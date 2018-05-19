@@ -17,6 +17,11 @@ import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import model.AnswerMat;
+import model.label.AnswerLabel;
+import model.label.ExCodeLabel;
+import model.label.MCodeLabel;
+
 public class AnswerSheetScorer {
 	
 	private static final int PROCESSED_WIDTH = 457;
@@ -39,30 +44,16 @@ public class AnswerSheetScorer {
 		}
 		
 		// Declare variables
-		Mat result = new Mat(src.rows(), src.cols(), CvType.CV_8UC3);
+		Mat result = new Mat(src.rows(), src.cols(), CvType.CV_8UC1);
 		
 		// Turn the photo image to grayscale image
-		if(src.type() == CvType.CV_8UC3) {
-			Imgproc.cvtColor(src, result, Imgproc.COLOR_RGB2GRAY);
-		} else {
-			result = src;
-		}
+		Imgproc.cvtColor(src, result, Imgproc.COLOR_RGB2GRAY);
 		Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-1-gray.jpg").getAbsolutePath(), result);
 		// Black and white
-		for(int i=0; i<result.rows(); i++) {
-			for(int j=0; j<result.cols(); j++) {
-				if(result.get(i, j)[0] < 100) {
-					result.put(i, j, 0);
-				} else {
-					result.put(i, j, 255);
-				}
-			}
-		}
+		Imgproc.adaptiveThreshold(result, result, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 69, 25);
 		Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-2-black-white.jpg").getAbsolutePath(), result);
-/*		// Adaptive Thresholding
-		Imgproc.adaptiveThreshold(result, result, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY_INV, 15, 7);
-		Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "4-thres.jpg").getAbsolutePath(), result);
-*/		
+
+		// Find all contour on mat
 		ArrayList<MatOfPoint> contours = new ArrayList<>();
 		Mat hierarchy = new Mat();
 		Imgproc.findContours(result, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
@@ -86,8 +77,9 @@ public class AnswerSheetScorer {
                 // Note: absolute value of an area is used because
                 // area may be positive or negative - in accordance with the
                 // contour orientation
+                double area = Math.abs(Imgproc.contourArea(approx));
                 if (approx.toArray().length == 4 &&
-                        Math.abs(Imgproc.contourArea(approx)) > 1000 &&
+                        area > 1000 && area < src.cols() * src.rows() * 98 / 100 &&
                         Imgproc.isContourConvex(new MatOfPoint(approx.toArray())))
                 {
                 	double maxCosine = 0;
@@ -130,7 +122,6 @@ public class AnswerSheetScorer {
 		Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-4-square.jpg").getAbsolutePath(), src);
 
 		// Give white color to the contour
-		Imgproc.drawContours(result, squares, idx, new Scalar(255, 255, 255), 30);
 		Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-5-square-prcs.jpg").getAbsolutePath(), result);
 		
 		// Find sorted 4 points : top left, top right, bottom right, bottom left
@@ -189,8 +180,8 @@ public class AnswerSheetScorer {
 		
 		Mat transform = Imgproc.getPerspectiveTransform(srcPoints, dst);
 		Imgproc.warpPerspective(result, perspective, transform, new Size(perspective.cols(), perspective.rows()));
+		Imgproc.adaptiveThreshold(perspective, perspective, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 55, 7);
 		Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-6-perspective.jpg").getAbsolutePath(), perspective);
-
 
 		return perspective;
 	}
@@ -200,30 +191,31 @@ public class AnswerSheetScorer {
 	 * @param src - answer sheet photo image
 	 * @return 
 	 */
-	public static void processAnswerSheet(Mat src, File file, String fileName) {
+	public static ArrayList<AnswerMat> processAnswerSheet(Mat src, File file, String fileName) {
 		// Check whether the argument is valid
-		if(src == null) {
-			throw new IllegalArgumentException("Argument cannot be null");
+		if(src == null)
+			throw new IllegalArgumentException("Argument src cannot be null");
+		// Check whether the argument is binary image
+		for(int row = 0; row < src.rows(); row++) {
+			for(int col = 0; col < src.cols(); col++) {
+				double[] colors = src.get(row, col);
+				if((int)colors[0] > 0 && (int)colors[0] < 255) 
+					throw new IllegalArgumentException("Found color value " + (int)colors[0] + ". Argument src must be binary image (0 = black, 255 = white)");
+				for(int channel = 1; channel < src.channels(); channel++) 
+					if(colors[channel] != colors[channel - 1]) 
+						throw new IllegalArgumentException("Argument src must be binary image (0 = black, 255 = white)");
+			}
 		}
-		
-		// Declare variables
-		Mat result = new Mat(src.rows(), src.cols(), CvType.CV_8UC3);
-		
-		// Turn the photo image to grayscale image
-		if(src.type() == CvType.CV_8UC3) {
-			Imgproc.cvtColor(src, result, Imgproc.COLOR_RGB2GRAY);
-		} else {
-			result = src;
-		}
-		Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-0-bw.jpg").getAbsolutePath(), result);
 
+		// Turn the photo image to grayscale image (DEBUG SUPPORT)
+		Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-0-bw.jpg").getAbsolutePath(), src);
+
+		// Find all contours
 		ArrayList<MatOfPoint> contours = new ArrayList<>();
-		Mat hierarchy = new Mat();
-		Imgproc.findContours(result, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+		Imgproc.findContours(src, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 		
+		// Find the fit squares
 		ArrayList<MatOfPoint> squares = new ArrayList<>();
-		
-        // Test contours
         MatOfPoint2f approx = new MatOfPoint2f();
         int area = (int) (PROCESSED_SQUARE_HEIGHT * PROCESSED_SQUARE_WIDTH * PROCESSED_RATIO * PROCESSED_RATIO);
         for (int i = 0; i < contours.size(); i++)
@@ -235,33 +227,32 @@ public class AnswerSheetScorer {
                 		Imgproc.arcLength(new MatOfPoint2f(contours.get(i).toArray()), true)*0.06, 
                 		true);
 
-                if(Math.abs(Imgproc.contourArea(approx)) > area && 
+                if(approx.toArray().length == 4 && Math.abs(Imgproc.contourArea(approx)) > area && 
                 	Imgproc.isContourConvex(new MatOfPoint(approx.toArray()))) {
                 	squares.add(new MatOfPoint(approx.toArray()));
                 }
         }
-        
-		
-		Mat res = new Mat(result.rows(), result.cols(), CvType.CV_8UC3);
-		for(int i=0; i<result.rows(); i++) {
-			for(int j=0; j<result.cols(); j++) {
-				double data = result.get(i, j)[0];
+
+        // Fill output DEBUG Mat with corresponding colors
+		Mat res = new Mat(src.rows(), src.cols(), CvType.CV_8UC3);
+		for(int i=0; i<src.rows(); i++) {
+			for(int j=0; j<src.cols(); j++) {
+				double data = src.get(i, j)[0];
 				res.put(i, j, data, data, data);
 			}
 		}
-        ArrayList<MatOfPoint> blackSquares = new ArrayList<>();
-        ArrayList<Rect> blackSquaresRect = new ArrayList<>();
 
+		// Filter the black squares only
+        ArrayList<Rect> blackSquaresRect = new ArrayList<>();
         for(int i=0; i<squares.size(); i++) {
 			// Calculate non zero color
         	Rect rect = Imgproc.boundingRect(squares.get(i));
-        	Mat subMat = result.submat(rect);
-        	int nonZero = Core.countNonZero(subMat);
+        	int nonZero = Core.countNonZero(src.submat(rect));
         	int total = rect.height * rect.width;
         	double percentage = 1.0 - ((double)nonZero)/((double)total);
         	if(percentage > 0.8) {
-        		blackSquares.add(squares.get(i));
         		blackSquaresRect.add(rect);
+        		// DEBUG OUTPUT
             	MatOfPoint matOfPoint = new MatOfPoint(new Point(rect.x, rect.y), 
 						new Point(rect.x+rect.width, rect.y), 
 						new Point(rect.x+rect.width, rect.y+rect.height),
@@ -270,10 +261,11 @@ public class AnswerSheetScorer {
         	}
         }
 
+        // DEBUG OUTPUT
 		Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-1-contour.jpg").getAbsolutePath(), res);
 		
 		if(blackSquaresRect.size() == 0) {
-			return;
+			throw new RuntimeException("Black squares found is 0");
 		}
 		
 		// Collect all squares for input
@@ -283,10 +275,10 @@ public class AnswerSheetScorer {
 		ArrayList<Rect> verticalSquares = new ArrayList<>();
 		ArrayList<Rect> horizontalSquares = new ArrayList<>();
 
-		// RESET MAT
-		for(int i=0; i<result.rows(); i++) {
-			for(int j=0; j<result.cols(); j++) {
-				double data = result.get(i, j)[0];
+		// RESET MAT DEBUG
+		for(int i=0; i<src.rows(); i++) {
+			for(int j=0; j<src.cols(); j++) {
+				double data = src.get(i, j)[0];
 				res.put(i, j, data, data, data);
 			}
 		}
@@ -366,131 +358,55 @@ public class AnswerSheetScorer {
 		averageWidth /= horizontalSquares.size();
 
 		// ANSWER SHEET TYPE P-40
-		final int FIRST_SEC_NUM_COLUMNS = 3;
-		final int SECOND_SEC_NUM_COLUMNS = 5;
-		final int THIRD_SEC_NUM_COLUMNS = 5;
-		final int FIRST_SEC_NUM_ROWS = 10;
-		final int SECOND_SEC_NUM_ROWS = 10;
+		int[] blackSquareVerticalIndices = new int[] {	0, 1, 
+														0, 1, 
+														0, 1, 
+														2, 3, 
+														2, 3, 
+														2, 3 };
+		int[] blackSquareHorizontalIndices = new int[] {0, 1, 
+														2, 3, 
+														4, 5, 
+														0, 1, 
+														2, 3, 
+														4, 5 };
+		int[] segmentNumberColumns = new int[] {3, 5, 5, 3, 5, 5};
+		int[] segmentNumberRows = new int[] {10, 10, 10, 10, 10, 10};
+		//char[] groupIn = new char[] {'V', 'H', 'H', 'V', 'H', 'H'}; // For grouping by horizontal line or vertical line
+		String[] label = new String[] {"EXC-", "Ans-", "Ans-", "MC-", "Ans-", "Ans-"};
+		int[] startFrom = new int[] {0, 1, 11, 0, 21, 31};
+		int[] ext = new int[] {'1', 'A', 'A', '1', 'A', 'A'};
 
 		// Create debug folder
 		File folder = new File(file, fileName.substring(0, fileName.lastIndexOf('.')));
 		folder.mkdirs();
+		File contentFolder = new File(folder, "Content");
+		contentFolder.mkdirs();
 		
-		// First top set of columns
-		findAllRect(result, res, verticalSquares.get(0), verticalSquares.get(1), 
-				horizontalSquares.get(0), horizontalSquares.get(1), 
-				FIRST_SEC_NUM_ROWS, FIRST_SEC_NUM_COLUMNS, averageWidth, averageHeight, folder, "ExCode-", 0, '1');
-
-		// Second top set of columns
-		findAllRect(result, res, verticalSquares.get(0), verticalSquares.get(1), 
-				horizontalSquares.get(2), horizontalSquares.get(3), 
-				FIRST_SEC_NUM_ROWS, SECOND_SEC_NUM_COLUMNS, averageWidth, averageHeight, folder, "Ans#", 1, 'A');
-
-		// Third top set of columns
-		findAllRect(result, res, verticalSquares.get(0), verticalSquares.get(1), 
-				horizontalSquares.get(4), horizontalSquares.get(5), 
-				FIRST_SEC_NUM_ROWS, THIRD_SEC_NUM_COLUMNS, averageWidth, averageHeight, folder, "Ans#", 11, 'A');
-
-		// First top set of columns
-		findAllRect(result, res, verticalSquares.get(2), verticalSquares.get(3), 
-				horizontalSquares.get(0), horizontalSquares.get(1), 
-				SECOND_SEC_NUM_ROWS, FIRST_SEC_NUM_COLUMNS, averageWidth, averageHeight, folder, "MCode-", 0, '1');
-
-		// Second top set of columns
-		findAllRect(result, res, verticalSquares.get(2), verticalSquares.get(3), 
-				horizontalSquares.get(2), horizontalSquares.get(3), 
-				SECOND_SEC_NUM_ROWS, SECOND_SEC_NUM_COLUMNS, averageWidth, averageHeight, folder, "Ans#", 21, 'A');
-
-		// Third bottom set of columns
-		findAllRect(result, res, verticalSquares.get(2), verticalSquares.get(3), 
-					horizontalSquares.get(4), horizontalSquares.get(5), 
-					SECOND_SEC_NUM_ROWS, THIRD_SEC_NUM_COLUMNS, averageWidth, averageHeight, folder, "Ans#", 31, 'A');
+		ArrayList<AnswerMat> answerMats = new ArrayList<>();
+		// Get all rectangles using metadata
+		for(int i=0; i<segmentNumberColumns.length; i++) {
+			answerMats.addAll(findAllRect(src, res, verticalSquares.get(blackSquareVerticalIndices[2*i]), 
+					verticalSquares.get(blackSquareVerticalIndices[2*i+1]), 
+					horizontalSquares.get(blackSquareHorizontalIndices[2*i]), 
+					horizontalSquares.get(blackSquareHorizontalIndices[2*i+1]), 
+					segmentNumberRows[i], segmentNumberColumns[i], averageWidth, averageHeight, 
+					folder, label[i], startFrom[i], ext[i]));
+		}
 
 		Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-2-class-square.jpg").getAbsolutePath(), res);
 		// End draw
+		return answerMats;
 	}
 	
-	private static double angle(Point pt1, Point pt2, Point pt0)
-	{
-	    double dx1 = pt1.x - pt0.x;
-	    double dy1 = pt1.y - pt0.y;
-	    double dx2 = pt2.x - pt0.x;
-	    double dy2 = pt2.y - pt0.y;
-	    return (dx1 * dx2 + dy1 * dy2) / 
-	    		Math.sqrt((dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2) + 1e-10);
-	}
-	
-	private static Point getCenter(Rect rect) {
-		if(rect == null) return null;
-		Point center = new Point();
-		center.x = rect.x + rect.width / 2;
-		center.y = rect.y + rect.height / 2;
-		
-		return center;
-	}
-	
-	private static Point findFirstBlackPixel(Mat mat, Point pStart, int xIter, int yIter) {
-		Point p = new Point(pStart.x, pStart.y);
-		while(p.x < mat.width() && p.x >= 0 && p.y < mat.height() && p.y >= 0 && mat.get((int)p.y, (int)p.x)[0] == 255) {
-			p.x += xIter;
-			p.y += yIter;
-		}
-		return p;
-	}
-	
-	private static void drawContour(Mat mat, Rect rect, Scalar color, int thickness) {
-    	MatOfPoint matOfPoint = new MatOfPoint(new Point(rect.x, rect.y), 
-				new Point(rect.x+rect.width, rect.y), 
-				new Point(rect.x+rect.width, rect.y+rect.height),
-				new Point(rect.x, rect.y+rect.height));
-    	Imgproc.drawContours(mat, Arrays.asList(matOfPoint), 0, color, thickness);
-	}
-	
-	private static void drawSquareFromCenter(Mat src, Mat drawOn, int x, int y, int predictedWidth, int predictedHeight, File directory, String filename) {
-    	Point currentCenter = new Point(x, y);
-    	/*
-    	 * Option 1 (likely not used)
-    	 */
-    	Point top, bottom, left, right;
-    	top = findFirstBlackPixel(src, currentCenter, 0, -1);
-    	bottom = findFirstBlackPixel(src, currentCenter, 0, 1);
-    	left = findFirstBlackPixel(src, currentCenter, -1, 0);
-    	right = findFirstBlackPixel(src, currentCenter, 1, 0);
-    	Rect currentRect = new Rect(new Point(left.x, top.y), 
-    								new Size(right.x - left.x, bottom.y - top.y));
-    	drawContour(drawOn, currentRect, new Scalar(0, 0, 255), 2);
-    	int shrinkPixelX = currentRect.width / 10;
-    	int shrinkPixelY = currentRect.height / 10;
-    	currentRect.x += shrinkPixelX; currentRect.y += shrinkPixelY;
-    	currentRect.width -= 2 * shrinkPixelX; currentRect.height -= 2 * shrinkPixelY;
-    	drawContour(drawOn, currentRect, new Scalar(0, 255, 0), 2);
-    	
-    	/*
-    	 * Option 2 (concern accuracy)
-    	 */
-    	int width, height;
-    	width = predictedWidth * 11 / 5;
-    	height = predictedHeight * 11 / 5;
-    	currentRect = new Rect(new Point(currentCenter.x - width / 2, currentCenter.y - height / 2),
-    								new Size(width, height));
-    	Mat square = (new Mat(drawOn, currentRect)).clone();
-    	Imgcodecs.imwrite(new File(directory, filename + ".jpg").getAbsolutePath(), square);
-    	
-    	// TRY WITH MOST FIT TEMPLATE
-    	Point rectStartPoint = findMostFitRect(square, predictedWidth, predictedHeight, (int) Math.round(PROCESSED_ANSWER_SQUARE_BORDER * PROCESSED_RATIO));
-    	//System.out.println(filename + ": " + rectStartPoint);
-    	currentRect = new Rect(rectStartPoint, new Size(predictedWidth, predictedHeight));
-    	drawContour(square, currentRect, new Scalar(255, 0, 255), 2);
-    	Imgcodecs.imwrite(new File(directory, filename + "-2.jpg").getAbsolutePath(), square);
-	}
-	
-	private static void findAllRect(Mat src, Mat drawOn,
+	private static ArrayList<AnswerMat> findAllRect(Mat src, Mat drawOn,
 									Rect firstVerticalRect, Rect secondVerticalRect, 
 									Rect firstHorizontalRect, Rect secondHorizontalRect,
 									int numberOfRows, int numberOfCols,
 									int averageWidth, int averageHeight,
 									File folder, String firstname, int firstExt, int secondExt) {
 		final int RADIUS = 4;
+		ArrayList<AnswerMat> answerMats = new ArrayList<>();
 		Point centerStartVerticalPoint = getCenter(firstVerticalRect);
 		Point centerEndVerticalPoint = getCenter(secondVerticalRect);
 		Point centerStartHorizontalPoint = getCenter(firstHorizontalRect);
@@ -506,9 +422,47 @@ public class AnswerSheetScorer {
 	        			drawOn.put(y, x, 0, 255, 0);
 	        		}
 	        	}
-				drawSquareFromCenter(src, drawOn, (int)Math.round(startCenterX), (int)Math.round(startCenterY), averageWidth, averageHeight, folder, firstname + String.valueOf(firstExt + i) + "-" + (char)(secondExt + j));
+				Mat mat = findSquareFromCenter(src, drawOn, (int)Math.round(startCenterX), (int)Math.round(startCenterY), averageWidth, averageHeight, folder, firstname + String.valueOf(firstExt + i) + "-" + (char)(secondExt + j));
+				
+				answerMats.add(new AnswerMat(mat, new MCodeLabel(firstExt + i, secondExt + j)));
+				Imgcodecs.imwrite(new File(new File(folder, "Content"), firstname + String.valueOf(firstExt + i) + "-" + (char)(secondExt + j) + ".jpg").getAbsolutePath(), mat);
 			}
 		}
+
+		return answerMats;
+	}
+	
+	private static Mat findSquareFromCenter(Mat src, Mat drawOn, int x, int y, int predictedWidth, int predictedHeight, File directory, String filename) {
+    	Point currentCenter = new Point(x, y);
+    	
+    	/*
+    	 * Option 2 (concern accuracy)
+    	 */
+    	// Get 
+    	int width, height;
+    	width = predictedWidth * 11 / 5;
+    	height = predictedHeight * 11 / 5;
+    	Rect currentRect = new Rect(new Point(currentCenter.x - width / 2, currentCenter.y - height / 2),
+    								new Size(width, height));
+    	Mat square = src.submat(currentRect);
+    	Mat sqDrawOn = drawOn.submat(currentRect);
+    	
+    	// Find the most fit rectangular
+    	Point rectStartPoint = findMostFitRect(square, predictedWidth, predictedHeight, (int) Math.round(PROCESSED_ANSWER_SQUARE_BORDER * PROCESSED_RATIO));
+    	currentRect = new Rect(rectStartPoint, new Size(predictedWidth, predictedHeight));
+    	currentRect = scaleRectOnCenter(currentRect, 1 - 2.5 * (double)PROCESSED_ANSWER_SQUARE_BORDER/(double)Math.min(PROCESSED_SQUARE_HEIGHT, PROCESSED_SQUARE_WIDTH));
+    	drawContour(sqDrawOn, currentRect, new Scalar(255, 0, 255), 2);
+    	Imgcodecs.imwrite(new File(directory, filename + ".jpg").getAbsolutePath(), sqDrawOn);
+    	
+    	return square.submat(currentRect).clone();
+	}
+	
+	private static Rect scaleRectOnCenter(Rect rect, double scale) {
+		int newWidth = (int) Math.round(rect.width * scale);
+		int newHeight = (int) Math.round(rect.height * scale);
+		int newX = rect.x + (int) (rect.width * (1 - scale) / 2);
+		int newY = rect.y + (int) (rect.height * (1 - scale) / 2);
+		return new Rect(newX, newY, newWidth, newHeight);
 	}
 	
 	private static Point findMostFitRect(Mat mat, int width, int height, int insideBorderThickness) {
@@ -522,7 +476,9 @@ public class AnswerSheetScorer {
 		for(x=0; x<mat.cols(); x++) {
 			blackPixel[0][x] = 0;
 		}
-//		new Mat(mat.rows(), mat.cols(), CvType.CV_32SC1);
+/*		Mat sum = new Mat(mat.rows(), mat.cols(), CvType.CV_32SC1);
+		Imgproc.integral(mat, sum);
+*/		
 		// Integral image (OpenCV)
 		for(y=1; y<=mat.rows(); y++) {
 			for(x=1; x<=mat.cols(); x++) {
@@ -557,5 +513,32 @@ public class AnswerSheetScorer {
 		}
 		
 		return new Point(xStart - 1, yStart - 1);
+	}
+	
+	private static void drawContour(Mat mat, Rect rect, Scalar color, int thickness) {
+    	MatOfPoint matOfPoint = new MatOfPoint(new Point(rect.x, rect.y), 
+				new Point(rect.x+rect.width, rect.y), 
+				new Point(rect.x+rect.width, rect.y+rect.height),
+				new Point(rect.x, rect.y+rect.height));
+    	Imgproc.drawContours(mat, Arrays.asList(matOfPoint), 0, color, thickness);
+	}
+	
+	private static double angle(Point pt1, Point pt2, Point pt0)
+	{
+	    double dx1 = pt1.x - pt0.x;
+	    double dy1 = pt1.y - pt0.y;
+	    double dx2 = pt2.x - pt0.x;
+	    double dy2 = pt2.y - pt0.y;
+	    return (dx1 * dx2 + dy1 * dy2) / 
+	    		Math.sqrt((dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2) + 1e-10);
+	}
+	
+	private static Point getCenter(Rect rect) {
+		if(rect == null) return null;
+		Point center = new Point();
+		center.x = rect.x + rect.width / 2;
+		center.y = rect.y + rect.height / 2;
+		
+		return center;
 	}
 }

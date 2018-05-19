@@ -3,14 +3,6 @@ package model;
 import java.util.ArrayList;
 
 public class Answer {
-
-	public enum Option {
-		A, B, C, D, E;
-		
-		public Character getOption() {
-			return this.name().charAt(0);
-		}
-	}
 	
 	private Option chosenOption;
 	private ArrayList<Option> cancelledOptions;
