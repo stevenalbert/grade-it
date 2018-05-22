@@ -5,6 +5,8 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 
+import process.AnswerSheetScorer;
+
 public class Main {
 
 	public static final String RES_DIR = "res";
