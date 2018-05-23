@@ -19,6 +19,8 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import model.AnswerMat;
+import model.AnswerSheetMetadata;
+import model.AnswerSheetMetadata.Value;
 import model.Option;
 import model.label.AnswerLabel;
 import model.label.AnswerSheetLabel;
@@ -194,7 +196,8 @@ public class AnswerSheetScorer {
      *            - answer sheet photo image
      * @return
      */
-    public static ArrayList<AnswerMat> processAnswerSheet(Mat src, File file, String fileName) {
+    public static ArrayList<AnswerMat> processAnswerSheet(Mat src, AnswerSheetMetadata metadata, File file,
+            String fileName) {
         // Check whether the argument is valid
         if (src == null)
             throw new IllegalArgumentException("Argument src cannot be null");
@@ -363,16 +366,17 @@ public class AnswerSheetScorer {
         }
         averageWidth /= horizontalSquares.size();
 
-        // ANSWER SHEET TYPE P-40
-        int[] blackSquareVerticalIndices = new int[] { 0, 1, 0, 1, 0, 1, 2, 3, 2, 3, 2, 3 };
-        int[] blackSquareHorizontalIndices = new int[] { 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5 };
-        int[] segmentNumberColumns = new int[] { 3, 5, 5, 3, 5, 5 };
-        int[] segmentNumberRows = new int[] { 10, 10, 10, 10, 10, 10 };
-        // char[] groupIn = new char[] {'V', 'H', 'H', 'V', 'H', 'H'}; // For grouping
-        // by horizontal line or vertical line
-        String[] label = new String[] { "EXC-", "Ans-", "Ans-", "MC-", "Ans-", "Ans-" };
-        int[] startFrom = new int[] { 0, 1, 11, 0, 21, 31 };
-        int[] ext = new int[] { '1', 'A', 'A', '1', 'A', 'A' };
+        /*
+         * // ANSWER SHEET TYPE P-40 int[] blackSquareVerticalIndices = new int[] { 0,
+         * 1, 0, 1, 0, 1, 2, 3, 2, 3, 2, 3 }; int[] blackSquareHorizontalIndices = new
+         * int[] { 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5 }; int[] segmentNumberColumns =
+         * new int[] { 3, 5, 5, 3, 5, 5 }; int[] segmentNumberRows = new int[] { 10, 10,
+         * 10, 10, 10, 10 }; // char[] groupIn = new char[] {'V', 'H', 'H', 'V', 'H',
+         * 'H'}; // For grouping // by horizontal line or vertical line String[] label =
+         * new String[] { "ExCode", "Answer", "Answer", "MCode", "Answer", "Answer" };
+         * int[] startFrom = new int[] { 0, 1, 11, 0, 21, 31 }; int[] ext = new int[] {
+         * '1', 'A', 'A', '1', 'A', 'A' };
+         */
 
         // Create debug folder
         File folder = new File(file, fileName.substring(0, fileName.lastIndexOf('.')));
@@ -382,18 +386,24 @@ public class AnswerSheetScorer {
 
         ArrayList<AnswerMat> answerMats = new ArrayList<>();
         // Get all rectangles using metadata
-        for (int i = 0; i < segmentNumberColumns.length; i++) {
-            answerMats.addAll(findAllRect(src, res, verticalSquares.get(blackSquareVerticalIndices[2 * i]),
-                    verticalSquares.get(blackSquareVerticalIndices[2 * i + 1]),
-                    horizontalSquares.get(blackSquareHorizontalIndices[2 * i]),
-                    horizontalSquares.get(blackSquareHorizontalIndices[2 * i + 1]), segmentNumberRows[i],
-                    segmentNumberColumns[i], averageWidth, averageHeight, folder, label[i], startFrom[i], ext[i]));
+        for (int i = 0; i < metadata.getValueLength(); i++) {
+            answerMats.addAll(findAllRect(src, res, verticalSquares, horizontalSquares, metadata.getValue(i),
+                    averageWidth, averageHeight, folder));
         }
 
         Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-2-class-square.jpg")
                 .getAbsolutePath(), res);
         // End draw
         return answerMats;
+    }
+
+    private static ArrayList<AnswerMat> findAllRect(Mat src, Mat drawOn, ArrayList<Rect> vertical,
+            ArrayList<Rect> horizontal, Value metadataValue, int averageWidth, int averageHeight, File folder) {
+        return findAllRect(src, drawOn, vertical.get(metadataValue.startVerticalIndex),
+                vertical.get(metadataValue.endVerticalIndex), horizontal.get(metadataValue.startHorizontalIndex),
+                horizontal.get(metadataValue.endHorizontalIndex), metadataValue.rowCount, metadataValue.columnCount,
+                averageWidth, averageHeight, folder, metadataValue.label, metadataValue.startRowInteger,
+                metadataValue.startColumnChar);
     }
 
     private static ArrayList<AnswerMat> findAllRect(Mat src, Mat drawOn, Rect firstVerticalRect,
@@ -419,19 +429,19 @@ public class AnswerSheetScorer {
                 }
                 Mat mat = findSquareFromCenter(src, drawOn, (int) Math.round(startCenterX),
                         (int) Math.round(startCenterY), averageWidth, averageHeight, folder,
-                        firstname + String.valueOf(firstExt + i) + "-" + (char) (secondExt + j));
+                        firstname + "-" + String.valueOf(firstExt + i) + "-" + (char) (secondExt + j));
 
                 AnswerSheetLabel label;
                 if (firstname.equals("ExCode")) {
-                    label = new ExCodeLabel(firstExt + i, secondExt + j);
+                    label = new ExCodeLabel(secondExt + j - '1', firstExt + i);
                 } else if (firstname.equals("MCode")) {
-                    label = new MCodeLabel(firstExt + i, secondExt + j);
+                    label = new MCodeLabel(secondExt + j - '1', firstExt + i);
                 } else {
                     label = new AnswerLabel(firstExt + i, Option.getOption((char) (secondExt + j)));
                 }
                 answerMats.add(new AnswerMat(mat, label));
                 Imgcodecs.imwrite(new File(new File(folder, "Content"),
-                        firstname + String.valueOf(firstExt + i) + "-" + (char) (secondExt + j) + ".jpg")
+                        firstname + "-" + String.valueOf(firstExt + i) + "-" + (char) (secondExt + j) + ".jpg")
                                 .getAbsolutePath(),
                         mat);
             }
@@ -445,18 +455,20 @@ public class AnswerSheetScorer {
         Point currentCenter = new Point(x, y);
 
         /*
-         * Option 2 (concern accuracy)
+         * Option 2 (concern in accuracy: the size of processed rectangle ->
+         * ERROR_RATE_SCALE)
          */
-        // Get
+        // Get the smallest possible rectangle to determine the questioned rectangle
         int width, height;
-        width = predictedWidth * 11 / 5;
-        height = predictedHeight * 11 / 5;
+        final double ERROR_RATE_SCALE = 1.5;
+        width = (int) Math.round(predictedWidth * ERROR_RATE_SCALE);
+        height = (int) Math.round(predictedHeight * ERROR_RATE_SCALE);
         Rect currentRect = new Rect(new Point(currentCenter.x - width / 2, currentCenter.y - height / 2),
                 new Size(width, height));
         Mat square = src.submat(currentRect);
         Mat sqDrawOn = drawOn.submat(currentRect);
 
-        // Find the most fit rectangular
+        // Find the most fit rectangle
         Point rectStartPoint = findMostFitRect(square, predictedWidth, predictedHeight,
                 (int) Math.round(PROCESSED_ANSWER_SQUARE_BORDER * PROCESSED_RATIO));
         currentRect = new Rect(rectStartPoint, new Size(predictedWidth, predictedHeight));

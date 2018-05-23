@@ -18,11 +18,11 @@ public abstract class AnswerSheetLabel {
         this.colInfo = colInfo;
     }
 
-    public String getRowInfo() {
+    public final String getRowInfo() {
         return this.rowInfo;
     }
 
-    public String getColInfo() {
+    public final String getColInfo() {
         return this.colInfo;
     }
 

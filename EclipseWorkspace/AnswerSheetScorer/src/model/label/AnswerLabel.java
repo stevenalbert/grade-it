@@ -4,12 +4,12 @@ import model.Option;
 
 public class AnswerLabel extends AnswerSheetLabel {
 
-    private static final int NUMBER_LIMIT = 3;
+    private static final int NUMBER_LIMIT = 99;
 
     public AnswerLabel(int number, Option option) {
         super(String.valueOf(option.getOption()), String.valueOf(number));
 
-        if (!isNumberValid(number) || option != null)
+        if (!isNumberValid(number) || option == null)
             throw new IllegalArgumentException("Argument is not valid");
     }
 

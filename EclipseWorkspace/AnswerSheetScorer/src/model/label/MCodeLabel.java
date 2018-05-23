@@ -16,15 +16,16 @@ public class MCodeLabel extends AnswerSheetLabel {
         if (columnNumber >= 0 && columnNumber < COLUMN_LIMIT)
             return true;
         else
-            throw new IllegalArgumentException(
-                    "Column number limits from 0 (inclusive) to " + COLUMN_LIMIT + " (exclusive)");
+            throw new IllegalArgumentException("column number = " + columnNumber
+                    + ", column number limits from 0 (inclusive) to " + COLUMN_LIMIT + " (exclusive)");
     }
 
     private boolean isValueValid(int value) {
         if (value >= 0 && value < VALUE_LIMIT)
             return true;
         else
-            throw new IllegalArgumentException("Value limits from 0 (inclusive) to " + VALUE_LIMIT + " (exclusive)");
+            throw new IllegalArgumentException(
+                    "value = " + value + ", value limits from 0 (inclusive) to " + VALUE_LIMIT + " (exclusive)");
     }
 
     public int getColumnNumber() {
