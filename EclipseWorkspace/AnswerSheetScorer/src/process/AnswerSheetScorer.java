@@ -1,6 +1,9 @@
 package process;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -58,7 +61,11 @@ public class AnswerSheetScorer {
                 new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-1-gray.jpg").getAbsolutePath(),
                 result);
         // Black and white
-        Imgproc.adaptiveThreshold(result, result, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 69, 25);
+        // Imgproc.threshold(result, result, 120, 255, Imgproc.THRESH_BINARY);
+        Imgproc.adaptiveThreshold(result, result, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 171,
+                20);
+        // Imgproc.adaptiveThreshold(result, result, 255,
+        // Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 69, 25);
         Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-2-black-white.jpg")
                 .getAbsolutePath(), result);
 
@@ -360,11 +367,13 @@ public class AnswerSheetScorer {
             averageHeight += verticalSquares.get(i).height;
         }
         averageHeight /= verticalSquares.size();
+        averageHeight = averageHeight * 95 / 100;
 
         for (int i = 0; i < horizontalSquares.size(); i++) {
             averageWidth += horizontalSquares.get(i).width;
         }
         averageWidth /= horizontalSquares.size();
+        averageWidth = averageWidth * 95 / 100;
 
         /*
          * // ANSWER SHEET TYPE P-40 int[] blackSquareVerticalIndices = new int[] { 0,
@@ -394,7 +403,42 @@ public class AnswerSheetScorer {
         Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-2-class-square.jpg")
                 .getAbsolutePath(), res);
         // End draw
+        Collections.sort(answerMats);
         return answerMats;
+    }
+
+    public static void scoreAnswerSheet(ArrayList<AnswerMat> answerMats, File outputDir, String filename) {
+        PrintWriter printWriter = null;
+        try {
+            File file = new File(outputDir, filename);
+            file.createNewFile();
+            printWriter = new PrintWriter(file);
+        } catch (FileNotFoundException e) {
+            System.err.println("File not found!");
+        } catch (IOException e) {
+            System.err.println("Can't create file!");
+        }
+
+        for (AnswerMat answerMat : answerMats) {
+            StringBuilder builder = new StringBuilder();
+            if (answerMat.getLabel() instanceof ExCodeLabel)
+                builder.append(
+                        "ExCode (" + answerMat.getLabel().getColInfo() + "," + answerMat.getLabel().getRowInfo() + ")");
+            else if (answerMat.getLabel() instanceof MCodeLabel)
+                builder.append(
+                        "MCode (" + answerMat.getLabel().getColInfo() + "," + answerMat.getLabel().getRowInfo() + ")");
+            else if (answerMat.getLabel() instanceof AnswerLabel)
+                builder.append("Answer #" + answerMat.getLabel().getRowInfo() + ": " + answerMat.getLabel().getColInfo()
+                        + ")");
+            else
+                builder.append("Unknown");
+            builder.append(" --> X value = ");
+            builder.append(FeatureExtractor.getFeatureX(answerMat));
+            printWriter.println(builder.toString());
+            printWriter.flush();
+        }
+
+        printWriter.close();
     }
 
     private static ArrayList<AnswerMat> findAllRect(Mat src, Mat drawOn, ArrayList<Rect> vertical,
@@ -431,7 +475,7 @@ public class AnswerSheetScorer {
                         (int) Math.round(startCenterY), averageWidth, averageHeight, folder,
                         firstname + "-" + String.valueOf(firstExt + i) + "-" + (char) (secondExt + j));
 
-                AnswerSheetLabel label;
+                AnswerSheetLabel label = null;
                 if (firstname.equals("ExCode")) {
                     label = new ExCodeLabel(secondExt + j - '1', firstExt + i);
                 } else if (firstname.equals("MCode")) {
@@ -470,8 +514,9 @@ public class AnswerSheetScorer {
 
         // Find the most fit rectangle
         Point rectStartPoint = findMostFitRect(square, predictedWidth, predictedHeight,
-                (int) Math.round(PROCESSED_ANSWER_SQUARE_BORDER * PROCESSED_RATIO));
+                (int) Math.floor(PROCESSED_ANSWER_SQUARE_BORDER * PROCESSED_RATIO));
         currentRect = new Rect(rectStartPoint, new Size(predictedWidth, predictedHeight));
+        drawContour(sqDrawOn, currentRect, new Scalar(0, 255, 0), 2);
         currentRect = scaleRectOnCenter(currentRect, 1 - 2.5 * (double) PROCESSED_ANSWER_SQUARE_BORDER
                 / (double) Math.min(PROCESSED_SQUARE_HEIGHT, PROCESSED_SQUARE_WIDTH));
         drawContour(sqDrawOn, currentRect, new Scalar(255, 0, 255), 2);

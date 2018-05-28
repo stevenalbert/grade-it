@@ -1,10 +1,12 @@
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 
+import model.AnswerMat;
 import model.AnswerSheetMetadata;
 import process.AnswerSheetScorer;
 
@@ -58,9 +60,17 @@ public class Main {
             System.out.println("Process answer sheet");
             startTime = System.nanoTime();
             AnswerSheetMetadata metadata = new AnswerSheetMetadata(new File(RES_DIR, "P-40.asmf"));
-            AnswerSheetScorer.processAnswerSheet(process, metadata, p, files[i].getName());
+            ArrayList<AnswerMat> answerMats = AnswerSheetScorer.processAnswerSheet(process, metadata, p,
+                    files[i].getName());
             endTime = System.nanoTime();
             System.out.println("Processing answer sheet in " + ((double) (endTime - startTime)) / (double) 1e9);
+
+            startTime = System.nanoTime();
+            AnswerSheetScorer.scoreAnswerSheet(answerMats, outputDirectory,
+                    files[i].getName().substring(0, files[i].getName().lastIndexOf(".")) + ".txt");
+            endTime = System.nanoTime();
+            System.out.println("Scoring answer sheet in " + ((double) (endTime - startTime)) / (double) 1e9);
+
             System.out.println("File " + files[i].getName() + " is processed.");
         }
     }

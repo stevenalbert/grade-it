@@ -6,7 +6,7 @@ public class MCodeLabel extends AnswerSheetLabel {
     private static final int VALUE_LIMIT = 10;
 
     public MCodeLabel(int columnNumber, int value) {
-        super(String.valueOf(columnNumber), String.valueOf(value));
+        super(String.valueOf(columnNumber), String.valueOf(value), SORT_BY_COLUMN);
 
         if (!isColumnNumberValid(columnNumber) || !isValueValid(value))
             throw new IllegalArgumentException("Argument is not valid");
@@ -34,5 +34,21 @@ public class MCodeLabel extends AnswerSheetLabel {
 
     public int getValue() {
         return Integer.valueOf(getRowInfo());
+    }
+
+    @Override
+    public int compareTo(AnswerSheetLabel o) {
+        if (!(o instanceof MCodeLabel))
+            return super.compareTo(o);
+        else {
+            MCodeLabel l = (MCodeLabel) o;
+            if (this.getColumnNumber() == l.getColumnNumber())
+                if (this.getValue() == l.getValue())
+                    return 0;
+                else
+                    return Integer.compare(this.getValue(), l.getValue());
+            else
+                return Integer.compare(this.getColumnNumber(), l.getColumnNumber());
+        }
     }
 }

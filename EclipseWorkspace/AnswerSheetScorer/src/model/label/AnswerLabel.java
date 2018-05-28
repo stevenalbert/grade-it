@@ -7,7 +7,7 @@ public class AnswerLabel extends AnswerSheetLabel {
     private static final int NUMBER_LIMIT = 99;
 
     public AnswerLabel(int number, Option option) {
-        super(String.valueOf(option.getOption()), String.valueOf(number));
+        super(String.valueOf(option.getOption()), String.valueOf(number), SORT_BY_ROW);
 
         if (!isNumberValid(number) || option == null)
             throw new IllegalArgumentException("Argument is not valid");
@@ -27,4 +27,21 @@ public class AnswerLabel extends AnswerSheetLabel {
     public Option getOption() {
         return Option.getOption(getColInfo().charAt(0));
     }
+
+    @Override
+    public int compareTo(AnswerSheetLabel o) {
+        if (!(o instanceof AnswerLabel))
+            return super.compareTo(o);
+        else {
+            AnswerLabel l = (AnswerLabel) o;
+            if (this.getNumber() == l.getNumber())
+                if (this.getOption().compareTo(l.getOption()) == 0)
+                    return 0;
+                else
+                    return getOption().compareTo(l.getOption());
+            else
+                return Integer.compare(this.getNumber(), l.getNumber());
+        }
+    }
+
 }
