@@ -9,6 +9,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Scalar;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 /**
@@ -467,7 +468,7 @@ public class FeatureExtractor {
      * @return a number indicating whether the given image contains an X or not. The
      *         more positive it is, the higher the chance
      */
-    public static double getFeatureX(Mat imgThreshold) {
+    public static double getFeatureX(Mat imgThreshold, String temp) {
         // =============
         // preprocessing
         // =============
@@ -503,7 +504,6 @@ public class FeatureExtractor {
         // crop the character, then convert the image so that black indicates
         // background, while white indicates object
         Mat imgCropped = imgThreshold.submat(idxTop, idxBottom + 1, idxLeft, idxRight + 1);
-        Core.bitwise_not(imgCropped, imgCropped);
 
         // ================================
         // normalize using F9 Normalization
@@ -581,19 +581,19 @@ public class FeatureExtractor {
 
         // ============================================================================================
         // drawing the image
-        /*
-         * if(true) { //Core.bitwise_not(imgCropped, imgCropped); Imgcodecs.imwrite(temp
-         * + "-1crop.jpg", imgCropped);
-         * 
-         * imgNorm.convertTo(imgNorm, CvType.CV_8UC1); Imgproc.threshold(imgNorm,
-         * imgNorm, 0, 255, Imgproc.THRESH_BINARY); Imgcodecs.imwrite(temp +
-         * "-2norm.jpg", imgNorm); GrayImgProc.matToTxt(imgNorm, temp + "-2norm.txt");
-         * 
-         * imgShifted.convertTo(imgShifted, CvType.CV_8UC1);
-         * Imgproc.threshold(imgShifted, imgShifted, 0, 255, Imgproc.THRESH_BINARY);
-         * Imgcodecs.imwrite(temp + "-4shifted.jpg", imgShifted);
-         * GrayImgProc.matToTxt(imgShifted, temp + "-4shifted.txt"); }
-         */
+
+        if (true) {
+            Imgcodecs.imwrite(temp + "-1crop.jpg", imgCropped);
+            imgNorm.convertTo(imgNorm, CvType.CV_8UC1);
+            Imgproc.threshold(imgNorm, imgNorm, 0, 255, Imgproc.THRESH_BINARY);
+            Imgcodecs.imwrite(temp + "-2norm.jpg", imgNorm);
+            GrayImgProc.matToTxt(imgNorm, temp + "-2norm.txt");
+            imgShifted.convertTo(imgShifted, CvType.CV_8UC1);
+            Imgproc.threshold(imgShifted, imgShifted, 0, 255, Imgproc.THRESH_BINARY);
+            Imgcodecs.imwrite(temp + "-4shifted.jpg", imgShifted);
+            GrayImgProc.matToTxt(imgShifted, temp + "-4shifted.txt");
+        }
+
         return result;
     }
 

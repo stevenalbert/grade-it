@@ -419,6 +419,9 @@ public class AnswerSheetScorer {
             System.err.println("Can't create file!");
         }
 
+        File tempDir = new File(outputDir, "X-" + filename.substring(0, filename.lastIndexOf(".")));
+        tempDir.mkdirs();
+
         for (AnswerMat answerMat : answerMats) {
             StringBuilder builder = new StringBuilder();
             if (answerMat.getLabel() instanceof ExCodeLabel)
@@ -428,14 +431,20 @@ public class AnswerSheetScorer {
                 builder.append(
                         "MCode (" + answerMat.getLabel().getColInfo() + "," + answerMat.getLabel().getRowInfo() + ")");
             else if (answerMat.getLabel() instanceof AnswerLabel)
-                builder.append("Answer #" + answerMat.getLabel().getRowInfo() + ": " + answerMat.getLabel().getColInfo()
+                builder.append("Answer #" + answerMat.getLabel().getRowInfo() + "- " + answerMat.getLabel().getColInfo()
                         + ")");
             else
                 builder.append("Unknown");
+            int value = (int) FeatureExtractor.getFeatureX(answerMat,
+                    tempDir.getAbsolutePath() + "/" + builder.toString());
             builder.append(" --> X value = ");
-            builder.append(FeatureExtractor.getFeatureX(answerMat));
-            printWriter.println(builder.toString());
-            printWriter.flush();
+            double zVal = (double) value / 850.0;
+            final double zThreshold = 0.55;
+            builder.append(String.format("%.3f | %s", zVal, (zVal > zThreshold ? "Recognized as X" : "NOT X")));
+            if (value != 0) {
+                printWriter.println(builder.toString());
+                printWriter.flush();
+            }
         }
 
         printWriter.close();
@@ -484,10 +493,11 @@ public class AnswerSheetScorer {
                     label = new AnswerLabel(firstExt + i, Option.getOption((char) (secondExt + j)));
                 }
                 answerMats.add(new AnswerMat(mat, label));
-                Imgcodecs.imwrite(new File(new File(folder, "Content"),
-                        firstname + "-" + String.valueOf(firstExt + i) + "-" + (char) (secondExt + j) + ".jpg")
-                                .getAbsolutePath(),
-                        mat);
+                Imgcodecs
+                        .imwrite(
+                                new File(new File(folder, "Content"), firstname + "-" + String.valueOf(firstExt + i)
+                                        + "-" + (char) (secondExt + j) + ".jpg").getAbsolutePath(),
+                                answerMats.get(answerMats.size() - 1));
             }
         }
 
