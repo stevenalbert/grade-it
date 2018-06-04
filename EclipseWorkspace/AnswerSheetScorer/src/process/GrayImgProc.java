@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Comparator;
 
 import org.opencv.core.Core;
@@ -617,7 +618,10 @@ public class GrayImgProc {
         // Normalize by discretization
         Mat outOfInterest = new Mat(rowsOfInterest, colsOfInterest, CvType.CV_8UC1, new Scalar(0));
         byte[] outVals = new byte[(int) outOfInterest.total()];
-        byte[] totalPixels = new byte[(int) outOfInterest.total()];
+        int[] whitePixels = new int[(int) outOfInterest.total()];
+        int[] totalPixels = new int[(int) outOfInterest.total()];
+        Arrays.fill(whitePixels, 0);
+        Arrays.fill(totalPixels, 0);
 
         // for all pixels
         byte[] inVals = new byte[(int) in.total()];
@@ -653,11 +657,13 @@ public class GrayImgProc {
                 else if (nextNewColIndex >= outOfInterest.cols())
                     nextNewColIndex = outOfInterest.cols() - 1;
 
+                // current color
+                int currVal = (inVals[i * in.cols() + ii] == 0 ? 0 : 1);
                 // for each pixel between the indices, update them with the value at (i,ii)
                 for (int iii = currentNewRowIndex; iii <= nextNewRowIndex; iii++) {
                     for (int iiii = currentNewColIndex; iiii <= nextNewColIndex; iiii++) {
                         // add current color to output matrix section
-                        outVals[iii * outOfInterest.cols() + iiii] += inVals[i * in.cols() + ii];
+                        whitePixels[iii * outOfInterest.cols() + iiii] += currVal;
                         totalPixels[iii * outOfInterest.cols() + iiii]++;
                     }
                 } // end of for (updating normalized image)
@@ -666,10 +672,10 @@ public class GrayImgProc {
 
         // calculate the color in outVals based on totalPixels
         for (int i = 0; i < outVals.length; i++) {
-            if (outVals[i] + outVals[i] < totalPixels[i])
-                outVals[i] = 1;
-            else
+            if (whitePixels[i] + whitePixels[i] < totalPixels[i])
                 outVals[i] = 0;
+            else
+                outVals[i] = -1;
         }
 
         // copy the region of interest to the center of the output matrix
