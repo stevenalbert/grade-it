@@ -32,6 +32,13 @@ import model.label.MCodeLabel;
 
 public class AnswerSheetScorer {
 
+    // private static final int PROCESSED_WIDTH = 2033;
+    // private static final int PROCESSED_HEIGHT = 1309;
+    // private static final int PROCESSED_SQUARE_WIDTH = 45;
+    // private static final int PROCESSED_SQUARE_HEIGHT = 40;
+    // private static final int PROCESSED_ANSWER_SQUARE_BORDER = 4;
+    // private static final double PROCESSED_RATIO = 1;
+
     private static final int PROCESSED_WIDTH = 457;
     private static final int PROCESSED_HEIGHT = 577;
     private static final int PROCESSED_SQUARE_WIDTH = 16;
@@ -77,31 +84,43 @@ public class AnswerSheetScorer {
         Mat res = new Mat(result.rows(), result.cols(), CvType.CV_8UC3);
 
         ArrayList<MatOfPoint> squares = new ArrayList<>();
+        ArrayList<MatOfPoint> notEnoughSquares = new ArrayList<>();
 
         // Test contours
         MatOfPoint2f approx = new MatOfPoint2f();
         for (int i = 0; i < contours.size(); i++) {
             // approximate contour with accuracy proportional
             // to the contour perimeter
-            Imgproc.approxPolyDP(new MatOfPoint2f(contours.get(i).toArray()), approx,
-                    Imgproc.arcLength(new MatOfPoint2f(contours.get(i).toArray()), true) * 0.06, true);
+            Imgproc.approxPolyDP(new MatOfPoint2f(contours.get(i).toArray()), approx, 0.02 * Math.min(PROCESSED_HEIGHT,
+                    PROCESSED_WIDTH)
+                    * PROCESSED_RATIO/*
+                                      * Imgproc.arcLength(new MatOfPoint2f(contours.get(i).toArray()), true) * 0.005
+                                      */, true);
 
             // Note: absolute value of an area is used because
             // area may be positive or negative - in accordance with the
             // contour orientation
             double area = Math.abs(Imgproc.contourArea(approx));
-            if (approx.toArray().length == 4 && area > 1000 && area < src.cols() * src.rows() * 98 / 100
+            if (approx.toArray().length == 4 && area > src.cols() * src.rows() * 2 / 10
+                    && area < src.cols() * src.rows() * 98 / 100
                     && Imgproc.isContourConvex(new MatOfPoint(approx.toArray()))) {
-                double maxCosine = 0;
-
-                Point[] approxPoints = approx.toArray();
-                for (int j = 2; j < 5; j++) {
-                    double cosine = Math.abs(angle(approxPoints[j % 4], approxPoints[j - 2], approxPoints[j - 1]));
-                    maxCosine = Math.max(maxCosine, cosine);
-                }
-
-                if (maxCosine < 0.3)
-                    squares.add(new MatOfPoint(approx.toArray()));
+                // double maxCosine = 0;
+                //
+                // Point[] approxPoints = approx.toArray();
+                // for (int j = 0; j < 4; j++) {
+                // double cosine = Math
+                // .abs(angle(approxPoints[j % 4], approxPoints[(j + 2) % 4], approxPoints[(j +
+                // 3) % 4]));
+                // maxCosine = Math.max(maxCosine, cosine);
+                // System.out.print(maxCosine + " ");
+                // }
+                //
+                // if (maxCosine < 0.3)
+                squares.add(new MatOfPoint(approx.toArray()));
+                // else {
+                // notEnoughSquares.add(new MatOfPoint(approx.toArray()));
+                // }
+                // System.out.println("| MAX COSINE = " + maxCosine);
             }
         }
 
@@ -120,7 +139,9 @@ public class AnswerSheetScorer {
                 secondMaxIdx = j;
             }
         }
+        Imgproc.drawContours(res, contours, -1, new Scalar(0, 255, 255), 2);
         Imgproc.drawContours(res, squares, -1, new Scalar(0, 255, 0), 2);
+        Imgproc.drawContours(res, notEnoughSquares, -1, new Scalar(255, 255, 0), 2);
         Imgcodecs.imwrite(
                 new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-3-contour.jpg").getAbsolutePath(),
                 res);
@@ -238,7 +259,7 @@ public class AnswerSheetScorer {
             // approximate contour with accuracy proportional
             // to the contour perimeter
             Imgproc.approxPolyDP(new MatOfPoint2f(contours.get(i).toArray()), approx,
-                    Imgproc.arcLength(new MatOfPoint2f(contours.get(i).toArray()), true) * 0.06, true);
+                    Imgproc.arcLength(new MatOfPoint2f(contours.get(i).toArray()), true) * 0.08, true);
 
             if (approx.toArray().length == 4 && Math.abs(Imgproc.contourArea(approx)) > area
                     && Imgproc.isContourConvex(new MatOfPoint(approx.toArray()))) {
@@ -279,7 +300,10 @@ public class AnswerSheetScorer {
                 res);
 
         if (blackSquaresRect.size() == 0) {
-            throw new RuntimeException("Black squares found is 0");
+            Imgproc.drawContours(res, contours, -1, new Scalar(0, 255, 255), 3);
+            Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-1-contour.jpg")
+                    .getAbsolutePath(), res);
+            throw new RuntimeException("Black squares found is 0 from " + contours.size() + " contours.");
         }
 
         // Collect all squares for input
@@ -400,6 +424,27 @@ public class AnswerSheetScorer {
                     averageWidth, averageHeight, folder));
         }
 
+        // Filter Noise AnswerMat
+        for (AnswerMat answerMat : answerMats) {
+            ArrayList<MatOfPoint> answerMatContours = new ArrayList<>();
+            Imgproc.findContours(answerMat, answerMatContours, new Mat(), Imgproc.RETR_LIST,
+                    Imgproc.CHAIN_APPROX_SIMPLE);
+            Scalar blackScalar = new Scalar(0);
+            for (MatOfPoint contour : answerMatContours) {
+                Rect contourRect = Imgproc.boundingRect(contour);
+                if (contourRect.area() < area / 4) {
+                    Imgproc.drawContours(answerMat, Arrays.asList(contour), 0, blackScalar, Core.FILLED);
+                }
+            }
+        }
+
+        // Write to file for debug
+        for (AnswerMat answerMat : answerMats) {
+            StringBuilder builder = new StringBuilder();
+            builder.append(answerMat.getLabel().toString());
+            Imgcodecs.imwrite(new File(contentFolder, answerMat.getLabel().toString() + ".jpg").getAbsolutePath(),
+                    answerMat);
+        }
         Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-2-class-square.jpg")
                 .getAbsolutePath(), res);
         // End draw
@@ -424,17 +469,7 @@ public class AnswerSheetScorer {
 
         for (AnswerMat answerMat : answerMats) {
             StringBuilder builder = new StringBuilder();
-            if (answerMat.getLabel() instanceof ExCodeLabel)
-                builder.append(
-                        "ExCode (" + answerMat.getLabel().getColInfo() + "," + answerMat.getLabel().getRowInfo() + ")");
-            else if (answerMat.getLabel() instanceof MCodeLabel)
-                builder.append(
-                        "MCode (" + answerMat.getLabel().getColInfo() + "," + answerMat.getLabel().getRowInfo() + ")");
-            else if (answerMat.getLabel() instanceof AnswerLabel)
-                builder.append("Answer #" + answerMat.getLabel().getRowInfo() + "- " + answerMat.getLabel().getColInfo()
-                        + ")");
-            else
-                builder.append("Unknown");
+            builder.append(answerMat.getLabel().toString());
             int value = (int) FeatureExtractor.getFeatureX(answerMat,
                     tempDir.getAbsolutePath() + "/" + builder.toString());
             builder.append(" --> X value = ");
@@ -493,11 +528,6 @@ public class AnswerSheetScorer {
                     label = new AnswerLabel(firstExt + i, Option.getOption((char) (secondExt + j)));
                 }
                 answerMats.add(new AnswerMat(mat, label));
-                Imgcodecs
-                        .imwrite(
-                                new File(new File(folder, "Content"), firstname + "-" + String.valueOf(firstExt + i)
-                                        + "-" + (char) (secondExt + j) + ".jpg").getAbsolutePath(),
-                                answerMats.get(answerMats.size() - 1));
             }
         }
 

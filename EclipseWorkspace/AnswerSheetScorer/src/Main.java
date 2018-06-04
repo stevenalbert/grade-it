@@ -13,6 +13,10 @@ import process.AnswerSheetScorer;
 public class Main {
 
     public static final String RES_DIR = "res";
+    // public static final String RES_DIR = "res-ch";
+    private static AnswerSheetMetadata metadata = new AnswerSheetMetadata(new File(RES_DIR, "P-40.asmf"));
+    // private static AnswerSheetMetadata metadata = new AnswerSheetMetadata(new
+    // File(RES_DIR, "ans.asmf"));
 
     public static void main(String[] args) {
         // load OpenCV library
@@ -59,7 +63,6 @@ public class Main {
             p.mkdirs();
             System.out.println("Process answer sheet");
             startTime = System.nanoTime();
-            AnswerSheetMetadata metadata = new AnswerSheetMetadata(new File(RES_DIR, "P-40.asmf"));
             ArrayList<AnswerMat> answerMats = AnswerSheetScorer.processAnswerSheet(process, metadata, p,
                     files[i].getName());
             endTime = System.nanoTime();

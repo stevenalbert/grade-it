@@ -568,7 +568,6 @@ public class GrayImgProc {
                 CvType.CV_8UC1, new Scalar(0));
         Core.copyMakeBorder(in, tempIn, expandStartRow, expandEndRow, expandStartCol, expandEndCol,
                 Core.BORDER_ISOLATED, new Scalar(0));
-        in = null;
         in = tempIn;
         tempIn = null;
 
@@ -618,6 +617,7 @@ public class GrayImgProc {
         // Normalize by discretization
         Mat outOfInterest = new Mat(rowsOfInterest, colsOfInterest, CvType.CV_8UC1, new Scalar(0));
         byte[] outVals = new byte[(int) outOfInterest.total()];
+        byte[] totalPixels = new byte[(int) outOfInterest.total()];
 
         // for all pixels
         byte[] inVals = new byte[(int) in.total()];
@@ -656,16 +656,21 @@ public class GrayImgProc {
                 // for each pixel between the indices, update them with the value at (i,ii)
                 for (int iii = currentNewRowIndex; iii <= nextNewRowIndex; iii++) {
                     for (int iiii = currentNewColIndex; iiii <= nextNewColIndex; iiii++) {
-                        // only change the pixel value if it is still 0 (not yet changed)
-                        if (outVals[iii * outOfInterest.cols() + iiii] == 0)
-                            outVals[iii * outOfInterest.cols() + iiii] = inVals[i * in.cols() + ii];
-
-                        // use the last value to be inputed in this pixel
-                        // outVals[iii*outOfInterest.cols() + iiii] = inVals[i*in.cols() + ii];
+                        // add current color to output matrix section
+                        outVals[iii * outOfInterest.cols() + iiii] += inVals[i * in.cols() + ii];
+                        totalPixels[iii * outOfInterest.cols() + iiii]++;
                     }
                 } // end of for (updating normalized image)
             }
         } // end of for (scanning original image's)
+
+        // calculate the color in outVals based on totalPixels
+        for (int i = 0; i < outVals.length; i++) {
+            if (outVals[i] + outVals[i] < totalPixels[i])
+                outVals[i] = 1;
+            else
+                outVals[i] = 0;
+        }
 
         // copy the region of interest to the center of the output matrix
         Mat out = new Mat(newRows, newCols, CvType.CV_8UC1, new Scalar(0));

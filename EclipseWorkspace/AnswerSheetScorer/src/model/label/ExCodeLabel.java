@@ -2,7 +2,7 @@ package model.label;
 
 public class ExCodeLabel extends AnswerSheetLabel {
 
-    private static final int COLUMN_LIMIT = 3;
+    private static final int COLUMN_LIMIT = 10;
     private static final int VALUE_LIMIT = 10;
 
     public ExCodeLabel(int columnNumber, int value) {
@@ -50,5 +50,10 @@ public class ExCodeLabel extends AnswerSheetLabel {
             else
                 return Integer.compare(this.getColumnNumber(), l.getColumnNumber());
         }
+    }
+
+    @Override
+    public String toString() {
+        return "ExCode (" + getColInfo() + "," + getRowInfo() + ")";
     }
 }

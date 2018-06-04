@@ -4,7 +4,7 @@ import model.Option;
 
 public class AnswerLabel extends AnswerSheetLabel {
 
-    private static final int NUMBER_LIMIT = 99;
+    private static final int NUMBER_LIMIT = 999;
 
     public AnswerLabel(int number, Option option) {
         super(String.valueOf(option.getOption()), String.valueOf(number), SORT_BY_ROW);
@@ -44,4 +44,8 @@ public class AnswerLabel extends AnswerSheetLabel {
         }
     }
 
+    @Override
+    public String toString() {
+        return "Answer #" + getRowInfo() + "- (" + getColInfo() + ")";
+    }
 }

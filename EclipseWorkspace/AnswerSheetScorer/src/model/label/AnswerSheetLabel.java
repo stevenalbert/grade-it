@@ -43,7 +43,7 @@ public abstract class AnswerSheetLabel implements Comparable<AnswerSheetLabel> {
 
     @Override
     public String toString() {
-        return "{row:" + getRowInfo() + ",col:" + getColInfo() + "}";
+        return "(" + getRowInfo() + ", " + getColInfo() + ")";
     }
 
     @Override
