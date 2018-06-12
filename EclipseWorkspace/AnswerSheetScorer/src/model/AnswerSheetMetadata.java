@@ -34,6 +34,32 @@ public class AnswerSheetMetadata {
         }
     }
 
+    public class PaperDimension {
+        public int width;
+        public int height;
+        public int squareWidth;
+        public int squareHeight;
+        public int squareAnswerBorder;
+
+        public PaperDimension(int width, int height, int squareWidth, int squareHeight, int squareAnswerBorder,
+                double scale) {
+            this.width = (int) Math.round((double) width * scale);
+            this.height = (int) Math.round((double) height * scale);
+            this.squareWidth = (int) Math.round((double) squareWidth * scale);
+            this.squareHeight = (int) Math.round((double) squareHeight * scale);
+            this.squareAnswerBorder = (int) Math.round((double) squareAnswerBorder * scale);
+        }
+    }
+
+    private static final String METADATA_EXTENSION = "asmf";
+
+    private static final String DIMENSION_FORMAT_KEY = "Dim";
+
+    private static final String DIMENSION_FORMAT = "\"" + DIMENSION_FORMAT_KEY
+            + ", __WIDTH__, __HEIGHT__, __SQ_WIDTH__, __SQ_HEIGHT__, __SQ_ANS_BORDER__, __SCALE__\" (without quotes and fill __ATTR__ with number correspond to its attr)";
+
+    private PaperDimension dimension;
+
     private ArrayList<Value> values;
 
     public AnswerSheetMetadata(String filePath) {
@@ -46,24 +72,49 @@ public class AnswerSheetMetadata {
     }
 
     private void readMetadataFile(File metadataFile) {
-        if (!isMetadataFileValid(metadataFile))
-            throw new IllegalArgumentException("Metadata file is invalid");
+        if (metadataFile == null)
+            throw new IllegalArgumentException("Metadata cannot be null");
+        else if (!metadataFile.exists())
+            throw new IllegalArgumentException("Metadata cannot be found");
+        else if (!metadataFile.isFile() || !metadataFile.getName().matches(".+\\." + METADATA_EXTENSION))
+            throw new IllegalArgumentException(
+                    "Metadata is not valid. Must be a File with " + METADATA_EXTENSION + " extension name.");
 
         values = new ArrayList<>();
         BufferedReader reader = null;
-        String metadata;
+        String metadata = null;
         try {
             reader = new BufferedReader(new FileReader(metadataFile));
             while ((metadata = reader.readLine()) != null) {
-                Value value = processMetadataLine(metadata);
-                if (value != null) {
-                    values.add(value);
+                if (isCommentOrEmpty(metadata))
+                    continue;
+
+                PaperDimension dim = processPaperDimension(metadata);
+                if (dimension == null && dim != null)
+                    dimension = dim;
+                else if (dimension != null && dim != null)
+                    throw new IllegalArgumentException("There is more than one lines which is started by \""
+                            + DIMENSION_FORMAT_KEY + "\" (without quotes)");
+                else if (dim == null) {
+                    Value value = processMetadataLine(metadata);
+                    if (value != null) {
+                        values.add(value);
+                    }
                 }
             }
+
+            if (dimension == null)
+                throw new IllegalArgumentException("There is no dimension row. Expected once: " + DIMENSION_FORMAT);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                if (reader != null)
+                    reader.close();
+            } catch (IOException e) {
+            }
         }
     }
 
@@ -75,11 +126,33 @@ public class AnswerSheetMetadata {
         return values.size();
     }
 
-    private Value processMetadataLine(String metadata) {
-        if (metadata.startsWith("#") || metadata.trim().length() == 0) {
+    private boolean isCommentOrEmpty(String metadata) {
+        return metadata.startsWith("#") || metadata.trim().length() == 0;
+    }
+
+    private PaperDimension processPaperDimension(String metadata) {
+        if (!metadata.startsWith("Dim"))
             return null;
+
+        String[] data = metadata.split("\\s*,\\s*");
+        int expectedTotalData = PaperDimension.class.getDeclaredFields().length
+                - PaperDimension.class.getDeclaredMethods().length
+                - PaperDimension.class.getDeclaredConstructors().length + 2; // Latest +2 is for scale attribute and
+                                                                             // "Dim" string
+        if (data.length != expectedTotalData) {
+            throw new IllegalArgumentException("\"" + metadata + "\", format is not true.\nTotal data: " + data.length
+                    + ", expected total data: " + expectedTotalData + "\nFormat:\n\t" + DIMENSION_FORMAT);
         }
 
+        for (int i = 0; i < data.length; i++) {
+            data[i].trim();
+        }
+
+        return new PaperDimension(Integer.valueOf(data[1]), Integer.valueOf(data[2]), Integer.valueOf(data[3]),
+                Integer.valueOf(data[4]), Integer.valueOf(data[5]), Double.valueOf(data[6]));
+    }
+
+    private Value processMetadataLine(String metadata) {
         String[] data = metadata.split(",\\s*");
         int expectedTotalData = Value.class.getDeclaredFields().length - Value.class.getDeclaredMethods().length
                 - Value.class.getDeclaredConstructors().length;
@@ -95,10 +168,5 @@ public class AnswerSheetMetadata {
         return new Value(data[0], Integer.valueOf(data[1]), Integer.valueOf(data[2]), Integer.valueOf(data[3]),
                 Integer.valueOf(data[4]), Integer.valueOf(data[5]), Integer.valueOf(data[6]), Integer.valueOf(data[7]),
                 Character.valueOf(data[8].charAt(0)));
-    }
-
-    private boolean isMetadataFileValid(File metadataFile) {
-        return metadataFile != null && metadataFile.exists() && metadataFile.isFile()
-                && metadataFile.getName().matches(".+\\.asmf");
     }
 }

@@ -55,11 +55,15 @@ public class Main {
             // process the image
             System.out.println("Start find paper => " + files[i].getName());
             startTime = System.nanoTime();
-            Mat process = AnswerSheetScorer.convertAnswerSheet(mat, outputDirectory, files[i].getName());
+            File output = new File(outputDirectory, files[i].getName().replace(".jpg", ""));
+            output.mkdirs();
+            File preprocessOutput = new File(output, "0-Preprocess");
+            preprocessOutput.mkdirs();
+            Mat process = AnswerSheetScorer.convertAnswerSheet(mat, preprocessOutput, files[i].getName());
             endTime = System.nanoTime();
             System.out.println("Converting image in " + ((double) (endTime - startTime)) / (double) 1e9);
 
-            File p = new File(outputDirectory, "After perspective");
+            File p = new File(output, "1-Retrieve squares content");
             p.mkdirs();
             System.out.println("Process answer sheet");
             startTime = System.nanoTime();
@@ -69,8 +73,9 @@ public class Main {
             System.out.println("Processing answer sheet in " + ((double) (endTime - startTime)) / (double) 1e9);
 
             startTime = System.nanoTime();
-            AnswerSheetScorer.scoreAnswerSheet(answerMats, outputDirectory,
-                    files[i].getName().substring(0, files[i].getName().lastIndexOf(".")) + ".txt");
+            File scoringDirectory = new File(output, "2-Normalization and Detection");
+            scoringDirectory.mkdirs();
+            AnswerSheetScorer.scoreAnswerSheet(answerMats, scoringDirectory, "../result.txt");
             endTime = System.nanoTime();
             System.out.println("Scoring answer sheet in " + ((double) (endTime - startTime)) / (double) 1e9);
 

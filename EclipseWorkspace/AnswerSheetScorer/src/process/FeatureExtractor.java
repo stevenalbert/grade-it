@@ -43,7 +43,8 @@ public class FeatureExtractor {
 
     private static final float E_NORM = 0.01f;
 
-    private static final int X_NORM_SIZE = 11;
+    // private static final int X_NORM_SIZE = 11;
+    private static final int X_NORM_SIZE = 21;
 
     /**
      * Concatenate the given Mat object into a column vector of type double
@@ -575,7 +576,8 @@ public class FeatureExtractor {
         // masking to find the result of convolution with X-mask
         // =====================================================
         // create the mask, then dot the features
-        Mat mask = createMaskX11();
+        // Mat mask = createMaskX11();
+        Mat mask = createMaskX21();
         imgShifted.convertTo(imgShifted, CvType.CV_8SC1);
         double result = imgShifted.dot(mask);
 
@@ -583,14 +585,19 @@ public class FeatureExtractor {
         // drawing the image
 
         if (true) {
+            Core.bitwise_not(imgCropped, imgCropped);
             Imgcodecs.imwrite(temp + "-1crop.jpg", imgCropped);
             imgNorm.convertTo(imgNorm, CvType.CV_8UC1);
             Imgproc.threshold(imgNorm, imgNorm, 0, 255, Imgproc.THRESH_BINARY);
+            Core.bitwise_not(imgNorm, imgNorm);
             Imgcodecs.imwrite(temp + "-2norm.jpg", imgNorm);
+            Core.bitwise_not(imgNorm, imgNorm);
             GrayImgProc.matToTxt(imgNorm, temp + "-2norm.txt");
             imgShifted.convertTo(imgShifted, CvType.CV_8UC1);
             Imgproc.threshold(imgShifted, imgShifted, 0, 255, Imgproc.THRESH_BINARY);
+            Core.bitwise_not(imgShifted, imgShifted);
             Imgcodecs.imwrite(temp + "-4shifted.jpg", imgShifted);
+            Core.bitwise_not(imgShifted, imgShifted);
             GrayImgProc.matToTxt(imgShifted, temp + "-4shifted.txt");
         }
 
@@ -759,6 +766,57 @@ public class FeatureExtractor {
         mask.put(10, 9, 10);
         mask.put(10, 10, 10);
 
+        return mask;
+    }
+
+    /**
+     * create a 21x21 mask to detect "X" symbol as follows: </br>
+     * 10 10 10 10 10 00 00 -90 -90 -90 -90 -90 -90 -90 00 00 10 10 10 10 10</br>
+     * 10 10 10 10 10 10 00 00 -90 -90 -90 -90 -90 00 00 10 10 10 10 10 10</br>
+     * 10 10 10 10 10 10 10 00 00 -90 -90 -90 00 00 10 10 10 10 10 10 10</br>
+     * 10 10 10 10 10 10 10 10 00 00 -90 00 00 10 10 10 10 10 10 10 10</br>
+     * 10 10 10 10 10 10 10 10 10 00 00 00 10 10 10 10 10 10 10 10 10</br>
+     * 00 10 10 10 10 10 10 10 10 10 00 10 10 10 10 10 10 10 10 10 00</br>
+     * 00 00 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 00 00</br>
+     * -90 00 00 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 00 00 -90</br>
+     * -90 -90 00 00 10 10 10 10 10 10 10 10 10 10 10 10 10 00 00 -90 -90</br>
+     * -90 -90 -90 00 00 10 10 10 10 10 10 10 10 10 10 10 00 00 -90 -90 -90</br>
+     * -90 -90 -90 -90 00 00 10 10 10 10 10 10 10 10 10 00 00 -90 -90 -90 -90</br>
+     * -90 -90 -90 00 00 10 10 10 10 10 10 10 10 10 10 10 00 00 -90 -90 -90</br>
+     * -90 -90 00 00 10 10 10 10 10 10 10 10 10 10 10 10 10 00 00 -90 -90</br>
+     * -90 00 00 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 00 00 -90</br>
+     * 00 00 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 00 00</br>
+     * 00 10 10 10 10 10 10 10 10 10 00 10 10 10 10 10 10 10 10 10 00</br>
+     * 10 10 10 10 10 10 10 10 10 00 00 00 10 10 10 10 10 10 10 10 10</br>
+     * 10 10 10 10 10 10 10 10 00 00 -90 00 00 10 10 10 10 10 10 10 10</br>
+     * 10 10 10 10 10 10 10 00 00 -90 -90 -90 00 00 10 10 10 10 10 10 10</br>
+     * 10 10 10 10 10 10 00 00 -90 -90 -90 -90 -90 00 00 10 10 10 10 10 10</br>
+     * 10 10 10 10 10 00 00 -90 -90 -90 -90 -90 -90 -90 00 00 10 10 10 10 10</br>
+     * 
+     * @return a Mat object of size 11x11 containing the mask described above
+     */
+    private static Mat createMaskX21() {
+        Mat mask = new Mat(21, 21, CvType.CV_8SC1);
+        byte[] maskVal = new byte[] { 10, 10, 10, 10, 10, 00, 00, -90, -90, -90, -90, -90, -90, -90, 00, 00, 10, 10, 10,
+                10, 10, 10, 10, 10, 10, 10, 10, 00, 00, -90, -90, -90, -90, -90, 00, 00, 10, 10, 10, 10, 10, 10, 10, 10,
+                10, 10, 10, 10, 10, 00, 00, -90, -90, -90, 00, 00, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                10, 10, 00, 00, -90, 00, 00, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 00, 00,
+                00, 10, 10, 10, 10, 10, 10, 10, 10, 10, 00, 10, 10, 10, 10, 10, 10, 10, 10, 10, 00, 10, 10, 10, 10, 10,
+                10, 10, 10, 10, 00, 00, 00, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 00, 00,
+                -90, 00, 00, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 00, 00, -90, -90, -90, 00, 00,
+                10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 00, 00, -90, -90, -90, -90, -90, 00, 00, 10, 10, 10,
+                10, 10, 10, 10, 10, 10, 10, 10, 00, 00, -90, -90, -90, -90, -90, -90, -90, 00, 00, 10, 10, 10, 10, 10,
+                10, 10, 10, 10, 00, 00, -90, -90, -90, -90, -90, -90, -90, 00, 00, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                10, 10, 00, 00, -90, -90, -90, -90, -90, 00, 00, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 00,
+                00, -90, -90, -90, 00, 00, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 00, 00, -90, 00,
+                00, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 00, 00, 00, 10, 10, 10, 10, 10,
+                10, 10, 10, 10, 00, 10, 10, 10, 10, 10, 10, 10, 10, 10, 00, 10, 10, 10, 10, 10, 10, 10, 10, 10, 00, 00,
+                00, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 00, 00, -90, 00, 00, 10, 10, 10,
+                10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 00, 00, -90, -90, -90, 00, 00, 10, 10, 10, 10, 10, 10,
+                10, 10, 10, 10, 10, 10, 10, 00, 00, -90, -90, -90, -90, -90, 00, 00, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                10, 10, 00, 00, -90, -90, -90, -90, -90, -90, -90, 00, 00, 10, 10, 10, 10, 10 };
+
+        mask.put(0, 0, maskVal);
         return mask;
     }
 
