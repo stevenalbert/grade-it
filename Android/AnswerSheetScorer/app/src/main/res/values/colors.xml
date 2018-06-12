@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#c35c2f</color>
+    <color name="colorPrimaryDark">#c8450b</color>
+    <color name="colorAccent">#ffdc7f</color>
+
+    <color name="app_background">#ffdc7f</color>
+    <color name="main_menu_item">#ffecbc</color>
+    <color name="main_menu_item_content">#b68567</color>
+</resources>
