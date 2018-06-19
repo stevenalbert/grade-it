@@ -1,6 +1,15 @@
 <resources>
     <string name="app_name">Answer Sheet Scorer</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <!-- Home menu item name -->
+    <string name="home">Home</string>
+
+    <!-- Main menu item names -->
+    <string name="mark_answer">Mark Answer</string>
+    <string name="view_marks">View Marks</string>
+    <string name="answer_analysis">Answer Analysis</string>
+
+    <!-- Support menu item names -->
+    <string name="help">Help and Support</string>
+    <string name="about_us">About Us</string>
 </resources>
