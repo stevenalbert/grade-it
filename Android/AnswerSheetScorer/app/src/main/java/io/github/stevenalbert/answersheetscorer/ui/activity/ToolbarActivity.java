@@ -3,7 +3,6 @@ package io.github.stevenalbert.answersheetscorer.ui.activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 
 import io.github.stevenalbert.answersheetscorer.R;
 
@@ -12,9 +11,12 @@ import io.github.stevenalbert.answersheetscorer.R;
  */
 public class ToolbarActivity extends BaseActivity {
 
+    protected Toolbar toolbar;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTheme(R.style.AppTheme_NoActionBar);
     }
 
     /**
@@ -22,7 +24,7 @@ public class ToolbarActivity extends BaseActivity {
      * Called on {@link #onCreate} after {@link #setContentView}
      */
     protected void setupToolbar() {
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
     }
 }

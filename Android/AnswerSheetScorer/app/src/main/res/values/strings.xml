@@ -12,4 +12,8 @@
     <!-- Support menu item names -->
     <string name="help">Help and Support</string>
     <string name="about_us">About Us</string>
+
+    <!-- Drawer description -->
+    <string name="drawer_open">Open drawer</string>
+    <string name="drawer_close">Close drawer</string>
 </resources>
