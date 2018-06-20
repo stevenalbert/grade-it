@@ -13,10 +13,7 @@ import process.AnswerSheetScorer;
 public class Main {
 
     public static final String RES_DIR = "res";
-    // public static final String RES_DIR = "res-ch";
     private static AnswerSheetMetadata metadata = new AnswerSheetMetadata(new File(RES_DIR, "P-40.asmf"));
-    // private static AnswerSheetMetadata metadata = new AnswerSheetMetadata(new
-    // File(RES_DIR, "ans.asmf"));
 
     public static void main(String[] args) {
         // load OpenCV library
@@ -59,7 +56,8 @@ public class Main {
             output.mkdirs();
             File preprocessOutput = new File(output, "0-Preprocess");
             preprocessOutput.mkdirs();
-            Mat process = AnswerSheetScorer.convertAnswerSheet(mat, preprocessOutput, files[i].getName());
+            Mat process = AnswerSheetScorer.convertAnswerSheet(mat, metadata, preprocessOutput, files[i].getName(),
+                    true);
             endTime = System.nanoTime();
             System.out.println("Converting image in " + ((double) (endTime - startTime)) / (double) 1e9);
 
@@ -68,14 +66,14 @@ public class Main {
             System.out.println("Process answer sheet");
             startTime = System.nanoTime();
             ArrayList<AnswerMat> answerMats = AnswerSheetScorer.processAnswerSheet(process, metadata, p,
-                    files[i].getName());
+                    files[i].getName(), true);
             endTime = System.nanoTime();
             System.out.println("Processing answer sheet in " + ((double) (endTime - startTime)) / (double) 1e9);
 
             startTime = System.nanoTime();
             File scoringDirectory = new File(output, "2-Normalization and Detection");
             scoringDirectory.mkdirs();
-            AnswerSheetScorer.scoreAnswerSheet(answerMats, scoringDirectory, "../result.txt");
+            AnswerSheetScorer.scoreAnswerSheet(answerMats, scoringDirectory, "../result.txt", true);
             endTime = System.nanoTime();
             System.out.println("Scoring answer sheet in " + ((double) (endTime - startTime)) / (double) 1e9);
 

@@ -122,6 +122,10 @@ public class AnswerSheetMetadata {
         return values.get(index);
     }
 
+    public PaperDimension getDimension() {
+        return dimension;
+    }
+
     public int getValueLength() {
         return values.size();
     }

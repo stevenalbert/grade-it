@@ -26,6 +26,7 @@ import org.opencv.imgproc.Imgproc;
 
 import model.AnswerMat;
 import model.AnswerSheetMetadata;
+import model.AnswerSheetMetadata.PaperDimension;
 import model.AnswerSheetMetadata.Value;
 import model.Option;
 import model.label.AnswerLabel;
@@ -35,20 +36,6 @@ import model.label.MCodeLabel;
 
 public class AnswerSheetScorer {
 
-    // private static final int PROCESSED_WIDTH = 2033;
-    // private static final int PROCESSED_HEIGHT = 1309;
-    // private static final int PROCESSED_SQUARE_WIDTH = 45;
-    // private static final int PROCESSED_SQUARE_HEIGHT = 40;
-    // private static final int PROCESSED_ANSWER_SQUARE_BORDER = 2;
-    // private static final double PROCESSED_RATIO = 1.25;
-
-    private static final int PROCESSED_WIDTH = 457;
-    private static final int PROCESSED_HEIGHT = 577;
-    private static final int PROCESSED_SQUARE_WIDTH = 16;
-    private static final int PROCESSED_SQUARE_HEIGHT = 16;
-    private static final int PROCESSED_ANSWER_SQUARE_BORDER = 2;
-    private static final double PROCESSED_RATIO = 3;
-
     /**
      * Convert answer sheet photo image to processable answer sheet image
      * 
@@ -56,7 +43,8 @@ public class AnswerSheetScorer {
      *            - answer sheet photo image
      * @return processable answer sheet image
      */
-    public static Mat convertAnswerSheet(Mat src, File file, String fileName) {
+    public static Mat convertAnswerSheet(Mat src, AnswerSheetMetadata metadata, File file, String fileName,
+            boolean debugOutput) {
         // Check whether the argument is valid
         if (src == null) {
             throw new IllegalArgumentException("Argument cannot be null");
@@ -98,11 +86,11 @@ public class AnswerSheetScorer {
         for (int i = 0; i < contours.size(); i++) {
             // approximate contour with accuracy proportional
             // to the contour perimeter
-            Imgproc.approxPolyDP(new MatOfPoint2f(contours.get(i).toArray()), approx, 0.02 * Math.min(PROCESSED_HEIGHT,
-                    PROCESSED_WIDTH)
-                    * PROCESSED_RATIO/*
-                                      * Imgproc.arcLength(new MatOfPoint2f(contours.get(i).toArray()), true) * 0.005
-                                      */, true);
+            Imgproc.approxPolyDP(new MatOfPoint2f(contours.get(i).toArray()), approx,
+                    0.02 * Math.min(metadata.getDimension().height, metadata.getDimension().width)
+                    /*
+                     * Imgproc.arcLength(new MatOfPoint2f(contours.get(i).toArray()), true) * 0.005
+                     */, true);
 
             // Note: absolute value of an area is used because
             // area may be positive or negative - in accordance with the
@@ -135,10 +123,13 @@ public class AnswerSheetScorer {
             return null;
         System.out.println("Draw second max area square");
         int idx = (secondMaxIdx > -1 ? secondMaxIdx : (maxIdx > -1 ? maxIdx : -1));
-        Mat drawSquareMat = new Mat(result, Range.all());
-        Imgproc.cvtColor(drawSquareMat, drawSquareMat, Imgproc.COLOR_GRAY2RGB);
-        Imgproc.drawContours(drawSquareMat, squares, idx, new Scalar(0, 0, 255), 3);
-        Imgcodecs.imwrite(new File(file, (counter++) + "-bw-getsquare.jpg").getAbsolutePath(), drawSquareMat);
+
+        if (debugOutput) {
+            Mat drawSquareMat = new Mat(result, Range.all());
+            Imgproc.cvtColor(drawSquareMat, drawSquareMat, Imgproc.COLOR_GRAY2RGB);
+            Imgproc.drawContours(drawSquareMat, squares, idx, new Scalar(0, 0, 255), 3);
+            Imgcodecs.imwrite(new File(file, (counter++) + "-bw-getsquare.jpg").getAbsolutePath(), drawSquareMat);
+        }
 
         // Find sorted 4 points : top left, top right, bottom right, bottom left
         Point[] points = squares.get(idx).toArray();
@@ -180,8 +171,8 @@ public class AnswerSheetScorer {
         }
 
         int perspectiveWidth, perspectiveHeight;
-        perspectiveHeight = (int) Math.round(PROCESSED_HEIGHT * PROCESSED_RATIO);
-        perspectiveWidth = (int) Math.round(PROCESSED_WIDTH * PROCESSED_RATIO);
+        perspectiveHeight = metadata.getDimension().height;
+        perspectiveWidth = metadata.getDimension().width;
         System.out.println("Start perspective transform");
         Mat perspective = new Mat(perspectiveHeight, perspectiveWidth, src.type());
         MatOfPoint2f srcPoints = new MatOfPoint2f(topLeftPoint, topRightPoint, bottomRightPoint, bottomLeftPoint);
@@ -192,7 +183,9 @@ public class AnswerSheetScorer {
         Imgproc.warpPerspective(result, perspective, transform, new Size(perspective.cols(), perspective.rows()));
         Imgproc.adaptiveThreshold(perspective, perspective, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
                 Imgproc.THRESH_BINARY, blockSize, C);
-        Imgcodecs.imwrite(new File(file, (counter++) + "-transform.jpg").getAbsolutePath(), perspective);
+
+        if (debugOutput)
+            Imgcodecs.imwrite(new File(file, (counter++) + "-transform.jpg").getAbsolutePath(), perspective);
 
         return perspective;
     }
@@ -205,7 +198,7 @@ public class AnswerSheetScorer {
      * @return
      */
     public static ArrayList<AnswerMat> processAnswerSheet(Mat src, AnswerSheetMetadata metadata, File file,
-            String fileName) {
+            String fileName, boolean debugOutput) {
         // Check whether the argument is valid
         if (src == null)
             throw new IllegalArgumentException("Argument src cannot be null");
@@ -230,7 +223,7 @@ public class AnswerSheetScorer {
         // Find the fit squares
         ArrayList<MatOfPoint> squares = new ArrayList<>();
         MatOfPoint2f approx = new MatOfPoint2f();
-        int area = (int) (PROCESSED_SQUARE_HEIGHT * PROCESSED_SQUARE_WIDTH * PROCESSED_RATIO * PROCESSED_RATIO);
+        int area = (int) (metadata.getDimension().squareHeight * metadata.getDimension().squareWidth);
         for (int i = 0; i < contours.size(); i++) {
             // approximate contour with accuracy proportional
             // to the contour perimeter
@@ -263,10 +256,13 @@ public class AnswerSheetScorer {
             if (percentage > 0.8) {
                 blackSquaresRect.add(rect);
                 // DEBUG OUTPUT
-                MatOfPoint matOfPoint = new MatOfPoint(new Point(rect.x, rect.y),
-                        new Point(rect.x + rect.width, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),
-                        new Point(rect.x, rect.y + rect.height));
-                Imgproc.drawContours(res, Arrays.asList(matOfPoint), 0, new Scalar(0, 255, 0), 3);
+                if (debugOutput) {
+                    MatOfPoint matOfPoint = new MatOfPoint(new Point(rect.x, rect.y),
+                            new Point(rect.x + rect.width, rect.y),
+                            new Point(rect.x + rect.width, rect.y + rect.height),
+                            new Point(rect.x, rect.y + rect.height));
+                    Imgproc.drawContours(res, Arrays.asList(matOfPoint), 0, new Scalar(0, 255, 0), 3);
+                }
             }
         }
 
@@ -274,9 +270,11 @@ public class AnswerSheetScorer {
         // Imgcodecs.imwrite(new File(file, "1-contour.jpg").getAbsolutePath(), res);
 
         if (blackSquaresRect.size() == 0) {
-            Imgproc.drawContours(res, contours, -1, new Scalar(0, 255, 255), 3);
-            Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-1-contour.jpg")
-                    .getAbsolutePath(), res);
+            if (debugOutput) {
+                Imgproc.drawContours(res, contours, -1, new Scalar(0, 255, 255), 3);
+                Imgcodecs.imwrite(new File(file, fileName.substring(0, fileName.lastIndexOf('.')) + "-fail-contour.jpg")
+                        .getAbsolutePath(), res);
+            }
             throw new RuntimeException("Black squares found is 0 from " + contours.size() + " contours.");
         }
 
@@ -286,14 +284,6 @@ public class AnswerSheetScorer {
         int mostBottomBlackSquareIndex = 0;
         ArrayList<Rect> verticalSquares = new ArrayList<>();
         ArrayList<Rect> horizontalSquares = new ArrayList<>();
-
-        // RESET MAT DEBUG
-        for (int i = 0; i < src.rows(); i++) {
-            for (int j = 0; j < src.cols(); j++) {
-                double data = src.get(i, j)[0];
-                res.put(i, j, data, data, data);
-            }
-        }
 
         // Find anchor
         for (int i = 1; i < blackSquaresRect.size(); i++) {
@@ -320,31 +310,40 @@ public class AnswerSheetScorer {
             }
         }
 
-        // Draw contour of horizontal and vertical squares
-        final int RADIUS = 4;
-        for (int i = 0; i < verticalSquares.size(); i++) {
-            Rect rect = verticalSquares.get(i);
-            drawContour(res, rect, new Scalar(0, 0, 255), 3);
+        // RESET MAT DEBUG
+        if (debugOutput) {
+            for (int i = 0; i < src.rows(); i++) {
+                for (int j = 0; j < src.cols(); j++) {
+                    double data = src.get(i, j)[0];
+                    res.put(i, j, data, data, data);
+                }
+            }
 
-            Point centerOfRect = getCenter(rect);
-            for (int x = (int) centerOfRect.x - RADIUS; x <= (int) centerOfRect.x + RADIUS; x++) {
-                for (int y = (int) centerOfRect.y - RADIUS; y <= (int) centerOfRect.y + RADIUS; y++) {
-                    res.put(y, x, 0, 0, 255);
+            // Draw contour of horizontal and vertical squares
+            final int RADIUS = 4;
+            for (int i = 0; i < verticalSquares.size(); i++) {
+                Rect rect = verticalSquares.get(i);
+                drawContour(res, rect, new Scalar(0, 0, 255), 3);
+
+                Point centerOfRect = getCenter(rect);
+                for (int x = (int) centerOfRect.x - RADIUS; x <= (int) centerOfRect.x + RADIUS; x++) {
+                    for (int y = (int) centerOfRect.y - RADIUS; y <= (int) centerOfRect.y + RADIUS; y++) {
+                        res.put(y, x, 0, 0, 255);
+                    }
+                }
+            }
+            for (int i = 0; i < horizontalSquares.size(); i++) {
+                Rect rect = horizontalSquares.get(i);
+                drawContour(res, rect, new Scalar(255, 255, 0), 3);
+
+                Point centerOfRect = getCenter(rect);
+                for (int x = (int) centerOfRect.x - RADIUS; x <= (int) centerOfRect.x + RADIUS; x++) {
+                    for (int y = (int) centerOfRect.y - RADIUS; y <= (int) centerOfRect.y + RADIUS; y++) {
+                        res.put(y, x, 255, 255, 0);
+                    }
                 }
             }
         }
-        for (int i = 0; i < horizontalSquares.size(); i++) {
-            Rect rect = horizontalSquares.get(i);
-            drawContour(res, rect, new Scalar(255, 255, 0), 3);
-
-            Point centerOfRect = getCenter(rect);
-            for (int x = (int) centerOfRect.x - RADIUS; x <= (int) centerOfRect.x + RADIUS; x++) {
-                for (int y = (int) centerOfRect.y - RADIUS; y <= (int) centerOfRect.y + RADIUS; y++) {
-                    res.put(y, x, 255, 255, 0);
-                }
-            }
-        }
-
         Collections.sort(verticalSquares, new Comparator<Rect>() {
             @Override
             public int compare(Rect o1, Rect o2) {
@@ -373,27 +372,17 @@ public class AnswerSheetScorer {
         averageWidth /= horizontalSquares.size();
         averageWidth = averageWidth * 95 / 100;
 
-        /*
-         * // ANSWER SHEET TYPE P-40 int[] blackSquareVerticalIndices = new int[] { 0,
-         * 1, 0, 1, 0, 1, 2, 3, 2, 3, 2, 3 }; int[] blackSquareHorizontalIndices = new
-         * int[] { 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5 }; int[] segmentNumberColumns =
-         * new int[] { 3, 5, 5, 3, 5, 5 }; int[] segmentNumberRows = new int[] { 10, 10,
-         * 10, 10, 10, 10 }; // char[] groupIn = new char[] {'V', 'H', 'H', 'V', 'H',
-         * 'H'}; // For grouping // by horizontal line or vertical line String[] label =
-         * new String[] { "ExCode", "Answer", "Answer", "MCode", "Answer", "Answer" };
-         * int[] startFrom = new int[] { 0, 1, 11, 0, 21, 31 }; int[] ext = new int[] {
-         * '1', 'A', 'A', '1', 'A', 'A' };
-         */
-
         // Create debug folder
         File folder = new File(file, "Content");
-        folder.mkdirs();
+
+        if (debugOutput)
+            folder.mkdirs();
 
         ArrayList<AnswerMat> answerMats = new ArrayList<>();
-        // Get all rectangles using metadata
+        // Get all rectangles using meta data
         for (int i = 0; i < metadata.getValueLength(); i++) {
             answerMats.addAll(findAllRect(src, res, verticalSquares, horizontalSquares, metadata.getValue(i),
-                    averageWidth, averageHeight, folder));
+                    averageWidth, averageHeight, metadata.getDimension()));
         }
 
         // Filter Noise AnswerMat
@@ -404,28 +393,31 @@ public class AnswerSheetScorer {
             Scalar blackScalar = new Scalar(0);
             for (MatOfPoint contour : answerMatContours) {
                 Rect contourRect = Imgproc.boundingRect(contour);
-                if (contourRect.area() < area / 4) {
+                if (contourRect.area() < area / 10) {
                     Imgproc.drawContours(answerMat, Arrays.asList(contour), 0, blackScalar, Core.FILLED);
                 }
             }
         }
 
         // Write to file for debug
-        for (AnswerMat answerMat : answerMats) {
-            StringBuilder builder = new StringBuilder();
-            builder.append(answerMat.getLabel().toString());
-            Mat outputAnswerMat = new Mat(answerMat.rows(), answerMat.cols(), answerMat.type());
-            Core.bitwise_not(answerMat, outputAnswerMat);
-            Imgcodecs.imwrite(new File(folder, answerMat.getLabel().toString() + "-content.jpg").getAbsolutePath(),
-                    outputAnswerMat);
+        if (debugOutput) {
+            for (AnswerMat answerMat : answerMats) {
+                StringBuilder builder = new StringBuilder();
+                builder.append(answerMat.getLabel().toString());
+                Mat outputAnswerMat = new Mat(answerMat.rows(), answerMat.cols(), answerMat.type());
+                Core.bitwise_not(answerMat, outputAnswerMat);
+                Imgcodecs.imwrite(new File(folder, answerMat.getLabel().toString() + "-content.jpg").getAbsolutePath(),
+                        outputAnswerMat);
+            }
+            Imgcodecs.imwrite(new File(file, "overall-content.jpg").getAbsolutePath(), res);
         }
-        Imgcodecs.imwrite(new File(file, "overall-content.jpg").getAbsolutePath(), res);
         // End draw
         Collections.sort(answerMats);
         return answerMats;
     }
 
-    public static void scoreAnswerSheet(ArrayList<AnswerMat> answerMats, File outputDir, String filename) {
+    public static void scoreAnswerSheet(ArrayList<AnswerMat> answerMats, File outputDir, String filename,
+            boolean debugOutput) {
         PrintWriter printWriter = null;
         try {
             File file = new File(outputDir, filename);
@@ -444,8 +436,8 @@ public class AnswerSheetScorer {
             int value = (int) FeatureExtractor.getFeatureX(answerMat,
                     outputDir.getAbsolutePath() + "/" + builder.toString());
             builder.append("\t");
-            double zVal = BigDecimal.valueOf((double) value / 2970.0).round(new MathContext(3)).doubleValue();
-            final double zThreshold = 0.350;
+            double zVal = BigDecimal.valueOf((double) value / 850.0).round(new MathContext(3)).doubleValue();
+            final double zThreshold = 0.24;
             builder.append(String.format("\t%f\t%s", zVal, (zVal >= zThreshold ? "1" : "0")));
             printWriter.println(builder.toString());
             printWriter.flush();
@@ -459,18 +451,18 @@ public class AnswerSheetScorer {
     }
 
     private static ArrayList<AnswerMat> findAllRect(Mat src, Mat drawOn, ArrayList<Rect> vertical,
-            ArrayList<Rect> horizontal, Value metadataValue, int averageWidth, int averageHeight, File folder) {
+            ArrayList<Rect> horizontal, Value metadataValue, int width, int height, PaperDimension paperDimension) {
         return findAllRect(src, drawOn, vertical.get(metadataValue.startVerticalIndex),
                 vertical.get(metadataValue.endVerticalIndex), horizontal.get(metadataValue.startHorizontalIndex),
                 horizontal.get(metadataValue.endHorizontalIndex), metadataValue.rowCount, metadataValue.columnCount,
-                averageWidth, averageHeight, folder, metadataValue.label, metadataValue.startRowInteger,
-                metadataValue.startColumnChar);
+                width, height, metadataValue.label, metadataValue.startRowInteger, metadataValue.startColumnChar,
+                paperDimension);
     }
 
     private static ArrayList<AnswerMat> findAllRect(Mat src, Mat drawOn, Rect firstVerticalRect,
             Rect secondVerticalRect, Rect firstHorizontalRect, Rect secondHorizontalRect, int numberOfRows,
-            int numberOfCols, int averageWidth, int averageHeight, File folder, String firstname, int firstExt,
-            int secondExt) {
+            int numberOfCols, int averageWidth, int averageHeight, String firstname, int firstExt, int secondExt,
+            PaperDimension paperDimension) {
         final int RADIUS = 4;
         ArrayList<AnswerMat> answerMats = new ArrayList<>();
         Point centerStartVerticalPoint = getCenter(firstVerticalRect);
@@ -489,7 +481,7 @@ public class AnswerSheetScorer {
                     }
                 }
                 Mat mat = findSquareFromCenter(src, drawOn, (int) Math.round(startCenterX),
-                        (int) Math.round(startCenterY), averageWidth, averageHeight, folder,
+                        (int) Math.round(startCenterY), averageWidth, averageHeight, paperDimension,
                         firstname + "-" + String.valueOf(firstExt + i) + "-" + (char) (secondExt + j));
 
                 AnswerSheetLabel label = null;
@@ -507,8 +499,8 @@ public class AnswerSheetScorer {
         return answerMats;
     }
 
-    private static Mat findSquareFromCenter(Mat src, Mat drawOn, int x, int y, int predictedWidth, int predictedHeight,
-            File directory, String filename) {
+    private static Mat findSquareFromCenter(Mat src, Mat drawOn, int x, int y, int width, int height,
+            PaperDimension dimension, String filename) {
         Point currentCenter = new Point(x, y);
 
         /*
@@ -516,22 +508,26 @@ public class AnswerSheetScorer {
          * ERROR_RATE_SCALE)
          */
         // Get the smallest possible rectangle to determine the questioned rectangle
-        int width, height;
         final double ERROR_RATE_SCALE = 1.5;
-        width = (int) Math.round(predictedWidth * ERROR_RATE_SCALE);
-        height = (int) Math.round(predictedHeight * ERROR_RATE_SCALE);
-        Rect currentRect = new Rect(new Point(currentCenter.x - width / 2, currentCenter.y - height / 2),
-                new Size(width, height));
+        int overscaleWidth = (int) Math.round(width * ERROR_RATE_SCALE);
+        int overscaleHeight = (int) Math.round(height * ERROR_RATE_SCALE);
+        Rect currentRect = new Rect(
+                new Point(currentCenter.x - overscaleWidth / 2, currentCenter.y - overscaleHeight / 2),
+                new Size(overscaleWidth, overscaleHeight));
         Mat square = src.submat(currentRect);
         Mat sqDrawOn = drawOn.submat(currentRect);
 
         // Find the most fit rectangle
-        Point rectStartPoint = findMostFitRect(square, predictedWidth, predictedHeight,
-                (int) Math.floor(PROCESSED_ANSWER_SQUARE_BORDER * PROCESSED_RATIO));
-        currentRect = new Rect(rectStartPoint, new Size(predictedWidth, predictedHeight));
+        Point rectStartPoint = findMostFitRect(square, width, height, dimension.squareAnswerBorder);
+        currentRect = new Rect(rectStartPoint, new Size(width, height));
         drawContour(sqDrawOn, currentRect, new Scalar(0, 255, 0), 2);
-        currentRect = scaleRectOnCenter(currentRect, 1 - 2.5 * (double) PROCESSED_ANSWER_SQUARE_BORDER
-                / (double) Math.min(PROCESSED_SQUARE_HEIGHT, PROCESSED_SQUARE_WIDTH));
+        /*
+         * currentRect = scaleRectOnCenter(currentRect, 1 - 2.5 * (double)
+         * dimension.squareAnswerBorder / (double) Math.min(width, height));
+         */
+        currentRect = new Rect((int) (rectStartPoint.x + dimension.squareAnswerBorder),
+                (int) (rectStartPoint.y + dimension.squareAnswerBorder), width - 2 * dimension.squareAnswerBorder,
+                height - 2 * dimension.squareAnswerBorder);
         drawContour(sqDrawOn, currentRect, new Scalar(255, 0, 255), 2);
         // Imgcodecs.imwrite(new File(directory, filename + ".jpg").getAbsolutePath(),
         // sqDrawOn);

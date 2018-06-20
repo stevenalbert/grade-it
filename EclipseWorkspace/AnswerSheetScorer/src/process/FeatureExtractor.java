@@ -43,8 +43,8 @@ public class FeatureExtractor {
 
     private static final float E_NORM = 0.01f;
 
-    // private static final int X_NORM_SIZE = 11;
-    private static final int X_NORM_SIZE = 21;
+    private static final int X_NORM_SIZE = 11;
+    // private static final int X_NORM_SIZE = 21;
 
     /**
      * Concatenate the given Mat object into a column vector of type double
@@ -576,8 +576,8 @@ public class FeatureExtractor {
         // masking to find the result of convolution with X-mask
         // =====================================================
         // create the mask, then dot the features
-        // Mat mask = createMaskX11();
-        Mat mask = createMaskX21();
+        Mat mask = createMaskX11();
+        // Mat mask = createMaskX21();
         imgShifted.convertTo(imgShifted, CvType.CV_8SC1);
         double result = imgShifted.dot(mask);
 
