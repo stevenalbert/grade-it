@@ -1,4 +1,6 @@
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -6,8 +8,11 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 
+import model.Answer;
 import model.AnswerMat;
+import model.AnswerSheet;
 import model.AnswerSheetMetadata;
+import model.Option;
 import process.AnswerSheetScorer;
 
 public class Main {
@@ -21,9 +26,9 @@ public class Main {
 
         // read directory
         File resDirectory = new File(RES_DIR);
-        File ansSheetDirectory = new File(resDirectory, "AnsSheet");
+        File ansSheetDirectory = new File(resDirectory, "AnsSheet-latest");
         Calendar calendar = Calendar.getInstance();
-        StringBuilder folderName = new StringBuilder("Processed_R_");
+        StringBuilder folderName = new StringBuilder("Processed_");
         folderName.append(String.valueOf(calendar.get(Calendar.MONTH) + 1) + "-");
         folderName.append(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)) + "-");
         folderName.append(String.valueOf(calendar.get(Calendar.YEAR)));
@@ -73,9 +78,36 @@ public class Main {
             startTime = System.nanoTime();
             File scoringDirectory = new File(output, "2-Normalization and Detection");
             scoringDirectory.mkdirs();
-            AnswerSheetScorer.scoreAnswerSheet(answerMats, scoringDirectory, "../result.txt", true);
+            AnswerSheet answerSheet = AnswerSheetScorer.scoreAnswerSheet(answerMats, scoringDirectory, "../result.txt",
+                    true);
             endTime = System.nanoTime();
             System.out.println("Scoring answer sheet in " + ((double) (endTime - startTime)) / (double) 1e9);
+
+            File recognitionResult = new File(output, "recognition_result.txt");
+            try {
+                recognitionResult.createNewFile();
+                PrintWriter pw = new PrintWriter(recognitionResult);
+
+                pw.println("EXCode = " + answerSheet.getExCode());
+                pw.println("MCode = " + answerSheet.getMCode());
+                pw.println();
+                pw.flush();
+
+                Option[] options = Option.values();
+                for (int number = 1; number <= answerSheet.getTotalAnswer(); number++) {
+                    Answer answer = answerSheet.getAnswerOn(number);
+                    pw.print(number + "\t");
+                    for (Option option : options) {
+                        pw.print((answer.isOptionChosen(option) ? 1 : 0) + " ");
+                    }
+                    pw.println();
+                    pw.flush();
+                }
+
+                pw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             System.out.println("File " + files[i].getName() + " is processed.");
         }

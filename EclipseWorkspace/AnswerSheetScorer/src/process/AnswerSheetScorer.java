@@ -25,6 +25,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import model.AnswerMat;
+import model.AnswerSheet;
 import model.AnswerSheetMetadata;
 import model.AnswerSheetMetadata.PaperDimension;
 import model.AnswerSheetMetadata.Value;
@@ -459,8 +460,13 @@ public class AnswerSheetScorer {
         return answerMats;
     }
 
-    public static void scoreAnswerSheet(ArrayList<AnswerMat> answerMats, File outputDir, String filename,
+    public static AnswerSheet scoreAnswerSheet(ArrayList<AnswerMat> answerMats, File outputDir, String filename,
             boolean debugOutput) {
+        final int TOTAL_ANSWER = 40;
+        AnswerSheet answerSheet = new AnswerSheet(TOTAL_ANSWER);
+        StringBuilder mCode = new StringBuilder("000");
+        StringBuilder exCode = new StringBuilder("000");
+
         PrintWriter printWriter = null;
         try {
             File file = new File(outputDir, filename);
@@ -481,16 +487,41 @@ public class AnswerSheetScorer {
             builder.append("\t");
             double zVal = BigDecimal.valueOf((double) value / 57.0).round(new MathContext(3)).doubleValue();
             final double zThreshold = 16.0 / 57.0;
-            builder.append(String.format("\t%f\t%s", zVal, (zVal >= zThreshold ? "1" : "0")));
+            boolean isX = (zVal >= zThreshold);
+            builder.append(String.format("\t%f\t%s", zVal, (isX ? "1" : "0")));
             printWriter.println(builder.toString());
             printWriter.flush();
+
+            AnswerSheetLabel label = answerMat.getLabel();
+            if (label instanceof AnswerLabel) {
+                AnswerLabel answerLabel = (AnswerLabel) label;
+                // Set true if the X is recognized, otherwise false.
+                answerSheet.setAnswerOn(answerLabel.getNumber(), answerLabel.getOption(), isX);
+            } else if (label instanceof ExCodeLabel) {
+                ExCodeLabel exCodeLabel = (ExCodeLabel) label;
+                // Change the value if it recognized as X
+                if (isX)
+                    exCode.setCharAt(exCodeLabel.getColumnNumber(), (char) (exCodeLabel.getValue() + '0'));
+            } else if (label instanceof MCodeLabel) {
+                MCodeLabel mCodeLabel = (MCodeLabel) label;
+                // Change the value if it recognized as X
+                if (isX)
+                    mCode.setCharAt(mCodeLabel.getColumnNumber(), (char) (mCodeLabel.getValue() + '0'));
+            }
+
             if (++i == 5) {
                 printWriter.println();
                 i = 0;
             }
         }
 
+        // Set ExCode and MCode
+        answerSheet.setExCode(exCode.toString());
+        answerSheet.setMCode(mCode.toString());
+
         printWriter.close();
+
+        return answerSheet;
     }
 
     private static ArrayList<AnswerMat> findAllRect(Mat src, Mat drawOn, ArrayList<Rect> vertical,
@@ -576,14 +607,6 @@ public class AnswerSheetScorer {
         // sqDrawOn);
 
         return square.submat(currentRect).clone();
-    }
-
-    private static Rect scaleRectOnCenter(Rect rect, double scale) {
-        int newWidth = (int) Math.round(rect.width * scale);
-        int newHeight = (int) Math.round(rect.height * scale);
-        int newX = rect.x + (int) (rect.width * (1 - scale) / 2);
-        int newY = rect.y + (int) (rect.height * (1 - scale) / 2);
-        return new Rect(newX, newY, newWidth, newHeight);
     }
 
     private static Point findMostFitRect(Mat mat, int width, int height, int insideBorderThickness) {

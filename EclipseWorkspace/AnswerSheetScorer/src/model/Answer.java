@@ -1,69 +1,33 @@
 package model;
 
-import java.util.ArrayList;
+import java.util.EnumMap;
 
 public class Answer {
 
-    private Option chosenOption;
-    private ArrayList<Option> cancelledOptions;
+    private EnumMap<Option, Boolean> isChosen;
 
-    public Answer(Option chosenOption) {
-        this(chosenOption, null);
+    public Answer() {
+        isChosen = new EnumMap<Option, Boolean>(Option.class);
     }
 
-    public Answer(Option chosenOption, ArrayList<Option> cancelledOptions) {
-        setChosenOptions(chosenOption);
-        setCancelledOptions(cancelledOptions);
+    public void setOptionChosen(Option option, boolean value) {
+        isChosen.put(option, value);
     }
 
-    private void setCancelledOptions(ArrayList<Option> cancelledOptions) {
-        this.cancelledOptions = (cancelledOptions == null ? new ArrayList<>() : cancelledOptions);
-    }
-
-    private void setChosenOptions(Option chosenOption) {
-        if (this.chosenOption != null && chosenOption != null && !this.chosenOption.equals(chosenOption))
-            addCancelledOption(this.chosenOption);
-        this.chosenOption = chosenOption;
-    }
-
-    public void addCancelledOption(Option cancelledOption) {
-        if (this.chosenOption.equals(cancelledOption))
-            setChosenOptions(null);
-        if (!this.cancelledOptions.contains(cancelledOption))
-            this.cancelledOptions.add(cancelledOption);
-    }
-
-    public Option getChosenOption() {
-        return this.chosenOption;
-    }
-
-    public ArrayList<Option> getCancelledOptions() {
-        return new ArrayList<>(this.cancelledOptions);
-    }
-
-    public boolean hasChosenOption() {
-        return this.chosenOption != null;
-    }
-
-    public boolean isChosenOptionEquals(Answer answer) {
-        if (answer != null && this.hasChosenOption() && answer.hasChosenOption())
-            return this.chosenOption.equals(answer.getChosenOption());
-        else
-            return false;
-    }
-
-    public boolean isCancelledOptionsEquals(Answer answer) {
-        if (answer != null && this.cancelledOptions != null)
-            return this.cancelledOptions.equals(answer.getCancelledOptions());
-        else
-            return false;
+    public boolean isOptionChosen(Option option) {
+        return isChosen.get(option);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Answer) {
             Answer answer = (Answer) obj;
-            return this.isChosenOptionEquals(answer) && isCancelledOptionsEquals(answer);
+            Option[] options = Option.values();
+            for (Option option : options) {
+                if (isChosen.get(option) != answer.isChosen.get(option))
+                    return false;
+            }
+            return true;
         }
         return false;
     }
