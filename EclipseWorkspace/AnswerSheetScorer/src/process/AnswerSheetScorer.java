@@ -170,6 +170,8 @@ public class AnswerSheetScorer {
             bottomRightPoint = points[bottomIdx[0]];
         }
 
+        assert topLeftPoint != null && topRightPoint != null && bottomLeftPoint != null && bottomRightPoint != null;
+
         int perspectiveWidth, perspectiveHeight;
         perspectiveHeight = metadata.getDimension().height;
         perspectiveWidth = metadata.getDimension().width;
@@ -343,6 +345,7 @@ public class AnswerSheetScorer {
                     }
                 }
             }
+            Imgcodecs.imwrite(new File(file, "squares.jpg").getAbsolutePath(), res);
         }
         Collections.sort(verticalSquares, new Comparator<Rect>() {
             @Override
@@ -408,7 +411,47 @@ public class AnswerSheetScorer {
                 Core.bitwise_not(answerMat, outputAnswerMat);
                 Imgcodecs.imwrite(new File(folder, answerMat.getLabel().toString() + "-content.jpg").getAbsolutePath(),
                         outputAnswerMat);
-            }
+                /*
+                 * // calculate the moment of the original image Mat tempIn = new
+                 * Mat(outputAnswerMat.rows(), outputAnswerMat.cols(), CvType.CV_32FC3); for
+                 * (int i = 0; i < outputAnswerMat.rows(); i++) { for (int j = 0; j <
+                 * outputAnswerMat.cols(); j++) { tempIn.put(i, j, new double[] {
+                 * outputAnswerMat.get(i, j)[0], outputAnswerMat.get(i, j)[0],
+                 * outputAnswerMat.get(i, j)[0] }); } } Moments moments =
+                 * Imgproc.moments(answerMat, true); double centerXOri = moments.m10 /
+                 * moments.m00; double centerYOri = moments.m01 / moments.m00; double miu20 =
+                 * Math.sqrt(moments.mu20 / moments.m00); double miu02 = Math.sqrt(moments.mu02
+                 * / moments.m00);
+                 * 
+                 * // expand/trim the dimension of the original image using moment (the start
+                 * index // is inclusive while the end is exclusive) int startingOriRowIndex =
+                 * (int) Math.floor(centerYOri - 2 * miu02), startingOriColIndex = (int)
+                 * Math.floor(centerXOri - 2 * miu20); int endOriRowIndex = (int)
+                 * Math.floor(centerYOri + 2 * miu02), endOriColIndex = (int)
+                 * Math.floor(centerXOri + 2 * miu20); MatOfPoint matOfPoint = new
+                 * MatOfPoint(new Point(startingOriColIndex, startingOriRowIndex), new
+                 * Point(startingOriColIndex, endOriRowIndex), new Point(endOriColIndex,
+                 * endOriRowIndex), new Point(endOriColIndex, startingOriRowIndex));
+                 * Imgproc.drawContours(tempIn, Arrays.asList(matOfPoint), 0, new Scalar(255, 0,
+                 * 255), 3);
+                 * 
+                 * for (int i = (int) centerXOri - 1; i <= (int) centerXOri + 1; i++) { for (int
+                 * j = (int) centerYOri - 1; j <= (int) centerYOri + 1; j++) { tempIn.put(j, i,
+                 * 0, 255, 0); } }
+                 * 
+                 * Imgcodecs.imwrite(new File(folder, answerMat.getLabel().toString() +
+                 * "-cropped.jpg").getAbsolutePath(), tempIn);
+                 * 
+                 * Mat object = new Mat(endOriRowIndex - startingOriRowIndex, endOriColIndex -
+                 * startingOriColIndex, CvType.CV_32FC1); for (int i = startingOriRowIndex; i <
+                 * endOriRowIndex; i++) { for (int j = startingOriColIndex; j < endOriColIndex;
+                 * j++) { if (i < 0 || i >= answerMat.rows() || j < 0 || j >= answerMat.cols())
+                 * { object.put(i - startingOriRowIndex, j - startingOriColIndex, 0); } else
+                 * object.put(i - startingOriRowIndex, j - startingOriColIndex, answerMat.get(i,
+                 * j)[0]); } } Imgcodecs.imwrite( new File(folder,
+                 * answerMat.getLabel().toString() + "-cropped-res.jpg").getAbsolutePath(),
+                 * object);
+                 */ }
             Imgcodecs.imwrite(new File(file, "overall-content.jpg").getAbsolutePath(), res);
         }
         // End draw
@@ -436,8 +479,8 @@ public class AnswerSheetScorer {
             int value = (int) FeatureExtractor.getFeatureX(answerMat,
                     outputDir.getAbsolutePath() + "/" + builder.toString());
             builder.append("\t");
-            double zVal = BigDecimal.valueOf((double) value / 850.0).round(new MathContext(3)).doubleValue();
-            final double zThreshold = 0.24;
+            double zVal = BigDecimal.valueOf((double) value / 57.0).round(new MathContext(3)).doubleValue();
+            final double zThreshold = 16.0 / 57.0;
             builder.append(String.format("\t%f\t%s", zVal, (zVal >= zThreshold ? "1" : "0")));
             printWriter.println(builder.toString());
             printWriter.flush();

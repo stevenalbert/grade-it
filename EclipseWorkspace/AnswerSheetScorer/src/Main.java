@@ -23,7 +23,7 @@ public class Main {
         File resDirectory = new File(RES_DIR);
         File ansSheetDirectory = new File(resDirectory, "AnsSheet");
         Calendar calendar = Calendar.getInstance();
-        StringBuilder folderName = new StringBuilder("Processed_");
+        StringBuilder folderName = new StringBuilder("Processed_R_");
         folderName.append(String.valueOf(calendar.get(Calendar.MONTH) + 1) + "-");
         folderName.append(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)) + "-");
         folderName.append(String.valueOf(calendar.get(Calendar.YEAR)));
@@ -39,7 +39,7 @@ public class Main {
             return;
         File[] files = directory.listFiles();
         for (int i = 0; i < files.length; i++) {
-            if (files[i].isDirectory()) {
+            if (files[i].isDirectory() || !files[i].getName().endsWith(".jpg")) {
                 /*
                  * File newOutputDirectory = new File(outputDirectory, files[i].getName());
                  * newOutputDirectory.mkdirs(); processDirectory(files[i], newOutputDirectory);
