@@ -5,15 +5,21 @@
     <string name="home">Home</string>
 
     <!-- Main menu item names -->
-    <string name="mark_answer">Mark Answer</string>
+    <string name="mark_answer_title">Get Mark</string>
+    <string name="view_marks_title">View Marks</string>
+    <string name="answer_analysis_title">Analysis</string>
+
+    <string name="mark_answer">Mark your answer sheet</string>
     <string name="view_marks">View Marks</string>
     <string name="answer_analysis">Answer Analysis</string>
 
     <!-- Support menu item names -->
-    <string name="help">Help and Support</string>
-    <string name="about_us">About Us</string>
+    <string name="help">Help</string>
+    <string name="about_us">About us</string>
 
-    <!-- Drawer description -->
-    <string name="drawer_open">Open drawer</string>
-    <string name="drawer_close">Close drawer</string>
+    <string name="photo">Take photo</string>
+    <string name="gallery">From gallery</string>
+    <string name="download_answer_sheet">Download answer sheet</string>
+    <string name="no_answer_sheet_que">Don\'t have answer sheet?</string>
+
 </resources>

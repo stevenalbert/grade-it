@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/mark_answer"
+        android:title="@string/mark_answer"
+        android:icon="@drawable/ic_camera_black"/>
+    <item android:id="@+id/view_marks"
+        android:title="@string/view_marks"
+        android:icon="@drawable/ic_folder_black"/>
+    <item android:id="@+id/answer_analysis"
+        android:title="@string/answer_analysis"
+        android:icon="@drawable/ic_show_chart_black"/>
+</menu>
