@@ -39,4 +39,7 @@ dependencies {
 
     /* Design support library */
     implementation "com.android.support:design:$support_version"
+
+    /* ExifInterface support library*/
+    implementation "com.android.support:exifinterface:$support_version"
 }

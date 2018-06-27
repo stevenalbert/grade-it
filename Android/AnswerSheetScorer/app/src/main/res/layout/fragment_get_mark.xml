@@ -38,14 +38,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/photo"
-            style="@style/MainMenuButton"
+            style="@style/AppTheme.Button.MenuButton"
             android:drawableLeft="@drawable/ic_photo_camera_black"/>
 
         <Button android:id="@+id/gallery"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/gallery"
-            style="@style/MainMenuButton"
+            style="@style/AppTheme.Button.MenuButton"
             android:drawableLeft="@drawable/ic_image_black"/>
 
     </LinearLayout>
@@ -66,7 +66,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:text="@string/download_answer_sheet"
-        style="@style/MainMenuButton"
+        style="@style/AppTheme.Button.MenuButton"
         android:drawableLeft="@drawable/ic_file_download_black"/>
 
 </android.support.constraint.ConstraintLayout>

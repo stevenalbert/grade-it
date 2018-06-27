@@ -8,22 +8,30 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <!-- Splash theme -->
+    <style name="AppTheme.Splash">
+        <item name="android:windowBackground">@color/colorPrimary</item>
+    </style>
+
     <!-- No action bar theme -->
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
-    <!-- Main menu button style -->
-    <style name="MainMenuButton" parent="Base.Widget.AppCompat.Button">
+    <!-- Button style -->
+    <style name="AppTheme.Button" parent="Base.Widget.AppCompat.Button">
+        <item name="colorAccent">@color/main_menu_item</item>
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Medium</item>
+        <item name="android:textColor">@color/main_menu_item_content</item>
+    </style>
+
+    <style name="AppTheme.Button.MenuButton">
         <item name="android:layout_gravity">center</item>
         <item name="android:paddingStart">28dp</item>
         <item name="android:paddingEnd">28dp</item>
         <item name="android:paddingTop">12dp</item>
         <item name="android:paddingBottom">12dp</item>
-        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Medium</item>
-        <item name="android:textColor">@color/main_menu_item_content</item>
-        <item name="colorAccent">@color/main_menu_item</item>
         <item name="android:drawablePadding">16dp</item>
     </style>
 

@@ -6,7 +6,6 @@
     android:layout_height="?attr/actionBarSize"
     android:background="?attr/colorPrimary"
     android:theme="?attr/actionBarTheme"
-    app:layout_scrollFlags="scroll|enterAlways"
     app:popupTheme="@style/AppTheme.NoActionBar.PopupOverlay">
 
 </android.support.v7.widget.Toolbar>

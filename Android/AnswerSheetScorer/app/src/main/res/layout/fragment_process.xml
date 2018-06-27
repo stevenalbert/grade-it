@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.fragment.ProcessFragment"
+    android:orientation="vertical">
+
+    <ImageView android:id="@+id/answer_sheet_image"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_margin="16dp"
+        android:contentDescription="answer_sheet"/>
+
+    <Button android:id="@+id/process_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/AppTheme.Button.MenuButton"
+        android:drawableRight="@drawable/ic_play_arrow_black"
+        android:text="@string/process_button_start" />
+
+</LinearLayout>

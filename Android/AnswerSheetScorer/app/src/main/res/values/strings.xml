@@ -22,4 +22,7 @@
     <string name="download_answer_sheet">Download answer sheet</string>
     <string name="no_answer_sheet_que">Don\'t have answer sheet?</string>
 
+    <!-- Process answer sheet -->
+    <string name="process_title">Mark Answer Sheet</string>
+    <string name="process_button_start">Start Marking</string>
 </resources>
