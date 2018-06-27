@@ -6,6 +6,7 @@
         <item name="android:textColor">@color/main_menu_item_content</item>
         <item name="android:backgroundTint">@color/main_menu_item</item>
     </style>
+
     <style name="AppTheme.Button.MenuButton">
         <item name="android:layout_gravity">center</item>
         <item name="android:paddingStart">28dp</item>

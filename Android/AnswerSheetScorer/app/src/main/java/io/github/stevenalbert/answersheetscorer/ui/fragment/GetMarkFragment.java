@@ -22,7 +22,6 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.IOException;
 
 import io.github.stevenalbert.answersheetscorer.R;
 import io.github.stevenalbert.answersheetscorer.util.CameraPermission;
@@ -113,34 +112,14 @@ public class GetMarkFragment extends Fragment {
             // Create the image File
             File storageDir = getActivity().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
             File imageFile = new File(storageDir, "answer_sheet.jpg");
-/*
-            try {
-                imageFile.createNewFile();
-            } catch (IOException ex) {
-                // Error occurred while creating the File
-                Toast.makeText(getContext(), "Failed to create file.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-*/
-            // Continue only if the File was successfully created
-            if (imageFile != null) {
-/*
-                imageUri = Uri.fromFile(imageFile);
-*/
-                imageUri = FileProvider.getUriForFile(getContext(),
-                        "io.github.stevenalbert.answersheetscorer.fileprovider",
-                        imageFile);
-                Log.d(TAG, "Image Uri: " + imageUri);
-                photoIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-                startActivityForResult(photoIntent, PHOTO_REQUEST);
-            }
-        }
-    }
 
-    private void galleryAddPic() {
-        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        mediaScanIntent.setData(imageUri);
-        this.getActivity().sendBroadcast(mediaScanIntent);
+            imageUri = FileProvider.getUriForFile(getContext(),
+                    "io.github.stevenalbert.answersheetscorer.fileprovider",
+                    imageFile);
+            Log.d(TAG, "Image Uri: " + imageUri);
+            photoIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+            startActivityForResult(photoIntent, PHOTO_REQUEST);
+        }
     }
 
     private void getImageFromGallery() {
@@ -188,13 +167,13 @@ public class GetMarkFragment extends Fragment {
 
         if(requestCode == PHOTO_REQUEST && resultCode == Activity.RESULT_OK) {
             // Send to next activity for processing answer sheet
-            Log.d(TAG, "Activity result: " + imageUri.toString());
+            // Log.d(TAG, "Activity result: " + imageUri.toString());
             processImage(imageUri);
         }
         if(requestCode == GALLERY_REQUEST && resultCode == Activity.RESULT_OK) {
             imageUri = data.getData();
             // Send to next activity for processing answer sheet
-            Log.d(TAG, "Activity result: " + imageUri.toString());
+            // Log.d(TAG, "Activity result: " + imageUri.toString());
             processImage(imageUri);
         }
     }

@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".ui.fragment.HomeFragment"
     android:background="@color/app_background"
     android:orientation="vertical"
@@ -16,7 +15,7 @@
         android:layout_margin="16dp"
         android:layout_gravity="center"
         android:contentDescription="@string/app_name"
-        android:src="@drawable/ic_launcher_background"/>
+        android:src="@drawable/ic_launcher_background" />
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -30,7 +29,7 @@
             android:theme="@style/AppTheme.Button.MenuButton"
             style="@style/Base.Widget.AppCompat.Button.Colored"
             android:text="@string/mark_answer"
-            android:drawableStart="@drawable/ic_camera_black"/>
+            android:drawableStart="@drawable/ic_camera_black" />
 
         <Button
             android:id="@+id/view_marks"
@@ -39,7 +38,7 @@
             android:theme="@style/AppTheme.Button.MenuButton"
             style="@style/Base.Widget.AppCompat.Button.Colored"
             android:text="@string/view_marks"
-            android:drawableStart="@drawable/ic_folder_black"/>
+            android:drawableStart="@drawable/ic_folder_black" />
 
         <Button
             android:id="@+id/answer_analysis"
