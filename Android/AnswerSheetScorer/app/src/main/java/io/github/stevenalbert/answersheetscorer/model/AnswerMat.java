@@ -4,7 +4,7 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Range;
 
-import model.label.AnswerSheetLabel;
+import io.github.stevenalbert.answersheetscorer.model.label.AnswerSheetLabel;
 
 public class AnswerMat extends Mat implements Comparable<AnswerMat> {
 

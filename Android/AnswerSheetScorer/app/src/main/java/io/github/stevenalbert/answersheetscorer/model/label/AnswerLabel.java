@@ -1,6 +1,6 @@
 package io.github.stevenalbert.answersheetscorer.model.label;
 
-import model.Option;
+import io.github.stevenalbert.answersheetscorer.model.Option;
 
 public class AnswerLabel extends AnswerSheetLabel {
 
