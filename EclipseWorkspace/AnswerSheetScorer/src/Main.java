@@ -26,9 +26,9 @@ public class Main {
 
         // read directory
         File resDirectory = new File(RES_DIR);
-        File ansSheetDirectory = new File(resDirectory, "AnsSheetX");
+        File ansSheetDirectory = new File(resDirectory, "AnsSheet-f");
         Calendar calendar = Calendar.getInstance();
-        StringBuilder folderName = new StringBuilder("Processed_X_");
+        StringBuilder folderName = new StringBuilder("Processed_" + ansSheetDirectory.getName() + "_");
         folderName.append(String.valueOf(calendar.get(Calendar.MONTH) + 1) + "-");
         folderName.append(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)) + "-");
         folderName.append(String.valueOf(calendar.get(Calendar.YEAR)));

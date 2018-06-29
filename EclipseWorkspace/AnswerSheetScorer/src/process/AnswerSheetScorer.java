@@ -368,13 +368,13 @@ public class AnswerSheetScorer {
             averageHeight += verticalSquares.get(i).height;
         }
         averageHeight /= verticalSquares.size();
-        averageHeight = averageHeight * 95 / 100;
+        averageHeight = averageHeight * 96 / 100;
 
         for (int i = 0; i < horizontalSquares.size(); i++) {
             averageWidth += horizontalSquares.get(i).width;
         }
         averageWidth /= horizontalSquares.size();
-        averageWidth = averageWidth * 95 / 100;
+        averageWidth = averageWidth * 96 / 100;
 
         // Create debug folder
         File folder = new File(file, "Content");
@@ -485,8 +485,8 @@ public class AnswerSheetScorer {
             int value = (int) FeatureExtractor.getFeatureX(answerMat,
                     outputDir.getAbsolutePath() + "/" + builder.toString());
             builder.append("\t");
-            double zVal = BigDecimal.valueOf((double) value / 57.0).round(new MathContext(3)).doubleValue();
-            final double zThreshold = 16.0 / 57.0;
+            double zVal = BigDecimal.valueOf((double) value).round(new MathContext(3)).doubleValue();
+            final double zThreshold = 15.0;
             boolean isX = (zVal >= zThreshold);
             builder.append(String.format("\t%f\t%s", zVal, (isX ? "1" : "0")));
             printWriter.println(builder.toString());
@@ -599,9 +599,9 @@ public class AnswerSheetScorer {
          * currentRect = scaleRectOnCenter(currentRect, 1 - 2.5 * (double)
          * dimension.squareAnswerBorder / (double) Math.min(width, height));
          */
-        currentRect = new Rect((int) (rectStartPoint.x + dimension.squareAnswerBorder),
-                (int) (rectStartPoint.y + dimension.squareAnswerBorder), width - 2 * dimension.squareAnswerBorder,
-                height - 2 * dimension.squareAnswerBorder);
+        int contentPadding = dimension.squareAnswerBorder * 3 / 2;
+        currentRect = new Rect((int) (rectStartPoint.x + contentPadding), (int) (rectStartPoint.y + contentPadding),
+                width - 2 * contentPadding, height - 2 * contentPadding);
         drawContour(sqDrawOn, currentRect, new Scalar(255, 0, 255), 2);
         // Imgcodecs.imwrite(new File(directory, filename + ".jpg").getAbsolutePath(),
         // sqDrawOn);

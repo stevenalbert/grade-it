@@ -519,8 +519,11 @@ public class FeatureExtractor {
         // for masking to find the center
         // ==============================
         // create the mask
-        Mat maskCenter = Mat.ones(5, 5, CvType.CV_8SC1);
-        maskCenter.put(2, 2, 5);
+        final int CENTER_SIZE = 5;
+        Mat maskCenter = new Mat(CENTER_SIZE, CENTER_SIZE, CvType.CV_8SC1);
+        byte[] maskCenterValue = new byte[] { 2, 1, 0, 1, 2, 1, 4, 3, 4, 1, 0, 3, 6, 3, 0, 1, 4, 3, 4, 1, 2, 1, 0, 1,
+                2 };
+        maskCenter.put(0, 0, maskCenterValue);
 
         // index for masking (adjustment by +1 and -1 to get the center)
         int idxStartCenterRow = (imgNorm.rows() + 1) / 2 - 1 - maskCenter.rows() / 2;
@@ -792,11 +795,11 @@ public class FeatureExtractor {
      */
     private static Mat createNewMaskX11() {
         Mat mask = new Mat(11, 11, CvType.CV_8SC1);
-        byte[] maskVal = new byte[] { 1, 1, -1, -3, -15, -15, -15, -3, -1, 1, 1, 1, 1, 1, -1, -3, -8, -3, -1, 1, 1, 1,
-                -1, 1, 1, 1, -1, -3, -1, 1, 1, 1, -1, -3, -1, 1, 3, 1, -1, 1, 3, 1, -1, -3, -15, -3, -1, 1, 3, 1, 3, 1,
-                -1, -3, -15, -15, -8, -3, -1, 1, 3, 1, -1, -3, -8, -15, -15, -3, -1, 1, 3, 1, 3, 1, -1, -3, -15, -3, -1,
-                1, 3, 1, -1, 1, 3, 1, -1, -3, -1, 1, 1, 1, -1, -3, -1, 1, 1, 1, -1, 1, 1, 1, -1, -3, -8, -3, -1, 1, 1,
-                1, 1, 1, -1, -3, -15, -15, -15, -3, -1, 1, 1 };
+        byte[] maskVal = new byte[] { 1, 1, -1, -5, -15, -15, -15, -5, -1, 1, 1, 1, 2, 1, -1, -5, -15, -5, -1, 1, 2, 1,
+                -1, 1, 2, 1, -1, -5, -1, 1, 2, 1, -1, -5, -1, 1, 2, 1, -1, 1, 2, 1, -1, -5, -15, -5, -1, 1, 2, 1, 2, 1,
+                -1, -5, -15, -15, -15, -5, -1, 1, 2, 1, -1, -5, -15, -15, -15, -5, -1, 1, 2, 1, 2, 1, -1, -5, -15, -5,
+                -1, 1, 2, 1, -1, 1, 2, 1, -1, -5, -1, 1, 2, 1, -1, -5, -1, 1, 2, 1, -1, 1, 2, 1, -1, -5, -15, -5, -1, 1,
+                2, 1, 1, 1, -1, -5, -15, -15, -15, -5, -1, 1, 1 };
 
         mask.put(0, 0, maskVal);
         return mask;
