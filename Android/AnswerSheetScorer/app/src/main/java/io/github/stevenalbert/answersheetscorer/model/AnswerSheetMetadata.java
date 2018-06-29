@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 public class AnswerSheetMetadata {
@@ -62,29 +64,18 @@ public class AnswerSheetMetadata {
 
     private ArrayList<Value> values;
 
-    public AnswerSheetMetadata(String filePath) {
-        File metadataFile = new File(filePath);
-        readMetadataFile(metadataFile);
+    public AnswerSheetMetadata(InputStream metadataInputStream) {
+        readMetadataFile(metadataInputStream);
     }
 
-    public AnswerSheetMetadata(File metadataFile) {
-        readMetadataFile(metadataFile);
-    }
-
-    private void readMetadataFile(File metadataFile) {
-        if (metadataFile == null)
+    private void readMetadataFile(InputStream metadataInputStream) {
+        if (metadataInputStream == null)
             throw new IllegalArgumentException("Metadata cannot be null");
-        else if (!metadataFile.exists())
-            throw new IllegalArgumentException("Metadata cannot be found");
-        else if (!metadataFile.isFile() || !metadataFile.getName().matches(".+\\." + METADATA_EXTENSION))
-            throw new IllegalArgumentException(
-                    "Metadata is not valid. Must be a File with " + METADATA_EXTENSION + " extension name.");
 
         values = new ArrayList<>();
-        BufferedReader reader = null;
+        BufferedReader reader = new BufferedReader(new InputStreamReader(metadataInputStream));
         String metadata = null;
         try {
-            reader = new BufferedReader(new FileReader(metadataFile));
             while ((metadata = reader.readLine()) != null) {
                 if (isCommentOrEmpty(metadata))
                     continue;
@@ -105,15 +96,13 @@ public class AnswerSheetMetadata {
 
             if (dimension == null)
                 throw new IllegalArgumentException("There is no dimension row. Expected once: " + DIMENSION_FORMAT);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             try {
-                if (reader != null)
-                    reader.close();
+                reader.close();
             } catch (IOException e) {
+                System.out.println("Metadata reader is not closed");
             }
         }
     }
