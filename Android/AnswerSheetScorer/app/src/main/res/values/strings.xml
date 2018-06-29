@@ -26,4 +26,7 @@
     <string name="answer_sheet">Answer Sheet</string>
     <string name="process_title">Mark Answer Sheet</string>
     <string name="process_button_start">Start Marking</string>
+
+    <!-- View marks -->
+    <string name="mark_ex_code_select">Select available ExCode:</string>
 </resources>
