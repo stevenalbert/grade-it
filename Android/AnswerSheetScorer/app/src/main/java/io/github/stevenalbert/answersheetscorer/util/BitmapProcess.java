@@ -35,12 +35,10 @@ public final class BitmapProcess {
     }
 
     public static Bitmap getExifRotatedBitmap(Context context, Uri uri) {
-        Bitmap baseBitmap = getBitmap(context, uri);
-
         InputStream imageStream = getInputStream(context, uri);
 
         if(imageStream == null)
-            return baseBitmap;
+            return null;
 
         ExifInterface exifInterface = null;
         try {
@@ -51,7 +49,7 @@ public final class BitmapProcess {
         }
 
         if(exifInterface == null)
-            return baseBitmap;
+            return null;
 
         int rotation = 0;
         int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION,
@@ -74,10 +72,12 @@ public final class BitmapProcess {
 
         Matrix matrix = new Matrix();
         matrix.postRotate(rotation);
-        Bitmap rotatedBitmap = Bitmap.createBitmap(baseBitmap, 0, 0, baseBitmap.getWidth(),
-                baseBitmap.getHeight(), matrix, true);
 
-        return rotatedBitmap;
+        Bitmap bitmap = getBitmap(context, uri);
+        bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(),
+                bitmap.getHeight(), matrix, true);
+
+        return bitmap;
     }
 
     public static Bitmap getScaledFitBitmap(Bitmap bitmap, int maxWidth, int maxHeight) {
@@ -86,10 +86,10 @@ public final class BitmapProcess {
 
         Log.d("Process", "width = " + bitmap.getWidth() + ", height = " + bitmap.getHeight() + ", scale = " + scale);
 
-        Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, (int) Math.floor(bitmap.getWidth() * scale),
+        bitmap = Bitmap.createScaledBitmap(bitmap, (int) Math.floor(bitmap.getWidth() * scale),
                 (int) Math.floor(bitmap.getHeight() * scale), true);
 
-        return scaledBitmap;
+        return bitmap;
     }
 
     private static InputStream getInputStream(Context context, Uri uri) {

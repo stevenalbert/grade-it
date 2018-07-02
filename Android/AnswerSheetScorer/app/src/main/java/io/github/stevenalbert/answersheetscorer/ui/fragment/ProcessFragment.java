@@ -24,7 +24,9 @@ import android.widget.Toast;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.imgcodecs.Imgcodecs;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -58,29 +60,12 @@ public class ProcessFragment extends Fragment {
     // Process button
     private Button processButton;
 
-    // Is OpenCV Loaded
-    private final int OPENCV_LOAD_WAIT = -1;
-    private int openCvLoadStatus = OPENCV_LOAD_WAIT;
-    private boolean isWaiting = false;
+    // OnProcessFinishListener object
+    private OnProcessFinishListener onProcessFinishListener;
 
-    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(getContext()) {
-        @Override
-        public void onManagerConnected(int status) {
-            openCvLoadStatus = status;
-            switch (status) {
-                case BaseLoaderCallback.SUCCESS:
-                    Log.i(TAG, "OpenCV Loaded successfully");
-
-                    if(isWaiting) {
-                        startProcessImage();
-                    }
-
-                    break;
-                default:
-                    super.onManagerConnected(status);
-            }
-        }
-    };
+    public interface OnProcessFinishListener {
+        void onFinish(AnswerSheet answerSheet);
+    }
 
     public ProcessFragment() {
         // Required empty public constructor
@@ -114,20 +99,20 @@ public class ProcessFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getContext(), R.string.process_button_start, Toast.LENGTH_SHORT).show();
-
-                if(openCvLoadStatus == OPENCV_LOAD_WAIT) {
-                    isWaiting = true;
-                } else if(openCvLoadStatus == BaseLoaderCallback.SUCCESS) {
-                    startProcessImage();
-                }
+                startProcessImage();
             }
         });
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION, getContext(), mLoaderCallback);
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if(context instanceof OnProcessFinishListener) {
+            this.onProcessFinishListener = (OnProcessFinishListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement " + OnProcessFinishListener.class.getSimpleName());
+        }
     }
 
     public static ProcessFragment newInstance(Uri imageUri) {
@@ -146,14 +131,15 @@ public class ProcessFragment extends Fragment {
 
         Bitmap bitmapImage = BitmapProcess.getExifRotatedBitmap(getContext(), imageUri);
         Log.d(TAG, "width = " + bitmapImage.getWidth() + ", height = " + bitmapImage.getHeight());
-        bitmapImage = BitmapProcess.getScaledFitBitmap(bitmapImage, imageWidth, imageHeight);
 
         updateImage(imageView, bitmapImage);
     }
 
     private void updateImage(ImageView imageView, Bitmap bitmap) {
-        if(imageView != null && bitmap != null)
+        if(imageView != null && bitmap != null) {
+            bitmap = BitmapProcess.getScaledFitBitmap(bitmap, imageWidth, imageHeight);
             imageView.setImageBitmap(bitmap);
+        }
     }
 
     private void startProcessImage() {
@@ -164,14 +150,26 @@ public class ProcessFragment extends Fragment {
         processButton.setEnabled(false);
     }
 
-    private class ProcessAsyncTask extends AsyncTask<Uri, String, AnswerSheet> {
+    private void nextProcessAnswerSheet(AnswerSheet answerSheet) {
+        if(onProcessFinishListener != null) {
+            onProcessFinishListener.onFinish(answerSheet);
+        }
+    }
+
+    private void notify(String message) {
+        Log.i(TAG, message);
+        Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    private class ProcessAsyncTask extends AsyncTask<Uri, Object, AnswerSheet> {
 
         @Override
         protected AnswerSheet doInBackground(Uri... uris) {
             if(uris.length == 0) return null;
-            Bitmap image = BitmapProcess.getBitmap(getContext(), uris[0]);
+            Long startTime = System.nanoTime(), endTime, sectionStartTime, sectionEndTime;
+            Bitmap image = BitmapProcess.getExifRotatedBitmap(getContext(), uris[0]);
             Mat imageMat = new Mat();
-            Utils.bitmapToMat(image, imageMat);
+            Utils.bitmapToMat(image, imageMat, true);
 
             InputStream metadataInputStream = null;
             try {
@@ -184,35 +182,69 @@ public class ProcessFragment extends Fragment {
 
             try {
                 AnswerSheetMetadata metadata = new AnswerSheetMetadata(metadataInputStream);
-                onProgressUpdate("Start converting image");
+
+                sectionStartTime = System.nanoTime();
+                publishProgress("Start converting image");
                 imageMat = AnswerSheetScorer.convertAnswerSheet(imageMat, metadata);
-                onProgressUpdate("Finish converting image");
+                publishProgress("Finish converting image");
+                sectionEndTime = System.nanoTime();
+                image = Bitmap.createBitmap(imageMat.cols(), imageMat.rows(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(imageMat, image, true);
+                publishProgress(image);
+                publishProgress(sectionEndTime - sectionStartTime);
 
-                onProgressUpdate("Start retrieving answer sheet squares");
-                ArrayList<AnswerMat> matSquares = AnswerSheetScorer.processAnswerSheet(imageMat, metadata);
-                onProgressUpdate("Finish retrieving answer sheet squares");
+                sectionStartTime = System.nanoTime();
+                publishProgress("Start retrieving answer sheet squares");
+                Mat updateImageMat = new Mat(imageMat.rows(), imageMat.cols(), CvType.CV_8UC3);
+                ArrayList<AnswerMat> matSquares = AnswerSheetScorer.processAnswerSheet(imageMat, updateImageMat, metadata);
+                publishProgress("Finish retrieving answer sheet squares");
+                sectionEndTime = System.nanoTime();
+                Utils.matToBitmap(updateImageMat, image, true);
+                publishProgress(image);
+                publishProgress(sectionEndTime - sectionStartTime);
+                updateImageMat.release();
 
-                onProgressUpdate("Start scoring answer sheet");
+                sectionStartTime = System.nanoTime();
+                publishProgress("Start scoring answer sheet");
                 AnswerSheet answerSheet = AnswerSheetScorer.scoreAnswerSheet(matSquares);
-                onProgressUpdate("Finish scoring answer sheet");
+                publishProgress("Finish scoring answer sheet");
+                sectionEndTime = System.nanoTime();
+                publishProgress(sectionEndTime - sectionStartTime);
+
+                endTime = System.nanoTime();
+                publishProgress("Total elapsed time", endTime - startTime);
 
                 return answerSheet;
             } catch (Exception e) {
-                onProgressUpdate(e.getMessage());
+                publishProgress(e.getMessage());
                 return null;
             }
         }
 
         @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-            Log.d(TAG, values[0]);
+        protected void onProgressUpdate(Object... values) {
+            for(Object value : values) {
+                if(value instanceof String)
+                    ProcessFragment.this.notify((String) value);
+                else if(value instanceof Bitmap) {
+                    Bitmap bitmap = (Bitmap) value;
+                    updateImage(imageView, bitmap);
+                } else if(value instanceof Long) {
+                    Log.d(TAG, "Elapsed process time = " + ((Long) value).doubleValue() / 1e9);
+                }
+            }
         }
 
         @Override
         protected void onPostExecute(AnswerSheet answerSheet) {
             super.onPostExecute(answerSheet);
-            Toast.makeText(getContext(), "Done! Well done!", Toast.LENGTH_SHORT).show();
+            if(answerSheet != null) {
+                Toast.makeText(getActivity(), "Answer sheet retrieved! Well done!", Toast.LENGTH_SHORT).show();
+                nextProcessAnswerSheet(answerSheet);
+            }
+            else {
+                Toast.makeText(getActivity(), "Failed to get answer sheet", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }
