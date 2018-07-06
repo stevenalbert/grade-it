@@ -469,16 +469,7 @@ public class FeatureExtractor {
      * @return a number indicating whether the given image contains an X or not. The
      *         more positive it is, the higher the chance
      */
-    public static double getFeatureX(Mat imgThreshold, String temp) {
-        // =============
-        // preprocessing
-        // =============
-        // filter the image
-        // Imgproc.medianBlur(imgThreshold, imgThreshold, 3);
-
-        // convert to binary
-        // Imgproc.threshold(imgThreshold, imgThreshold, 150, 255, imgThreshold.type());
-
+    public static double getFeatureX(Mat imgThreshold) {
         // =======================================================
         // crop only the character without excess white background
         // =======================================================
@@ -536,7 +527,7 @@ public class FeatureExtractor {
         int distXTemp = maskCenter.cols(), distYTemp = maskCenter.rows();
 
         // searching the center of the character
-        Mat imgTemp = new Mat();
+        Mat imgTemp;
         for (int ii = idxStartCenterRow; ii <= idxEndCenterRow; ii++) {
             for (int iii = idxStartCenterCol; iii <= idxEndCenterCol; iii++) {
                 imgTemp = imgNorm.submat(ii - maskCenter.rows() / 2, ii + maskCenter.rows() / 2 + 1,
@@ -562,11 +553,6 @@ public class FeatureExtractor {
             }
         }
 
-        // // TRY USE MOMENT TO DETECT CENTER
-        // Moments moment = Imgproc.moments(imgNorm, true);
-        // idxCenterCol = (int) Math.round(moment.m10 / moment.m00);
-        // idxCenterRow = (int) Math.round(moment.m01 / moment.m00);
-
         // shift the image according to the new found center
         Mat transformMatrix = new Mat(2, 3, CvType.CV_32FC1);
         transformMatrix.put(0, 0, 1);
@@ -575,7 +561,7 @@ public class FeatureExtractor {
         transformMatrix.put(1, 0, 0);
         transformMatrix.put(1, 1, 1);
         transformMatrix.put(1, 2, imgNorm.rows() / 2 - idxCenterRow);
-        // Mat imgShifted = Mat.zeros(X_NORM_SIZE, X_NORM_SIZE, CvType.CV_8SC1);
+
         Mat imgShifted = Mat.zeros(X_NORM_SIZE, X_NORM_SIZE, CvType.CV_8UC1);
         imgNorm.convertTo(imgNorm, CvType.CV_8UC1);
         Imgproc.warpAffine(imgNorm, imgShifted, transformMatrix, imgShifted.size());
@@ -588,26 +574,6 @@ public class FeatureExtractor {
         Mat mask = createNewMaskX11();
         imgShifted.convertTo(imgShifted, CvType.CV_8SC1);
         double result = imgShifted.dot(mask);
-
-        // ============================================================================================
-        // drawing the image
-
-        if (true) {
-            Core.bitwise_not(imgCropped, imgCropped);
-            Imgcodecs.imwrite(temp + "-1crop.jpg", imgCropped);
-            imgNorm.convertTo(imgNorm, CvType.CV_8UC1);
-            Imgproc.threshold(imgNorm, imgNorm, 0, 255, Imgproc.THRESH_BINARY);
-            Core.bitwise_not(imgNorm, imgNorm);
-            Imgcodecs.imwrite(temp + "-2norm.jpg", imgNorm);
-            Core.bitwise_not(imgNorm, imgNorm);
-            GrayImgProc.matToTxt(imgNorm, temp + "-2norm.txt");
-            imgShifted.convertTo(imgShifted, CvType.CV_8UC1);
-            Imgproc.threshold(imgShifted, imgShifted, 0, 255, Imgproc.THRESH_BINARY);
-            Core.bitwise_not(imgShifted, imgShifted);
-            Imgcodecs.imwrite(temp + "-4shifted.jpg", imgShifted);
-            Core.bitwise_not(imgShifted, imgShifted);
-            GrayImgProc.matToTxt(imgShifted, temp + "-4shifted.txt");
-        }
 
         return result;
     }

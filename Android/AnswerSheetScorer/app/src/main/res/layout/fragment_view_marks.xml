@@ -13,12 +13,15 @@
         android:text="@string/mark_ex_code_select"
         android:textColor="@color/colorPrimary"/>
 
+<!--
     <Spinner android:id="@+id/ex_code_spinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"/>
+-->
 
-    <android.support.v7.widget.RecyclerView android:id="@+id/result_recycler_view"
+    <android.support.v7.widget.RecyclerView android:id="@+id/marks_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"/>

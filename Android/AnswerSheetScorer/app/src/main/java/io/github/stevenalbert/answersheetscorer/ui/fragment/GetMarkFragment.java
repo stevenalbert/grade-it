@@ -167,13 +167,13 @@ public class GetMarkFragment extends Fragment {
 
         if(requestCode == PHOTO_REQUEST && resultCode == Activity.RESULT_OK) {
             // Send to next activity for processing answer sheet
-            // Log.d(TAG, "Activity result: " + imageUri.toString());
+            // Log.d(TAG, "Activity result: " + imageUri.answerToString());
             processImage(imageUri);
         }
         if(requestCode == GALLERY_REQUEST && resultCode == Activity.RESULT_OK) {
             imageUri = data.getData();
             // Send to next activity for processing answer sheet
-            // Log.d(TAG, "Activity result: " + imageUri.toString());
+            // Log.d(TAG, "Activity result: " + imageUri.answerToString());
             processImage(imageUri);
         }
     }

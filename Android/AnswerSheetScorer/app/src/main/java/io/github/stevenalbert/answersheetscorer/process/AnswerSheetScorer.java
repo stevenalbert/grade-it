@@ -336,7 +336,7 @@ public class AnswerSheetScorer {
         StringBuilder exCode = new StringBuilder("000");
 
         for (AnswerMat answerMat : answerMats) {
-            int value = (int) FeatureExtractor.getFeatureX(answerMat, null);
+            int value = (int) FeatureExtractor.getFeatureX(answerMat);
             double zVal = BigDecimal.valueOf((double) value).round(new MathContext(3)).doubleValue();
             final double zThreshold = 15.0;
             boolean isX = (zVal >= zThreshold);
