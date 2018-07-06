@@ -29,9 +29,13 @@ public class AnswerSheet implements Parcelable {
     @Ignore
     private static final int DEFAULT_TOTAL_ANSWER = 40;
     @Ignore
-    public static final boolean ANSWER_TRUE = true;
+    private static final int ANSWER_TRUE = 1;
     @Ignore
-    public static final boolean ANSWER_FALSE = false;
+    private static final int ANSWER_FALSE = 0;
+    @Ignore
+    private static final int ANSWER_MULTIPLE = 2;
+    @Ignore
+    private static final int NO_VERDICT = 3;
 
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
@@ -46,9 +50,9 @@ public class AnswerSheet implements Parcelable {
     @ColumnInfo(name = "scored")
     protected boolean isScored;
     @ColumnInfo(name = "verdicts")
-    protected boolean[] verdicts;
+    protected int[] verdicts;
 
-    public AnswerSheet(int exCode, int mCode, Answer[] answers, boolean isScored, boolean[] verdicts) {
+    public AnswerSheet(int exCode, int mCode, Answer[] answers, boolean isScored, int[] verdicts) {
         setExCode(exCode);
         setMCode(mCode);
         setAnswers(answers);
@@ -96,15 +100,17 @@ public class AnswerSheet implements Parcelable {
         this(exCode, mCode, DEFAULT_TOTAL_ANSWER);
     }
 
+    @Ignore
     protected AnswerSheet(Parcel in) {
         id = in.readLong();
         exCode = in.readInt();
         mCode = in.readInt();
         answers = AnswerSheetConverter.answersFromString(in.readString());
         isScored = in.readByte() != 0;
-        verdicts = in.createBooleanArray();
+        verdicts = in.createIntArray();
     }
 
+    @Ignore
     public static final Creator<AnswerSheet> CREATOR = new Creator<AnswerSheet>() {
         @Override
         public AnswerSheet createFromParcel(Parcel in) {
@@ -116,6 +122,28 @@ public class AnswerSheet implements Parcelable {
             return new AnswerSheet[size];
         }
     };
+
+    public void scoreAnswerSheet(AnswerKey answerKey) {
+        if(this.getMCode() == answerKey.getMCode()) {
+            Option[] options = Option.values();
+            for(int number = 1; number <= getTotalAnswer(); number++) {
+                Option keyOption = answerKey.getAnswerKey(number);
+                Answer answer = getAnswerOn(number);
+                if(answer.isOptionChosen(keyOption)) {
+                    setAnswerVerdict(number, ANSWER_TRUE);
+                    for(Option option : options) {
+                        if(!option.equals(keyOption) && answer.isOptionChosen(option)) {
+                            setAnswerVerdict(number, ANSWER_MULTIPLE);
+                            break;
+                        }
+                    }
+                } else {
+                    setAnswerVerdict(number, ANSWER_FALSE);
+                }
+            }
+            isScored = true;
+        }
+    }
 
     public void setExCode(String exCode) {
         setExCode(Integer.valueOf(exCode));
@@ -146,7 +174,7 @@ public class AnswerSheet implements Parcelable {
             this.answers = answers;
     }
 
-    private void setVerdicts(boolean[] verdicts) {
+    private void setVerdicts(int[] verdicts) {
         if (verdicts == null)
             if(answers == null) createAnswerVerdicts(DEFAULT_TOTAL_ANSWER);
             else createAnswerVerdicts(answers.length);
@@ -170,8 +198,8 @@ public class AnswerSheet implements Parcelable {
             totalAnswer = DEFAULT_TOTAL_ANSWER;
 
         // Create new answers verdict
-        verdicts = new boolean[totalAnswer];
-        Arrays.fill(verdicts, ANSWER_FALSE);
+        verdicts = new int[totalAnswer];
+        Arrays.fill(verdicts, NO_VERDICT);
     }
 
     public void setAnswerOn(int number, Answer answer) {
@@ -186,7 +214,7 @@ public class AnswerSheet implements Parcelable {
         } else throw new IndexOutOfBoundsException("Number starts from 1 to " + answers.length);
     }
 
-    public void setAnswerVerdict(int number, boolean verdict) {
+    public void setAnswerVerdict(int number, int verdict) {
         if (number >= 1 && number <= this.answers.length) {
             this.verdicts[number - 1] = verdict;
         } else throw new IndexOutOfBoundsException("Number starts from 1 to " + answers.length);
@@ -210,9 +238,9 @@ public class AnswerSheet implements Parcelable {
         return this.mCode;
     }
 
-    public boolean getAnswerVerdict(int number) {
+    public int getAnswerVerdict(int number) {
         if (number >= 1 && number <= this.answers.length) {
-            return isScored && this.verdicts[number - 1];
+            return this.verdicts[number - 1];
         } else throw new IndexOutOfBoundsException("Number starts from 1 to " + answers.length);
     }
 
@@ -222,6 +250,10 @@ public class AnswerSheet implements Parcelable {
 
     public boolean isAnswerFalse(int number) {
         return getAnswerVerdict(number) == ANSWER_FALSE;
+    }
+
+    public boolean isMultipleAnswer(int number) {
+        return getAnswerVerdict(number) == ANSWER_MULTIPLE;
     }
 
     public boolean isScored() {
@@ -244,7 +276,7 @@ public class AnswerSheet implements Parcelable {
         return answers;
     }
 
-    public boolean[] getVerdicts() {
+    public int[] getVerdicts() {
         return verdicts;
     }
 
@@ -260,6 +292,6 @@ public class AnswerSheet implements Parcelable {
         dest.writeInt(getMCode());
         dest.writeString(AnswerSheetConverter.answersToString(getAnswers()));
         dest.writeByte((byte) (isScored() ? 1 : 0));
-        dest.writeBooleanArray(getVerdicts());
+        dest.writeIntArray(getVerdicts());
     }
 }

@@ -6,18 +6,21 @@ import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
 import android.content.Context;
 
+import io.github.stevenalbert.answersheetscorer.dao.AnswerKeyDao;
 import io.github.stevenalbert.answersheetscorer.dao.AnswerSheetDao;
+import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
 import io.github.stevenalbert.answersheetscorer.model.AnswerSheet;
 
 /**
  * Created by Steven Albert on 7/4/2018.
  */
-@Database(entities = {AnswerSheet.class}, version = 1, exportSchema = false)
+@Database(entities = {AnswerSheet.class, AnswerKey.class}, version = 1, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
     private static AppDatabase instance;
     private static final String DB_NAME = "answersheetscorer.db";
 
     public abstract AnswerSheetDao answerSheetDao();
+    public abstract AnswerKeyDao answerKeyDao();
 
     public static AppDatabase getInstance(final Context context) {
         if(instance == null) {

@@ -25,10 +25,10 @@ public interface AnswerSheetDao {
     int delete(AnswerSheet answerSheet);
     @Query("DELETE FROM answer_sheet")
     void deleteAll();
-    @Query("SELECT * FROM answer_sheet ORDER BY ex_code ASC")
+    @Query("SELECT * FROM answer_sheet ORDER BY m_code ASC")
     LiveData<List<AnswerSheet>> getAllAnswerSheets();
-    @Query("SELECT * FROM answer_sheet WHERE ex_code = :exCode")
-    LiveData<List<AnswerSheet>> getAnswerSheetsByExCode(int exCode);
+    @Query("SELECT * FROM answer_sheet WHERE m_code = :mCode")
+    LiveData<List<AnswerSheet>> getAnswerSheetsByMCode(int mCode);
     @Query("SELECT * FROM answer_sheet WHERE ex_code = :exCode AND m_code = :mCode")
     LiveData<AnswerSheet> getAnswerSheet(int exCode, int mCode);
 }

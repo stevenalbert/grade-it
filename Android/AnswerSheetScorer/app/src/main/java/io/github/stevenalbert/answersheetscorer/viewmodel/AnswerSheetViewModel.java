@@ -21,10 +21,15 @@ public class AnswerSheetViewModel extends AndroidViewModel {
     public AnswerSheetViewModel(@NonNull Application application) {
         super(application);
         repository = new AnswerSheetRepository(application);
-        answerSheets = repository.getAnswerSheets();
     }
 
     public LiveData<List<AnswerSheet>> getAnswerSheets() {
+        answerSheets = repository.getAnswerSheets(AnswerSheetRepository.NO_SPECIFIC_MCODE);
+        return answerSheets;
+    }
+
+    public LiveData<List<AnswerSheet>> getAnswerSheetsByMCode(int mCode) {
+        answerSheets = repository.getAnswerSheets(mCode);
         return answerSheets;
     }
 

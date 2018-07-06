@@ -53,19 +53,19 @@ public class AnswerSheetConverter {
     }
 
     @TypeConverter
-    public static String verdictsToString(boolean[] booleans) {
+    public static String verdictsToString(int[] verdicts) {
         StringBuilder builder = new StringBuilder();
-        for(boolean i : booleans) {
-            builder.append((i ? 1 : 0));
+        for(int i : verdicts) {
+            builder.append(i);
         }
         return builder.toString();
     }
 
     @TypeConverter
-    public static boolean[] verdictsFromString(String string) {
-        boolean[] verdicts = new boolean[string.length()];
+    public static int[] verdictsFromString(String string) {
+        int[] verdicts = new int[string.length()];
         for(int i = 0; i < verdicts.length; i++) {
-            verdicts[i] = Integer.valueOf(string.substring(i, i + 1)).equals(1);
+            verdicts[i] = Integer.valueOf(string.substring(i, i + 1));
         }
         return verdicts;
     }

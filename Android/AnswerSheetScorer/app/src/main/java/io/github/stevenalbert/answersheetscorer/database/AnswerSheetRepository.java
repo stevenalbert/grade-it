@@ -14,16 +14,23 @@ import io.github.stevenalbert.answersheetscorer.model.AnswerSheet;
  */
 public class AnswerSheetRepository {
 
+    public static final int NO_SPECIFIC_MCODE = -1;
+
     private AnswerSheetDao answerSheetDao;
     private LiveData<List<AnswerSheet>> answerSheets;
+    private int currentMCode;
 
     public AnswerSheetRepository(Application application) {
         AppDatabase database = AppDatabase.getInstance(application);
         answerSheetDao = database.answerSheetDao();
-        answerSheets = answerSheetDao.getAllAnswerSheets();
+        currentMCode = -2;
     }
 
-    public LiveData<List<AnswerSheet>> getAnswerSheets() {
+    public LiveData<List<AnswerSheet>> getAnswerSheets(int mCode) {
+        if(currentMCode != mCode) {
+            answerSheets = (mCode == NO_SPECIFIC_MCODE ?
+                    answerSheetDao.getAllAnswerSheets() : answerSheetDao.getAnswerSheetsByMCode(mCode));
+        }
         return answerSheets;
     }
 

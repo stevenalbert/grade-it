@@ -7,6 +7,7 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.OpenCVLoader;
 
 import io.github.stevenalbert.answersheetscorer.R;
+import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
 import io.github.stevenalbert.answersheetscorer.model.AnswerSheet;
 import io.github.stevenalbert.answersheetscorer.ui.fragment.ProcessFragment;
 import io.github.stevenalbert.answersheetscorer.ui.fragment.AnswerSheetDetailFragment;
@@ -47,6 +48,10 @@ public class ProcessActivity extends LayoutToolbarActivity implements ProcessFra
 
     @Override
     public void onFinish(AnswerSheet answerSheet) {
-        changeFragment(AnswerSheetDetailFragment.newInstance(answerSheet));
+        if(AnswerKey.isAnswerKey(answerSheet)) {
+            AnswerKey answerKey = AnswerKey.fromAnswerSheet(answerSheet);
+        } else {
+            changeFragment(AnswerSheetDetailFragment.newInstance(answerSheet));
+        }
     }
 }

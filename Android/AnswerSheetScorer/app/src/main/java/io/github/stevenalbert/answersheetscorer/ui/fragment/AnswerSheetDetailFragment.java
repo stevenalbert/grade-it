@@ -22,6 +22,7 @@ import io.github.stevenalbert.answersheetscorer.database.AppDatabase;
 import io.github.stevenalbert.answersheetscorer.model.Answer;
 import io.github.stevenalbert.answersheetscorer.model.AnswerSheet;
 import io.github.stevenalbert.answersheetscorer.model.Option;
+import io.github.stevenalbert.answersheetscorer.viewmodel.AnswerKeyViewModel;
 import io.github.stevenalbert.answersheetscorer.viewmodel.AnswerSheetViewModel;
 
 /**
@@ -63,6 +64,7 @@ public class AnswerSheetDetailFragment extends Fragment {
         database = AppDatabase.getInstance(getContext());
 
         AnswerSheetViewModel answerSheetViewModel = ViewModelProviders.of(this).get(AnswerSheetViewModel.class);
+        AnswerKeyViewModel answerKeyViewModel = ViewModelProviders.of(this).get(AnswerKeyViewModel.class);
         answerSheetViewModel.insert(answerSheet);
     }
 
