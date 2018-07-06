@@ -27,10 +27,10 @@ import io.github.stevenalbert.answersheetscorer.viewmodel.AnswerSheetViewModel;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ProcessResultFragment extends Fragment {
+public class AnswerSheetDetailFragment extends Fragment {
 
     // TAG
-    private static final String TAG = ProcessResultFragment.class.getSimpleName();
+    private static final String TAG = AnswerSheetDetailFragment.class.getSimpleName();
 
     // Views
     private TextView answerSheetResult;
@@ -41,7 +41,7 @@ public class ProcessResultFragment extends Fragment {
     // AppDatabase
     private AppDatabase database;
 
-    public ProcessResultFragment() {
+    public AnswerSheetDetailFragment() {
         // Required empty public constructor
     }
 
@@ -50,7 +50,7 @@ public class ProcessResultFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_process_result, container, false);
+        return inflater.inflate(R.layout.fragment_answer_sheet_detail, container, false);
     }
 
     @Override
@@ -66,8 +66,8 @@ public class ProcessResultFragment extends Fragment {
         answerSheetViewModel.insert(answerSheet);
     }
 
-    public static ProcessResultFragment newInstance(AnswerSheet answerSheet) {
-        ProcessResultFragment newFragment = new ProcessResultFragment();
+    public static AnswerSheetDetailFragment newInstance(AnswerSheet answerSheet) {
+        AnswerSheetDetailFragment newFragment = new AnswerSheetDetailFragment();
         newFragment.answerSheet = answerSheet;
         return newFragment;
     }

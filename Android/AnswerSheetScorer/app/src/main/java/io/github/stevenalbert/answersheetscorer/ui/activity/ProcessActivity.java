@@ -9,7 +9,7 @@ import org.opencv.android.OpenCVLoader;
 import io.github.stevenalbert.answersheetscorer.R;
 import io.github.stevenalbert.answersheetscorer.model.AnswerSheet;
 import io.github.stevenalbert.answersheetscorer.ui.fragment.ProcessFragment;
-import io.github.stevenalbert.answersheetscorer.ui.fragment.ProcessResultFragment;
+import io.github.stevenalbert.answersheetscorer.ui.fragment.AnswerSheetDetailFragment;
 
 public class ProcessActivity extends LayoutToolbarActivity implements ProcessFragment.OnProcessFinishListener {
 
@@ -47,6 +47,6 @@ public class ProcessActivity extends LayoutToolbarActivity implements ProcessFra
 
     @Override
     public void onFinish(AnswerSheet answerSheet) {
-        changeFragment(ProcessResultFragment.newInstance(answerSheet));
+        changeFragment(AnswerSheetDetailFragment.newInstance(answerSheet));
     }
 }

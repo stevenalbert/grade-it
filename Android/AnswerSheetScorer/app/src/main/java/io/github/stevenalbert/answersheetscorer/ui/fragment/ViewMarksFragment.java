@@ -3,7 +3,6 @@ package io.github.stevenalbert.answersheetscorer.ui.fragment;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -28,9 +27,9 @@ import io.github.stevenalbert.answersheetscorer.viewmodel.AnswerSheetViewModel;
  * {@link OnFragmentInteractionListener} interface
  * to handle interaction events.
  */
-public class ViewMarksFragment extends Fragment {
+public class ViewMarksFragment extends Fragment implements AnswerSheetListAdapter.OnSelectAnswerSheetListener {
 
-    private OnFragmentInteractionListener mListener;
+    private OnSelectAnswerSheetListener listener;
 
     // Views
     private RecyclerView marksRecyclerView;
@@ -38,6 +37,17 @@ public class ViewMarksFragment extends Fragment {
     private AnswerSheetListAdapter adapter;
     // ViewModel
     private AnswerSheetViewModel answerSheetViewModel;
+
+    @Override
+    public void onSelectAnswerSheet(AnswerSheet answerSheet) {
+        if (listener != null) {
+            listener.onSelectAnswerSheet(answerSheet);
+        }
+    }
+
+    public interface OnSelectAnswerSheetListener {
+        void onSelectAnswerSheet(AnswerSheet answerSheet);
+    }
 
     public ViewMarksFragment() {
         // Required empty public constructor
@@ -56,7 +66,7 @@ public class ViewMarksFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         marksRecyclerView = view.findViewById(R.id.marks_recycler_view);
-        adapter = new AnswerSheetListAdapter(getContext());
+        adapter = new AnswerSheetListAdapter(getContext(), this);
         marksRecyclerView.setAdapter(adapter);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
         marksRecyclerView.setLayoutManager(layoutManager);
@@ -70,26 +80,20 @@ public class ViewMarksFragment extends Fragment {
         });
     }
 
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
+        if (context instanceof OnSelectAnswerSheetListener) {
+            listener = (OnSelectAnswerSheetListener) context;
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+                    + " must implement " + OnSelectAnswerSheetListener.class.getSimpleName());
         }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
+        listener = null;
     }
 }

@@ -30,10 +30,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ui.activity.ProcessActivity"
+        <activity android:name=".ui.activity.ProcessActivity"
             android:parentActivityName=".ui.activity.MainActivity" />
-
+        <activity android:name=".ui.activity.AnswerSheetDetailActivity"
+            android:parentActivityName=".ui.activity.MainActivity" />
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="io.github.stevenalbert.answersheetscorer.fileprovider"

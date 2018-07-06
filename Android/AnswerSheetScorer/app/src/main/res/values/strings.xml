@@ -2,7 +2,6 @@
     <string name="app_name">Answer Sheet Scorer</string>
 
     <!-- Home menu item name -->
-    <string name="home">Home</string>
 
     <!-- Main menu item names -->
     <string name="mark_answer_title">Get Mark</string>
@@ -29,4 +28,5 @@
 
     <!-- View marks -->
     <string name="mark_ex_code_select">Select available ExCode:</string>
+    <string name="none">None</string>
 </resources>

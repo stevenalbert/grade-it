@@ -6,6 +6,8 @@ import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 import android.arch.persistence.room.TypeConverters;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import java.util.Arrays;
 
@@ -14,7 +16,7 @@ import java.util.Arrays;
 @TypeConverters({
         AnswerSheetConverter.class
 })
-public class AnswerSheet {
+public class AnswerSheet implements Parcelable {
 
     @Ignore
     private static final int MINIMUM_EX_CODE = 000;
@@ -93,6 +95,27 @@ public class AnswerSheet {
     public AnswerSheet(String exCode, String mCode) {
         this(exCode, mCode, DEFAULT_TOTAL_ANSWER);
     }
+
+    protected AnswerSheet(Parcel in) {
+        id = in.readLong();
+        exCode = in.readInt();
+        mCode = in.readInt();
+        answers = AnswerSheetConverter.answersFromString(in.readString());
+        isScored = in.readByte() != 0;
+        verdicts = in.createBooleanArray();
+    }
+
+    public static final Creator<AnswerSheet> CREATOR = new Creator<AnswerSheet>() {
+        @Override
+        public AnswerSheet createFromParcel(Parcel in) {
+            return new AnswerSheet(in);
+        }
+
+        @Override
+        public AnswerSheet[] newArray(int size) {
+            return new AnswerSheet[size];
+        }
+    };
 
     public void setExCode(String exCode) {
         setExCode(Integer.valueOf(exCode));
@@ -223,5 +246,20 @@ public class AnswerSheet {
 
     public boolean[] getVerdicts() {
         return verdicts;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(id);
+        dest.writeInt(getExCode());
+        dest.writeInt(getMCode());
+        dest.writeString(AnswerSheetConverter.answersToString(getAnswers()));
+        dest.writeByte((byte) (isScored() ? 1 : 0));
+        dest.writeBooleanArray(getVerdicts());
     }
 }

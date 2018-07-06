@@ -11,13 +11,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.github.stevenalbert.answersheetscorer.R;
+import io.github.stevenalbert.answersheetscorer.model.AnswerSheet;
 import io.github.stevenalbert.answersheetscorer.ui.fragment.AnalysisFragment;
 import io.github.stevenalbert.answersheetscorer.ui.fragment.GetMarkFragment;
 import io.github.stevenalbert.answersheetscorer.ui.fragment.ViewMarksFragment;
 import io.github.stevenalbert.answersheetscorer.ui.listener.OnFragmentInteractionListener;
-import io.github.stevenalbert.answersheetscorer.util.ExternalStoragePermission;
 
-public class MainActivity extends TabActivity implements OnFragmentInteractionListener, GetMarkFragment.OnFragmentInteractionListener {
+public class MainActivity extends TabActivity implements OnFragmentInteractionListener, GetMarkFragment.OnFragmentInteractionListener, ViewMarksFragment.OnSelectAnswerSheetListener {
 
     // TAG
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -84,5 +84,12 @@ public class MainActivity extends TabActivity implements OnFragmentInteractionLi
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onSelectAnswerSheet(AnswerSheet answerSheet) {
+        Intent answerSheetDetailIntent = new Intent(this, AnswerSheetDetailActivity.class);
+        answerSheetDetailIntent.putExtra(AnswerSheetDetailActivity.ANSWER_SHEET_INTENT_KEY, answerSheet);
+        startActivity(answerSheetDetailIntent);
     }
 }

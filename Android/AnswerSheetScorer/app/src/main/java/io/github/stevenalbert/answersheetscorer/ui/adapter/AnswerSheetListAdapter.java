@@ -2,6 +2,8 @@ package io.github.stevenalbert.answersheetscorer.ui.adapter;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,11 +20,17 @@ import io.github.stevenalbert.answersheetscorer.model.AnswerSheet;
  */
 public class AnswerSheetListAdapter extends RecyclerView.Adapter<AnswerSheetListAdapter.AnswerSheetViewHolder> {
 
+    private OnSelectAnswerSheetListener listener;
     private LayoutInflater layoutInflater;
     private List<AnswerSheet> answerSheets;
 
-    public AnswerSheetListAdapter(Context context) {
+    public interface OnSelectAnswerSheetListener {
+        void onSelectAnswerSheet(AnswerSheet answerSheet);
+    }
+
+    public AnswerSheetListAdapter(Context context, OnSelectAnswerSheetListener listener) {
         layoutInflater = LayoutInflater.from(context);
+        this.listener = listener;
     }
 
     @NonNull
@@ -37,11 +45,14 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<AnswerSheetList
     public void onBindViewHolder(@NonNull AnswerSheetViewHolder holder, int position) {
         if(answerSheets != null) {
             AnswerSheet answerSheet = answerSheets.get(position);
+            if(answerSheet.getMCode() != 0) {
+                holder.cardView.setCardBackgroundColor(ContextCompat.getColor(layoutInflater.getContext(), R.color.colorAccent));
+            }
             holder.exCodeTextView.setText(String.valueOf(answerSheet.getExCode()));
             holder.mCodeTextView.setText(String.valueOf(answerSheet.getMCode()));
         } else {
-            holder.exCodeTextView.setText("No ExCode");
-            holder.mCodeTextView.setText("No MCode");
+            holder.exCodeTextView.setText(R.string.none);
+            holder.mCodeTextView.setText(R.string.none);
         }
     }
 
@@ -58,13 +69,23 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<AnswerSheetList
 
     public class AnswerSheetViewHolder extends RecyclerView.ViewHolder {
 
+        private CardView cardView;
         private TextView exCodeTextView;
         private TextView mCodeTextView;
 
-        public AnswerSheetViewHolder(View itemView) {
+        private AnswerSheetViewHolder(View itemView) {
             super(itemView);
+            cardView = itemView.findViewById(R.id.answer_sheet_info_card_view);
             exCodeTextView = itemView.findViewById(R.id.ex_code_text);
             mCodeTextView = itemView.findViewById(R.id.m_code_text);
+            cardView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(listener != null) {
+                        listener.onSelectAnswerSheet(answerSheets.get(getAdapterPosition()));
+                    }
+                }
+            });
         }
     }
 }
