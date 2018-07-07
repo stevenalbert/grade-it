@@ -7,6 +7,9 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,8 +23,10 @@ import java.util.List;
 import io.github.stevenalbert.answersheetscorer.R;
 import io.github.stevenalbert.answersheetscorer.database.AppDatabase;
 import io.github.stevenalbert.answersheetscorer.model.Answer;
+import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
 import io.github.stevenalbert.answersheetscorer.model.AnswerSheet;
 import io.github.stevenalbert.answersheetscorer.model.Option;
+import io.github.stevenalbert.answersheetscorer.ui.adapter.AnswerNumberAdapter;
 import io.github.stevenalbert.answersheetscorer.viewmodel.AnswerKeyViewModel;
 import io.github.stevenalbert.answersheetscorer.viewmodel.AnswerSheetViewModel;
 
@@ -34,13 +39,12 @@ public class AnswerSheetDetailFragment extends Fragment {
     private static final String TAG = AnswerSheetDetailFragment.class.getSimpleName();
 
     // Views
-    private TextView answerSheetResult;
+    private RecyclerView answerRecyclerView;
+    private TextView exCodeText;
+    private TextView mCodeText;
 
-    // Processed AnswerSheet
+    // AnswerSheet
     private AnswerSheet answerSheet;
-
-    // AppDatabase
-    private AppDatabase database;
 
     public AnswerSheetDetailFragment() {
         // Required empty public constructor
@@ -57,79 +61,33 @@ public class AnswerSheetDetailFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        answerSheetResult = view.findViewById(R.id.answer_sheet_result);
+        answerRecyclerView = view.findViewById(R.id.answer_recycler_view);
+        AnswerNumberAdapter adapter = new AnswerNumberAdapter(getContext());
+        adapter.setAnswers(answerSheet.getAnswers());
 
-        answerSheetResult.setText(readAnswerSheet());
+        answerRecyclerView.setAdapter(adapter);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+        answerRecyclerView.setLayoutManager(layoutManager);
 
-        database = AppDatabase.getInstance(getContext());
+        DividerItemDecoration divider = new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL);
+        answerRecyclerView.addItemDecoration(divider);
 
-        AnswerSheetViewModel answerSheetViewModel = ViewModelProviders.of(this).get(AnswerSheetViewModel.class);
-        AnswerKeyViewModel answerKeyViewModel = ViewModelProviders.of(this).get(AnswerKeyViewModel.class);
-        answerSheetViewModel.insert(answerSheet);
+        mCodeText = view.findViewById(R.id.m_code_text);
+        StringBuilder mCodeTextBuilder = new StringBuilder("000");
+        String mCodeTextString = Integer.toString(answerSheet.getMCode());
+        mCodeTextBuilder.replace(mCodeTextBuilder.length() - mCodeTextString.length(), mCodeTextBuilder.length(), mCodeTextString);
+        mCodeText.setText("MCode = " + mCodeTextBuilder.toString());
+
+        exCodeText = view.findViewById(R.id.ex_code_text);
+        StringBuilder exCodeTextBuilder = new StringBuilder("000");
+        String exCodeTextString = Integer.toString(answerSheet.getExCode());
+        exCodeTextBuilder.replace(exCodeTextBuilder.length() - exCodeTextString.length(), exCodeTextBuilder.length(), exCodeTextString);
+        exCodeText.setText("ExCode = " + exCodeTextBuilder.toString());
     }
 
     public static AnswerSheetDetailFragment newInstance(AnswerSheet answerSheet) {
         AnswerSheetDetailFragment newFragment = new AnswerSheetDetailFragment();
         newFragment.answerSheet = answerSheet;
         return newFragment;
-    }
-
-    private String readAnswerSheet() {
-        StringBuilder builder = new StringBuilder();
-
-        // EXCODE
-        builder.append("ExCode = ");
-        builder.append(answerSheet.getExCode());
-        builder.append('\n');
-
-        // MCODE
-        builder.append("MCode = ");
-        builder.append(answerSheet.getMCode());
-        builder.append('\n');
-
-        // ANSWERS
-        Option[] options = Option.values();
-        for (int number = 1; number <= answerSheet.getTotalAnswer(); number++) {
-            Answer answer = answerSheet.getAnswerOn(number);
-            builder.append(number);
-            builder.append(".    ");
-            builder.append((number < 10 ? " " : ""));
-            for (Option option : options) {
-                builder.append((answer.isOptionChosen(option) ? 1 : 0));
-                builder.append("  ");
-            }
-            builder.append('\n');
-        }
-
-        return builder.toString();
-    }
-
-    private void onFinishedInsertTask(List<Long> ids) {
-        Toast.makeText(getContext(), "Finish inserting answer sheet with ids: " + ids.toString(), Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "Finish inserting answer sheet with ids: " + ids.toString());
-    }
-
-    private class AnswerSheetInsertTask extends AsyncTask<AnswerSheet, Void, List<Long>> {
-
-        private AppDatabase database;
-
-        public AnswerSheetInsertTask(AppDatabase database) {
-            this.database = database;
-        }
-
-        @Override
-        protected List<Long> doInBackground(AnswerSheet... answerSheets) {
-            List<Long> ids = new ArrayList<>();
-            for(AnswerSheet answerSheet : answerSheets) {
-                ids.add(this.database.answerSheetDao().insert(answerSheet));
-            }
-            return ids;
-        }
-
-        @Override
-        protected void onPostExecute(List<Long> longs) {
-            super.onPostExecute(longs);
-            onFinishedInsertTask(longs);
-        }
     }
 }

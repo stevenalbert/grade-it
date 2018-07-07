@@ -18,7 +18,7 @@ public interface AnswerKeyDao {
     @Insert
     long insert(AnswerKey answerKey);
     @Update
-    long update(AnswerKey answerKey);
+    int update(AnswerKey answerKey);
     @Query("SELECT * FROM answer_key")
     LiveData<List<AnswerKey>> getAllAnswerKeys();
     @Query("SELECT * FROM answer_key WHERE m_code = :mCode")

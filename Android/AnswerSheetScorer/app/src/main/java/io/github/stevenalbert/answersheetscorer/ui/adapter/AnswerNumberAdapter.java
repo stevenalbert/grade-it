@@ -37,6 +37,7 @@ public class AnswerNumberAdapter extends RecyclerView.Adapter<AnswerNumberAdapte
 
     @Override
     public void onBindViewHolder(@NonNull AnswerNumberViewHolder holder, int position) {
+        holder.number.setText(Integer.toString(position + 1));
         if(answers != null) {
             Answer answer = answers[position];
             Option[] options = Option.values();
@@ -45,6 +46,10 @@ public class AnswerNumberAdapter extends RecyclerView.Adapter<AnswerNumberAdapte
                     holder.options.get(option).setBackgroundColor(
                             ContextCompat.getColor(layoutInflater.getContext(), android.R.color.holo_green_light)
                     );
+                } else {
+                    holder.options.get(option).setBackgroundColor(
+                            ContextCompat.getColor(layoutInflater.getContext(), android.R.color.white)
+                    );
                 }
             }
         }
@@ -52,7 +57,9 @@ public class AnswerNumberAdapter extends RecyclerView.Adapter<AnswerNumberAdapte
 
     @Override
     public int getItemCount() {
-        return 0;
+        if(answers != null) return answers.length;
+        else return 0;
+
     }
 
     public void setAnswers(Answer[] answers) {
@@ -63,7 +70,9 @@ public class AnswerNumberAdapter extends RecyclerView.Adapter<AnswerNumberAdapte
     public void setAnswers(Option[] answersOption) {
         this.answers = new Answer[answersOption.length];
         for(int i = 0; i < answersOption.length; i++) {
-            this.answers[i].setOptionChosen(answersOption[i], true);
+            this.answers[i] = new Answer();
+            if(answersOption[i] != null)
+                this.answers[i].setOptionChosen(answersOption[i], true);
         }
         notifyDataSetChanged();
     }

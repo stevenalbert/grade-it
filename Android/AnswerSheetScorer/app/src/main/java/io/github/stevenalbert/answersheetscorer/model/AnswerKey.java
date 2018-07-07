@@ -4,11 +4,13 @@ import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
+import android.arch.persistence.room.TypeConverters;
 
 /**
  * Created by Steven Albert on 7/6/2018.
  */
 @Entity(tableName = "answer_key")
+@TypeConverters({AnswerKeyConverter.class})
 public class AnswerKey {
 
     @Ignore

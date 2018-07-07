@@ -3,6 +3,7 @@ package io.github.stevenalbert.answersheetscorer.ui.activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -91,5 +92,10 @@ public class MainActivity extends TabActivity implements OnFragmentInteractionLi
         Intent answerSheetDetailIntent = new Intent(this, AnswerSheetDetailActivity.class);
         answerSheetDetailIntent.putExtra(AnswerSheetDetailActivity.ANSWER_SHEET_INTENT_KEY, answerSheet);
         startActivity(answerSheetDetailIntent);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 }

@@ -19,6 +19,8 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -60,6 +62,11 @@ public class ProcessFragment extends Fragment {
     // Process button
     private Button processButton;
 
+    // Progress bar
+    private ProgressBar progressBar;
+    private TextView progressText;
+    private TextView progressDescription;
+
     // OnProcessFinishListener object
     private OnProcessFinishListener onProcessFinishListener;
 
@@ -99,9 +106,23 @@ public class ProcessFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getContext(), R.string.process_button_start, Toast.LENGTH_SHORT).show();
+
+                // Disable button
+                processButton.setEnabled(false);
+                processButton.setVisibility(View.INVISIBLE);
+
+                progressBar.setVisibility(View.VISIBLE);
+
                 startProcessImage();
             }
         });
+
+        progressBar = view.findViewById(R.id.progress_bar);
+        progressBar.setMax(3);
+        progressBar.setVisibility(View.INVISIBLE);
+
+        progressText = view.findViewById(R.id.progress_text);
+        progressDescription = view.findViewById(R.id.progress_description);
     }
 
     @Override
@@ -145,9 +166,6 @@ public class ProcessFragment extends Fragment {
     private void startProcessImage() {
         ProcessAsyncTask task = new ProcessAsyncTask();
         task.execute(Uri.parse(getArguments().getString(IMAGE_URI)));
-
-        // Disable button
-        processButton.setEnabled(false);
     }
 
     private void nextProcessAnswerSheet(AnswerSheet answerSheet) {
@@ -157,8 +175,12 @@ public class ProcessFragment extends Fragment {
     }
 
     private void notify(String message) {
-        Log.i(TAG, message);
-        Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
+        progressDescription.setText(message);
+    }
+
+    private void updateProgressBar(int progressNumber) {
+        progressBar.setProgress(progressNumber);
+        progressText.setText(progressBar.getProgress() + " / " + progressBar.getMax());
     }
 
     private class ProcessAsyncTask extends AsyncTask<Uri, Object, AnswerSheet> {
@@ -183,36 +205,36 @@ public class ProcessFragment extends Fragment {
             try {
                 AnswerSheetMetadata metadata = new AnswerSheetMetadata(metadataInputStream);
 
+                publishProgress(Integer.valueOf(1));
                 sectionStartTime = System.nanoTime();
-                publishProgress("Start converting image");
+                publishProgress("Converting image");
                 imageMat = AnswerSheetScorer.convertAnswerSheet(imageMat, metadata);
-                publishProgress("Finish converting image");
                 sectionEndTime = System.nanoTime();
                 image = Bitmap.createBitmap(imageMat.cols(), imageMat.rows(), Bitmap.Config.ARGB_8888);
                 Utils.matToBitmap(imageMat, image, true);
                 publishProgress(image);
                 publishProgress(sectionEndTime - sectionStartTime);
 
+                publishProgress(Integer.valueOf(2));
                 sectionStartTime = System.nanoTime();
-                publishProgress("Start retrieving answer sheet squares");
+                publishProgress("Retrieving answer sheet squares");
                 Mat updateImageMat = new Mat(imageMat.rows(), imageMat.cols(), CvType.CV_8UC3);
                 ArrayList<AnswerMat> matSquares = AnswerSheetScorer.processAnswerSheet(imageMat, updateImageMat, metadata);
-                publishProgress("Finish retrieving answer sheet squares");
                 sectionEndTime = System.nanoTime();
                 Utils.matToBitmap(updateImageMat, image, true);
                 publishProgress(image);
                 publishProgress(sectionEndTime - sectionStartTime);
                 updateImageMat.release();
 
+                publishProgress(Integer.valueOf(3));
                 sectionStartTime = System.nanoTime();
-                publishProgress("Start scoring answer sheet");
+                publishProgress("Recognizing answer sheet");
                 AnswerSheet answerSheet = AnswerSheetScorer.scoreAnswerSheet(matSquares);
-                publishProgress("Finish scoring answer sheet");
                 sectionEndTime = System.nanoTime();
                 publishProgress(sectionEndTime - sectionStartTime);
 
                 endTime = System.nanoTime();
-                publishProgress("Total elapsed time", endTime - startTime);
+                publishProgress(endTime - startTime);
 
                 return answerSheet;
             } catch (Exception e) {
@@ -231,6 +253,8 @@ public class ProcessFragment extends Fragment {
                     updateImage(imageView, bitmap);
                 } else if(value instanceof Long) {
                     Log.d(TAG, "Elapsed process time = " + ((Long) value).doubleValue() / 1e9);
+                } else if(value instanceof Integer) {
+                    updateProgressBar((Integer) value);
                 }
             }
         }

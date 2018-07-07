@@ -11,8 +11,8 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,8 +24,6 @@ import android.widget.Toast;
 import java.io.File;
 
 import io.github.stevenalbert.answersheetscorer.R;
-import io.github.stevenalbert.answersheetscorer.util.CameraPermission;
-import io.github.stevenalbert.answersheetscorer.util.ExternalStoragePermission;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -99,8 +97,9 @@ public class GetMarkFragment extends Fragment {
 
     private void getPhotoByCamera() {
 
-        if(!CameraPermission.isGranted(getContext()) || !ExternalStoragePermission.isWriteGranted(getContext())) {
-            ActivityCompat.requestPermissions(getActivity(), new String[] {
+        if(ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[] {
                     Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE
             }, CAMERA_PERMISSION_CODE);
             return;
@@ -123,8 +122,9 @@ public class GetMarkFragment extends Fragment {
     }
 
     private void getImageFromGallery() {
-        if(!ExternalStoragePermission.isReadGranted(getContext())) {
-            ExternalStoragePermission.requestRead(getActivity(), READ_EXTERNAL_STORAGE_PERMISSION_CODE);
+        if(ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
+                    READ_EXTERNAL_STORAGE_PERMISSION_CODE);
             return;
         }
 
@@ -182,8 +182,10 @@ public class GetMarkFragment extends Fragment {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
+        Log.d(TAG, "onRequestPermissionsResult in");
         if(requestCode == READ_EXTERNAL_STORAGE_PERMISSION_CODE) {
             if(grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "onRequestPermissionsResult in gallery");
                 getImageFromGallery();
             } else {
                 Toast.makeText(getContext(), "Can't get image from gallery", Toast.LENGTH_SHORT).show();
@@ -192,6 +194,7 @@ public class GetMarkFragment extends Fragment {
         if(requestCode == CAMERA_PERMISSION_CODE) {
             if(grantResults.length == 2 && grantResults[0] == PackageManager.PERMISSION_GRANTED
                     && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "onRequestPermissionsResult in photo");
                 getPhotoByCamera();
             } else {
                 Toast.makeText(getContext(), "Camera permission denied", Toast.LENGTH_SHORT).show();
