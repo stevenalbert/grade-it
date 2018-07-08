@@ -13,46 +13,61 @@ import android.widget.TextView;
 import java.util.List;
 
 import io.github.stevenalbert.answersheetscorer.R;
+import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
 import io.github.stevenalbert.answersheetscorer.model.AnswerSheet;
 
 /**
  * Created by Steven Albert on 7/5/2018.
  */
-public class AnswerSheetListAdapter extends RecyclerView.Adapter<AnswerSheetListAdapter.AnswerSheetViewHolder> {
+public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    private OnSelectAnswerSheetListener listener;
+    private static final int ANSWER_KEY_VIEW_TYPE = 1;
+    private static final int ANSWER_SHEET_VIEW_TYPE = 2;
+
+    private OnSelectListener listener;
     private LayoutInflater layoutInflater;
     private List<AnswerSheet> answerSheets;
+    private List<AnswerKey> answerKeys;
 
-    public interface OnSelectAnswerSheetListener {
+    public interface OnSelectListener {
         void onSelectAnswerSheet(AnswerSheet answerSheet);
+        void onSelectAnswerKey(AnswerKey answerKey);
     }
 
-    public AnswerSheetListAdapter(Context context, OnSelectAnswerSheetListener listener) {
+    public AnswerSheetListAdapter(Context context, OnSelectListener listener) {
         layoutInflater = LayoutInflater.from(context);
         this.listener = listener;
     }
 
     @NonNull
     @Override
-    public AnswerSheetViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new AnswerSheetViewHolder(
-                layoutInflater.inflate(R.layout.answer_sheet_list_item, parent, false)
-        );
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        return (viewType == ANSWER_KEY_VIEW_TYPE ?
+                new AnswerKeyViewHolder(
+                        layoutInflater.inflate(R.layout.answer_key_list_item, parent, false))
+                : new AnswerSheetViewHolder(
+                        layoutInflater.inflate(R.layout.answer_sheet_list_item, parent, false)));
     }
 
     @Override
-    public void onBindViewHolder(@NonNull AnswerSheetViewHolder holder, int position) {
-        if(answerSheets != null) {
-            AnswerSheet answerSheet = answerSheets.get(position);
-            if(answerSheet.getMCode() != 0) {
-                holder.cardView.setCardBackgroundColor(ContextCompat.getColor(layoutInflater.getContext(), R.color.colorAccent));
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if(answerKeys != null) {
+            if(position < answerKeys.size()) {
+                AnswerKey answerKey = answerKeys.get(position);
+                AnswerKeyViewHolder viewHolder = (AnswerKeyViewHolder) holder;
+
+                viewHolder.cardView.setCardBackgroundColor(ContextCompat.getColor(layoutInflater.getContext(), R.color.main_menu_item));
+                viewHolder.mCodeTextView.setText(answerKey.getMCodeString());
+            } else {
+                position -= answerKeys.size();
+
+                AnswerSheetViewHolder viewHolder = (AnswerSheetViewHolder) holder;
+                AnswerSheet answerSheet = answerSheets.get(position);
+
+                viewHolder.cardView.setCardBackgroundColor(ContextCompat.getColor(layoutInflater.getContext(), R.color.colorAccent));
+                viewHolder.exCodeTextView.setText(answerSheet.getExCodeString());
+                viewHolder.mCodeTextView.setText(answerSheet.getMCodeString());
             }
-            holder.exCodeTextView.setText(String.valueOf(answerSheet.getExCode()));
-            holder.mCodeTextView.setText(String.valueOf(answerSheet.getMCode()));
-        } else {
-            holder.exCodeTextView.setText(R.string.none);
-            holder.mCodeTextView.setText(R.string.none);
         }
     }
 
@@ -61,10 +76,23 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<AnswerSheetList
         notifyDataSetChanged();
     }
 
+    public void setAnswerKeys(List<AnswerKey> answerKeys) {
+        this.answerKeys = answerKeys;
+        notifyDataSetChanged();
+    }
+
     @Override
     public int getItemCount() {
-        if(answerSheets != null) return answerSheets.size();
-        else return 0;
+        int count = 0;
+        if(answerKeys != null) count += answerKeys.size();
+        if(answerSheets != null) count += answerSheets.size();
+        return count;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if(position < answerKeys.size()) return ANSWER_KEY_VIEW_TYPE;
+        else return ANSWER_SHEET_VIEW_TYPE;
     }
 
     public class AnswerSheetViewHolder extends RecyclerView.ViewHolder {
@@ -82,7 +110,29 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<AnswerSheetList
                 @Override
                 public void onClick(View v) {
                     if(listener != null) {
-                        listener.onSelectAnswerSheet(answerSheets.get(getAdapterPosition()));
+                        int adapterPosition = getAdapterPosition() - (answerKeys != null ? answerKeys.size() : 0);
+                        listener.onSelectAnswerSheet(answerSheets.get(adapterPosition));
+                    }
+                }
+            });
+        }
+    }
+
+    public class AnswerKeyViewHolder extends RecyclerView.ViewHolder {
+
+        private CardView cardView;
+        private TextView mCodeTextView;
+
+        private AnswerKeyViewHolder(View itemView) {
+            super(itemView);
+            cardView = itemView.findViewById(R.id.answer_sheet_info_card_view);
+            mCodeTextView = itemView.findViewById(R.id.m_code_text);
+            cardView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(listener != null) {
+                        int adapterPosition = getAdapterPosition();
+                        listener.onSelectAnswerKey(answerKeys.get(adapterPosition));
                     }
                 }
             });

@@ -21,7 +21,7 @@ public class AnswerSheetDetailActivity extends LayoutToolbarActivity {
         Bundle bundle = getIntent().getExtras();
         if(bundle != null) {
             AnswerSheet answerSheet = bundle.getParcelable(ANSWER_SHEET_INTENT_KEY);
-            changeFragment(AnswerSheetDetailFragment.newInstance(answerSheet));
+//            changeFragment(AnswerSheetDetailFragment.newInstance(answerSheet));
         } else {
             Toast.makeText(this, "No answer sheet is found", Toast.LENGTH_SHORT).show();
         }

@@ -3,35 +3,26 @@ package io.github.stevenalbert.answersheetscorer.ui.fragment;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.media.ExifInterface;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.opencv.android.BaseLoaderCallback;
-import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.imgcodecs.Imgcodecs;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -229,7 +220,7 @@ public class ProcessFragment extends Fragment {
                 publishProgress(Integer.valueOf(3));
                 sectionStartTime = System.nanoTime();
                 publishProgress("Recognizing answer sheet");
-                AnswerSheet answerSheet = AnswerSheetScorer.scoreAnswerSheet(matSquares);
+                AnswerSheet answerSheet = AnswerSheetScorer.recognizeAnswerSheet(matSquares);
                 sectionEndTime = System.nanoTime();
                 publishProgress(sectionEndTime - sectionStartTime);
 
@@ -264,11 +255,11 @@ public class ProcessFragment extends Fragment {
             super.onPostExecute(answerSheet);
             if(answerSheet != null) {
                 Toast.makeText(getActivity(), "Answer sheet retrieved! Well done!", Toast.LENGTH_SHORT).show();
-                nextProcessAnswerSheet(answerSheet);
             }
             else {
                 Toast.makeText(getActivity(), "Failed to get answer sheet", Toast.LENGTH_SHORT).show();
             }
+            nextProcessAnswerSheet(answerSheet);
         }
     }
 }

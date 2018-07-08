@@ -25,6 +25,7 @@
     <string name="answer_sheet">Answer Sheet</string>
     <string name="process_title">Mark Answer Sheet</string>
     <string name="process_button_start">Start Marking</string>
+    <string name="answer_key_list_item_title">KEY</string>
 
     <!-- View marks -->
     <string name="mark_ex_code_select">Select available ExCode:</string>
@@ -36,4 +37,11 @@
     <string name="option_c">C</string>
     <string name="option_d">D</string>
     <string name="option_e">E</string>
+
+    <string name="no_answer_sheet_error_message">Answer sheet can\'t be found.\nPlease retry again.</string>
+    <string name="no_answer_key_error_message">There is no answer key with MCode: %1$s.\nPlease add the respective answer key first (using ExCode: 000)</string>
+
+    <string name="m_code">MCode: %1$s</string>
+    <string name="ex_code">ExCode: %1$s</string>
+    <string name="ok">Ok</string>
 </resources>

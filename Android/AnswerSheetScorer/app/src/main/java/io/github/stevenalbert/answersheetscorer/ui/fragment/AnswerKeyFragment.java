@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import io.github.stevenalbert.answersheetscorer.R;
 import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
+import io.github.stevenalbert.answersheetscorer.ui.adapter.AnswerKeyNumberAdapter;
 import io.github.stevenalbert.answersheetscorer.ui.adapter.AnswerNumberAdapter;
 
 /**
@@ -48,8 +49,8 @@ public class AnswerKeyFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         answerRecyclerView = view.findViewById(R.id.answer_recycler_view);
-        AnswerNumberAdapter adapter = new AnswerNumberAdapter(getContext());
-        adapter.setAnswers(answerKey.getAnswerKeys());
+        AnswerKeyNumberAdapter adapter = new AnswerKeyNumberAdapter(getContext());
+        adapter.setAnswerKey(answerKey);
 
         answerRecyclerView.setAdapter(adapter);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
@@ -59,9 +60,6 @@ public class AnswerKeyFragment extends Fragment {
         answerRecyclerView.addItemDecoration(divider);
 
         mCodeText = view.findViewById(R.id.m_code_text);
-        StringBuilder mCodeTextBuilder = new StringBuilder("000");
-        String mCodeTextString = Integer.toString(answerKey.getMCode());
-        mCodeTextBuilder.replace(mCodeTextBuilder.length() - mCodeTextString.length(), mCodeTextBuilder.length(), mCodeTextString);
-        mCodeText.setText("MCode = " + mCodeTextBuilder.toString());
+        mCodeText.setText(getString(R.string.m_code, answerKey.getMCodeString()));
     }
 }

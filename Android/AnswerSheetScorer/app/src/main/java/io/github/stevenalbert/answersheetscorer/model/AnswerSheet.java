@@ -234,8 +234,22 @@ public class AnswerSheet implements Parcelable {
         return this.exCode;
     }
 
+    public String getExCodeString() {
+        StringBuilder exCodeTextBuilder = new StringBuilder("000");
+        String exCodeTextString = Integer.toString(getExCode());
+        exCodeTextBuilder.replace(exCodeTextBuilder.length() - exCodeTextString.length(), exCodeTextBuilder.length(), exCodeTextString);
+        return exCodeTextBuilder.toString();
+    }
+
     public int getMCode() {
         return this.mCode;
+    }
+
+    public String getMCodeString() {
+        StringBuilder mCodeTextBuilder = new StringBuilder("000");
+        String mCodeTextString = Integer.toString(getMCode());
+        mCodeTextBuilder.replace(mCodeTextBuilder.length() - mCodeTextString.length(), mCodeTextBuilder.length(), mCodeTextString);
+        return mCodeTextBuilder.toString();
     }
 
     public int getAnswerVerdict(int number) {

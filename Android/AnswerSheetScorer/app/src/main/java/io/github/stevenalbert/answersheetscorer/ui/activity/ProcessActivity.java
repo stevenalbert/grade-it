@@ -1,22 +1,37 @@
 package io.github.stevenalbert.answersheetscorer.ui.activity;
 
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
+import android.content.DialogInterface;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.OpenCVLoader;
 
+import java.util.List;
+
 import io.github.stevenalbert.answersheetscorer.R;
 import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
 import io.github.stevenalbert.answersheetscorer.model.AnswerSheet;
+import io.github.stevenalbert.answersheetscorer.process.AnswerSheetScorer;
 import io.github.stevenalbert.answersheetscorer.ui.fragment.AnswerKeyFragment;
 import io.github.stevenalbert.answersheetscorer.ui.fragment.ProcessFragment;
 import io.github.stevenalbert.answersheetscorer.ui.fragment.AnswerSheetDetailFragment;
+import io.github.stevenalbert.answersheetscorer.viewmodel.AnswerKeyViewModel;
+import io.github.stevenalbert.answersheetscorer.viewmodel.AnswerSheetViewModel;
 
 public class ProcessActivity extends LayoutToolbarActivity implements ProcessFragment.OnProcessFinishListener {
 
     // TAG
     private static final String TAG = ProcessActivity.class.getSimpleName();
+
+    // AnswerSheet from recognition
+    private AnswerSheet answerSheet = null;
+    private AnswerKey answerKey = null;
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -49,11 +64,84 @@ public class ProcessActivity extends LayoutToolbarActivity implements ProcessFra
 
     @Override
     public void onFinish(AnswerSheet answerSheet) {
-        if(AnswerKey.isAnswerKey(answerSheet)) {
-            AnswerKey answerKey = AnswerKey.fromAnswerSheet(answerSheet);
-            changeFragment(AnswerKeyFragment.newInstance(answerKey));
+        if(answerSheet == null) {
+            AlertDialog alertDialog = new AlertDialog.Builder(this)
+                    .setMessage(getString(R.string.no_answer_sheet_error_message))
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    })
+                    .create();
+
+            alertDialog.show();
         } else {
-            changeFragment(AnswerSheetDetailFragment.newInstance(answerSheet));
+            if(AnswerKey.isAnswerKey(answerSheet)) {
+                AnswerKey key = AnswerKey.fromAnswerSheet(answerSheet);
+                ViewModelProviders.of(this).get(AnswerKeyViewModel.class)
+                        .insert(key);
+                changeFragment(AnswerKeyFragment.newInstance(key));
+            } else {
+                this.answerSheet = answerSheet;
+                ViewModelProviders.of(this).get(AnswerKeyViewModel.class)
+                        .getAnswerKeyByMCode(answerSheet.getMCode())
+                        .observe(this, new Observer<List<AnswerKey>>() {
+                            @Override
+                            public void onChanged(@Nullable List<AnswerKey> answerKeys) {
+                                scoreAnswerSheet(answerKeys.size() > 0 ? answerKeys.get(0) : null);
+                            }
+                        });
+            }
+        }
+    }
+
+    private void scoreAnswerSheet(AnswerKey answerKey) {
+        Log.d(TAG, "AnswerKey = " + answerKey);
+        if(answerKey == null) {
+            AlertDialog alertDialog = new AlertDialog.Builder(this)
+                    .setMessage(getString(R.string.no_answer_key_error_message, answerSheet.getMCodeString()))
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    })
+                    .create();
+
+            alertDialog.show();
+        } else {
+            this.answerKey = answerKey;
+            new ScoreAsyncTask(answerSheet, answerKey).execute();
+        }
+    }
+
+    private void onFinishScoredAnswerSheet() {
+        ViewModelProviders.of(this).get(AnswerSheetViewModel.class)
+                .insert(answerSheet);
+        changeFragment(AnswerSheetDetailFragment.newInstance(answerSheet, answerKey));
+    }
+
+    private class ScoreAsyncTask extends AsyncTask<Void, Void, Void> {
+
+        private AnswerSheet answerSheet;
+        private AnswerKey answerKey;
+
+        private ScoreAsyncTask(AnswerSheet answerSheet, AnswerKey answerKey) {
+            this.answerSheet = answerSheet;
+            this.answerKey = answerKey;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            AnswerSheetScorer.scoreAnswerSheet(answerSheet, answerKey);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            onFinishScoredAnswerSheet();
         }
     }
 }

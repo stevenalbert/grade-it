@@ -16,9 +16,11 @@ import android.view.ViewGroup;
 import java.util.List;
 
 import io.github.stevenalbert.answersheetscorer.R;
+import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
 import io.github.stevenalbert.answersheetscorer.model.AnswerSheet;
 import io.github.stevenalbert.answersheetscorer.ui.adapter.AnswerSheetListAdapter;
 import io.github.stevenalbert.answersheetscorer.ui.listener.OnFragmentInteractionListener;
+import io.github.stevenalbert.answersheetscorer.viewmodel.AnswerKeyViewModel;
 import io.github.stevenalbert.answersheetscorer.viewmodel.AnswerSheetViewModel;
 
 /**
@@ -27,9 +29,11 @@ import io.github.stevenalbert.answersheetscorer.viewmodel.AnswerSheetViewModel;
  * {@link OnFragmentInteractionListener} interface
  * to handle interaction events.
  */
-public class ViewMarksFragment extends Fragment implements AnswerSheetListAdapter.OnSelectAnswerSheetListener {
+public class ViewMarksFragment extends Fragment implements AnswerSheetListAdapter.OnSelectListener {
 
-    private OnSelectAnswerSheetListener listener;
+    private static final String TAG = ViewMarksFragment.class.getSimpleName();
+
+    private OnSelectListener listener;
 
     // Views
     private RecyclerView marksRecyclerView;
@@ -37,6 +41,7 @@ public class ViewMarksFragment extends Fragment implements AnswerSheetListAdapte
     private AnswerSheetListAdapter adapter;
     // ViewModel
     private AnswerSheetViewModel answerSheetViewModel;
+    private AnswerKeyViewModel answerKeyViewModel;
 
     @Override
     public void onSelectAnswerSheet(AnswerSheet answerSheet) {
@@ -45,8 +50,16 @@ public class ViewMarksFragment extends Fragment implements AnswerSheetListAdapte
         }
     }
 
-    public interface OnSelectAnswerSheetListener {
+    @Override
+    public void onSelectAnswerKey(AnswerKey answerKey) {
+        if(listener != null) {
+            listener.onSelectAnswerKey(answerKey);
+        }
+    }
+
+    public interface OnSelectListener {
         void onSelectAnswerSheet(AnswerSheet answerSheet);
+        void onSelectAnswerKey(AnswerKey answerKey);
     }
 
     public ViewMarksFragment() {
@@ -78,16 +91,23 @@ public class ViewMarksFragment extends Fragment implements AnswerSheetListAdapte
                 adapter.setAnswerSheets(answerSheets);
             }
         });
+        answerKeyViewModel = ViewModelProviders.of(this).get(AnswerKeyViewModel.class);
+        answerKeyViewModel.getAnswerKeys().observe(this, new Observer<List<AnswerKey>>() {
+            @Override
+            public void onChanged(@Nullable List<AnswerKey> answerKeys) {
+                adapter.setAnswerKeys(answerKeys);
+            }
+        });
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnSelectAnswerSheetListener) {
-            listener = (OnSelectAnswerSheetListener) context;
+        if (context instanceof OnSelectListener) {
+            listener = (OnSelectListener) context;
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement " + OnSelectAnswerSheetListener.class.getSimpleName());
+                    + " must implement " + OnSelectListener.class.getSimpleName());
         }
     }
 

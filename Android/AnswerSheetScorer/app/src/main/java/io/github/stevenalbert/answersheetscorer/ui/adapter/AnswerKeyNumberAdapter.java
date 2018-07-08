@@ -14,44 +14,38 @@ import java.util.EnumMap;
 import io.github.stevenalbert.answersheetscorer.R;
 import io.github.stevenalbert.answersheetscorer.model.Answer;
 import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
-import io.github.stevenalbert.answersheetscorer.model.AnswerSheet;
 import io.github.stevenalbert.answersheetscorer.model.Option;
 
 /**
- * Created by Steven Albert on 7/6/2018.
+ * Created by Steven Albert on 7/7/2018.
  */
-public class AnswerNumberAdapter extends RecyclerView.Adapter<AnswerNumberAdapter.AnswerNumberViewHolder> {
+public class AnswerKeyNumberAdapter extends RecyclerView.Adapter<AnswerKeyNumberAdapter.AnswerKeyNumberViewHolder> {
 
     private LayoutInflater layoutInflater;
-    private AnswerSheet answerSheet;
     private AnswerKey answerKey;
 
-    public AnswerNumberAdapter(Context context) {
+    public AnswerKeyNumberAdapter(Context context) {
         layoutInflater = LayoutInflater.from(context);
     }
 
     @NonNull
     @Override
-    public AnswerNumberViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new AnswerNumberViewHolder(
+    public AnswerKeyNumberViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        return new AnswerKeyNumberViewHolder(
                 layoutInflater.inflate(R.layout.answer_number_item, parent, false)
         );
     }
 
     @Override
-    public void onBindViewHolder(@NonNull AnswerNumberViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull AnswerKeyNumberViewHolder holder, int position) {
         holder.number.setText(Integer.toString(position + 1));
-        if(answerSheet != null && answerKey != null) {
-            Answer answer = answerSheet.getAnswerOn(position + 1);
+        if(answerKey != null) {
             Option trueOption = answerKey.getAnswerKey(position + 1);
             Option[] options = Option.values();
             for(Option option : options) {
-                if(answer.isOptionChosen(option)) {
+                if(option.equals(trueOption)) {
                     holder.options.get(option).setBackgroundColor(
-                            ContextCompat.getColor(layoutInflater.getContext(),
-                                    option.equals(trueOption) ?
-                                            android.R.color.holo_green_light :
-                                            android.R.color.holo_red_light)
+                            ContextCompat.getColor(layoutInflater.getContext(), android.R.color.holo_green_light)
                     );
                 } else {
                     holder.options.get(option).setBackgroundColor(
@@ -64,23 +58,22 @@ public class AnswerNumberAdapter extends RecyclerView.Adapter<AnswerNumberAdapte
 
     @Override
     public int getItemCount() {
-        if(answerSheet != null) return answerSheet.getTotalAnswer();
+        if(answerKey != null) return answerKey.getAnswerKeys().length;
         else return 0;
 
     }
 
-    public void setAnswerSheet(AnswerSheet answerSheet, AnswerKey answerKey) {
-        this.answerSheet = answerSheet;
+    public void setAnswerKey(AnswerKey answerKey) {
         this.answerKey = answerKey;
         notifyDataSetChanged();
     }
 
-    public class AnswerNumberViewHolder extends RecyclerView.ViewHolder {
+    public class AnswerKeyNumberViewHolder extends RecyclerView.ViewHolder {
 
         private TextView number;
         private EnumMap<Option, TextView> options;
 
-        public AnswerNumberViewHolder(View itemView) {
+        public AnswerKeyNumberViewHolder(View itemView) {
             super(itemView);
 
             number = itemView.findViewById(R.id.number);

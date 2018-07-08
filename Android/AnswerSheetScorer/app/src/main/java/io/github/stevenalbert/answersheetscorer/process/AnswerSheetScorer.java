@@ -24,6 +24,7 @@ import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
 import io.github.stevenalbert.answersheetscorer.model.AnswerMat;
 import io.github.stevenalbert.answersheetscorer.model.AnswerSheet;
 import io.github.stevenalbert.answersheetscorer.model.AnswerSheetMetadata;
@@ -329,7 +330,7 @@ public class AnswerSheetScorer {
         return answerMats;
     }
 
-    public static AnswerSheet scoreAnswerSheet(ArrayList<AnswerMat> answerMats) {
+    public static AnswerSheet recognizeAnswerSheet(ArrayList<AnswerMat> answerMats) {
         final int TOTAL_ANSWER = 40;
         AnswerSheet answerSheet = new AnswerSheet(TOTAL_ANSWER);
         StringBuilder mCode = new StringBuilder("000");
@@ -364,6 +365,10 @@ public class AnswerSheetScorer {
         answerSheet.setMCode(mCode.toString());
 
         return answerSheet;
+    }
+
+    public static void scoreAnswerSheet(AnswerSheet answerSheet, AnswerKey answerKey) {
+        answerSheet.scoreAnswerSheet(answerKey);
     }
 
     private static ArrayList<AnswerMat> findAllRect(Mat src, Mat outputDraw, ArrayList<Rect> vertical,
