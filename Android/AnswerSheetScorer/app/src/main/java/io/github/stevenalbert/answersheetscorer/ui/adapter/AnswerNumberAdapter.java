@@ -55,7 +55,10 @@ public class AnswerNumberAdapter extends RecyclerView.Adapter<AnswerNumberAdapte
                     );
                 } else {
                     holder.options.get(option).setBackgroundColor(
-                            ContextCompat.getColor(layoutInflater.getContext(), android.R.color.white)
+                            ContextCompat.getColor(layoutInflater.getContext(),
+                                    option.equals(trueOption) ?
+                                            android.R.color.holo_green_dark :
+                                            android.R.color.white)
                     );
                 }
             }

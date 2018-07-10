@@ -37,6 +37,12 @@ public class MainActivity extends TabActivity implements OnFragmentInteractionLi
         setupTabActivity(getAllTabFragments());
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setTitle(R.string.app_name);
+    }
+
     private ArrayList<TabFragment> getAllTabFragments() {
         final List<TabFragment> TAB_FRAGMENTS = Arrays.asList(
                 new TabFragment(new GetMarkFragment(), this.getString(R.string.mark_answer_title)),

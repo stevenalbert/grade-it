@@ -7,11 +7,13 @@ import android.arch.persistence.room.TypeConverter;
  */
 public class AnswerKeyConverter {
 
+    private static final Character NULL_OPTION = '-';
+
     @TypeConverter
     public static String optionsToString(Option[] options) {
         StringBuilder builder = new StringBuilder();
         for(Option option : options) {
-            builder.append(option.getOption());
+            builder.append(option == null ? NULL_OPTION : option.getOption());
         }
         return builder.toString();
     }
@@ -20,7 +22,7 @@ public class AnswerKeyConverter {
     public static Option[] optionsFromString(String value) {
         Option[] options = new Option[value.length()];
         for(int i = 0; i < options.length; i++) {
-            options[i] = Option.getOption(value.charAt(i));
+            options[i] = value.charAt(i) == NULL_OPTION ? null : Option.getOption(value.charAt(i));
         }
         return options;
     }

@@ -36,4 +36,12 @@ public class AnswerKeyViewModel extends AndroidViewModel {
     public void insert(AnswerKey answerKey) {
         repository.insert(answerKey);
     }
+
+    public void delete(AnswerKey answerKey) {
+        repository.delete(answerKey);
+    }
+
+    public void deleteAll() {
+        repository.deleteAll();
+    }
 }

@@ -44,4 +44,6 @@
     <string name="m_code">MCode: %1$s</string>
     <string name="ex_code">ExCode: %1$s</string>
     <string name="ok">Ok</string>
+
+    <string name="answer_key_detail_activity_title">Answer Key</string>
 </resources>

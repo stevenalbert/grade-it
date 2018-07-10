@@ -2,7 +2,9 @@ package io.github.stevenalbert.answersheetscorer.dao;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
+import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
+import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Update;
 
@@ -15,10 +17,14 @@ import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
  */
 @Dao
 public interface AnswerKeyDao {
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     long insert(AnswerKey answerKey);
-    @Update
+    @Update(onConflict = OnConflictStrategy.IGNORE)
     int update(AnswerKey answerKey);
+    @Delete
+    int delete(AnswerKey answerKey);
+    @Query("DELETE FROM answer_key")
+    void deleteAll();
     @Query("SELECT * FROM answer_key")
     LiveData<List<AnswerKey>> getAllAnswerKeys();
     @Query("SELECT * FROM answer_key WHERE m_code = :mCode")

@@ -37,6 +37,14 @@ public class AnswerKeyRepository {
         new InsertAsyncTask(answerKeyDao).execute(answerKey);
     }
 
+    public void delete(AnswerKey answerKey) {
+        new DeleteAsyncTask(answerKeyDao).execute(answerKey);
+    }
+
+    public void deleteAll() {
+        new DeleteAllAsyncTask(answerKeyDao).execute();
+    }
+
     private static class InsertAsyncTask extends AsyncTask<AnswerKey, Void, Void> {
 
         private AnswerKeyDao answerKeyDao;
@@ -52,4 +60,33 @@ public class AnswerKeyRepository {
         }
     }
 
+    private static class DeleteAsyncTask extends AsyncTask<AnswerKey, Void, Void> {
+
+        private AnswerKeyDao answerKeyDao;
+
+        public DeleteAsyncTask(AnswerKeyDao answerKeyDao) {
+            this.answerKeyDao = answerKeyDao;
+        }
+
+        @Override
+        protected Void doInBackground(AnswerKey... answerKeys) {
+            answerKeyDao.delete(answerKeys[0]);
+            return null;
+        }
+    }
+
+    private static class DeleteAllAsyncTask extends AsyncTask<Void, Void, Void> {
+
+        private AnswerKeyDao answerKeyDao;
+
+        public DeleteAllAsyncTask(AnswerKeyDao answerKeyDao) {
+            this.answerKeyDao = answerKeyDao;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            answerKeyDao.deleteAll();
+            return null;
+        }
+    }
 }
