@@ -9,6 +9,7 @@ import java.util.List;
 
 import io.github.stevenalbert.answersheetscorer.database.AnswerKeyRepository;
 import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
+import io.github.stevenalbert.answersheetscorer.model.AnswerKeyCode;
 
 /**
  * Created by Steven Albert on 7/6/2018.
@@ -16,21 +17,28 @@ import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
 public class AnswerKeyViewModel extends AndroidViewModel {
 
     private AnswerKeyRepository repository;
+    private LiveData<List<AnswerKeyCode>> answerKeysMetadata;
     private LiveData<List<AnswerKey>> answerKeys;
+    private LiveData<AnswerKey> answerKeyByMCode;
 
     public AnswerKeyViewModel(@NonNull Application application) {
         super(application);
         repository = new AnswerKeyRepository(application);
     }
 
+    public LiveData<List<AnswerKeyCode>> getAnswerKeysMetadata() {
+        answerKeysMetadata = repository.getAnswerKeysMetadata();
+        return answerKeysMetadata;
+    }
+
     public LiveData<List<AnswerKey>> getAnswerKeys() {
-        answerKeys = repository.getAnswerKeys(AnswerKeyRepository.NO_SPECIFIC_MCODE);
+        answerKeys = repository.getAnswerKeys();
         return answerKeys;
     }
 
-    public LiveData<List<AnswerKey>> getAnswerKeyByMCode(int mCode) {
-        answerKeys = repository.getAnswerKeys(mCode);
-        return answerKeys;
+    public LiveData<AnswerKey> getAnswerKeyByMCode(int mCode) {
+        answerKeyByMCode = repository.getAnswerKeyByMCode(mCode);
+        return answerKeyByMCode;
     }
 
     public void insert(AnswerKey answerKey) {

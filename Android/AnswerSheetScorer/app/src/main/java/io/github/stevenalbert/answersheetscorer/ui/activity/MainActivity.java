@@ -13,9 +13,9 @@ import java.util.List;
 
 import io.github.stevenalbert.answersheetscorer.R;
 import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
-import io.github.stevenalbert.answersheetscorer.model.AnswerSheet;
+import io.github.stevenalbert.answersheetscorer.model.AnswerKeyCode;
+import io.github.stevenalbert.answersheetscorer.model.AnswerSheetCode;
 import io.github.stevenalbert.answersheetscorer.ui.fragment.AnalysisFragment;
-import io.github.stevenalbert.answersheetscorer.ui.fragment.AnswerKeyFragment;
 import io.github.stevenalbert.answersheetscorer.ui.fragment.GetMarkFragment;
 import io.github.stevenalbert.answersheetscorer.ui.fragment.ViewMarksFragment;
 import io.github.stevenalbert.answersheetscorer.ui.listener.OnFragmentInteractionListener;
@@ -96,16 +96,16 @@ public class MainActivity extends TabActivity implements OnFragmentInteractionLi
     }
 
     @Override
-    public void onSelectAnswerSheet(AnswerSheet answerSheet) {
+    public void onSelectAnswerSheet(AnswerSheetCode answerSheetCode) {
         Intent answerSheetDetailIntent = new Intent(this, AnswerSheetDetailActivity.class);
-        answerSheetDetailIntent.putExtra(AnswerSheetDetailActivity.ANSWER_SHEET_INTENT_KEY, answerSheet);
+        answerSheetDetailIntent.putExtra(AnswerSheetDetailActivity.ANSWER_SHEET_CODE_INTENT_KEY, answerSheetCode);
         startActivity(answerSheetDetailIntent);
     }
 
     @Override
-    public void onSelectAnswerKey(AnswerKey answerKey) {
+    public void onSelectAnswerKey(AnswerKeyCode answerKeyCode) {
         Intent answerKeyDetailIntent = new Intent(this, AnswerKeyDetailActivity.class);
-        answerKeyDetailIntent.putExtra(AnswerKeyDetailActivity.ANSWER_KEY_INTENT_KEY, answerKey);
+        answerKeyDetailIntent.putExtra(AnswerKeyDetailActivity.ANSWER_KEY_INTENT_KEY, answerKeyCode);
         startActivity(answerKeyDetailIntent);
     }
 

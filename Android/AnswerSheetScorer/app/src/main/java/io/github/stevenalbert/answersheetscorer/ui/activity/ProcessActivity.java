@@ -33,6 +33,10 @@ public class ProcessActivity extends LayoutToolbarActivity implements ProcessFra
     private AnswerSheet answerSheet = null;
     private AnswerKey answerKey = null;
 
+    // ViewModel
+    private AnswerSheetViewModel answerSheetViewModel;
+    private AnswerKeyViewModel answerKeyViewModel;
+
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -84,14 +88,14 @@ public class ProcessActivity extends LayoutToolbarActivity implements ProcessFra
                 changeFragment(AnswerKeyFragment.newInstance(key));
             } else {
                 this.answerSheet = answerSheet;
-                ViewModelProviders.of(this).get(AnswerKeyViewModel.class)
-                        .getAnswerKeyByMCode(answerSheet.getMCode())
-                        .observe(this, new Observer<List<AnswerKey>>() {
-                            @Override
-                            public void onChanged(@Nullable List<AnswerKey> answerKeys) {
-                                scoreAnswerSheet(answerKeys.size() > 0 ? answerKeys.get(0) : null);
-                            }
-                        });
+                answerKeyViewModel = ViewModelProviders.of(this).get(AnswerKeyViewModel.class);
+
+                answerKeyViewModel.getAnswerKeyByMCode(answerSheet.getMCode()).observe(this, new Observer<AnswerKey>() {
+                    @Override
+                    public void onChanged(@Nullable AnswerKey answerKey) {
+                        scoreAnswerSheet(answerKey);
+                    }
+                });
             }
         }
     }

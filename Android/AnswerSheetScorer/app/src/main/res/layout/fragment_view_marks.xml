@@ -10,16 +10,14 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/mark_ex_code_select"
+        android:text="@string/mark_m_code_select"
         android:textColor="@color/colorPrimary"/>
 
-<!--
-    <Spinner android:id="@+id/ex_code_spinner"
+    <Spinner android:id="@+id/m_code_spinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="16dp"/>
--->
 
     <android.support.v7.widget.RecyclerView android:id="@+id/marks_recycler_view"
         android:layout_width="match_parent"

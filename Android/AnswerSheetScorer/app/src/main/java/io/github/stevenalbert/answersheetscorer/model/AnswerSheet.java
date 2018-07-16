@@ -47,16 +47,17 @@ public class AnswerSheet implements Parcelable {
     protected int mCode;
     @ColumnInfo(name = "answers")
     protected Answer[] answers;
-    @ColumnInfo(name = "scored")
-    protected boolean isScored;
     @ColumnInfo(name = "verdicts")
     protected int[] verdicts;
+    @ColumnInfo(name = "correct")
+    protected int totalCorrect;
 
-    public AnswerSheet(int exCode, int mCode, Answer[] answers, boolean isScored, int[] verdicts) {
+    public AnswerSheet(int exCode, int mCode, Answer[] answers, int[] verdicts, int totalCorrect) {
         setExCode(exCode);
         setMCode(mCode);
         setAnswers(answers);
         setVerdicts(verdicts);
+        this.totalCorrect = totalCorrect;
     }
 
     @Ignore
@@ -106,8 +107,8 @@ public class AnswerSheet implements Parcelable {
         exCode = in.readInt();
         mCode = in.readInt();
         answers = AnswerSheetConverter.answersFromString(in.readString());
-        isScored = in.readByte() != 0;
         verdicts = in.createIntArray();
+        totalCorrect = in.readInt();
     }
 
     @Ignore
@@ -125,15 +126,18 @@ public class AnswerSheet implements Parcelable {
 
     public void scoreAnswerSheet(AnswerKey answerKey) {
         if(this.getMCode() == answerKey.getMCode()) {
+            int totalCorrect = 0;
             Option[] options = Option.values();
             for(int number = 1; number <= getTotalAnswer(); number++) {
                 Option keyOption = answerKey.getAnswerKey(number);
                 Answer answer = getAnswerOn(number);
                 if(answer.isOptionChosen(keyOption)) {
                     setAnswerVerdict(number, ANSWER_TRUE);
+                    totalCorrect++;
                     for(Option option : options) {
                         if(!option.equals(keyOption) && answer.isOptionChosen(option)) {
                             setAnswerVerdict(number, ANSWER_MULTIPLE);
+                            totalCorrect--;
                             break;
                         }
                     }
@@ -141,7 +145,7 @@ public class AnswerSheet implements Parcelable {
                     setAnswerVerdict(number, ANSWER_FALSE);
                 }
             }
-            isScored = true;
+            this.totalCorrect = totalCorrect;
         }
     }
 
@@ -270,16 +274,12 @@ public class AnswerSheet implements Parcelable {
         return getAnswerVerdict(number) == ANSWER_MULTIPLE;
     }
 
-    public boolean isScored() {
-        return isScored;
+    public int getTotalCorrect() {
+        return this.totalCorrect;
     }
 
     public void setId(long id) {
         this.id = id;
-    }
-
-    public void setScored(boolean scored) {
-        isScored = scored;
     }
 
     public long getId() {
@@ -305,7 +305,7 @@ public class AnswerSheet implements Parcelable {
         dest.writeInt(getExCode());
         dest.writeInt(getMCode());
         dest.writeString(AnswerSheetConverter.answersToString(getAnswers()));
-        dest.writeByte((byte) (isScored() ? 1 : 0));
         dest.writeIntArray(getVerdicts());
+        dest.writeInt(totalCorrect);
     }
 }

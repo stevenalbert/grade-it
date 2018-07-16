@@ -1,5 +1,6 @@
 package io.github.stevenalbert.answersheetscorer.process;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 
@@ -34,6 +35,8 @@ public class AnalysisProcess {
 
         StringBuilder summaryBuilder = new StringBuilder();
         EnumMap<Option, Integer>[] totalOptionsOfNumber;
+        List<int[]> verdictList = new ArrayList<>();
+        List<Integer> trueAnswerTotalList = new ArrayList<>();
 
         // Create table header
         appendWithSeparator(summaryBuilder, "MCode");
@@ -73,6 +76,7 @@ public class AnalysisProcess {
             // Per answer sheet
             appendWithSeparator(summaryBuilder, answerSheet.getMCodeString());
             appendWithSeparator(summaryBuilder, answerSheet.getExCodeString());
+            verdictList.add(answerSheet.getVerdicts());
             int trueAnswerTotal = 0;
             for (int number = 1; number <= totalNumber; number++) {
                 String answerString = AnswerSheetConverter.answerToString(answerSheet.getAnswerOn(number));
@@ -83,6 +87,7 @@ public class AnalysisProcess {
                     totalOptionsOfNumber[number - 1].put(option, totalOptionsOfNumber[number - 1].get(option) + 1);
                 }
             }
+            trueAnswerTotalList.add(trueAnswerTotal);
             appendWithSeparator(summaryBuilder, String.valueOf(trueAnswerTotal));
             summaryBuilder.append(LINE_SEPARATOR);
             // End of answer sheet
@@ -92,7 +97,10 @@ public class AnalysisProcess {
         // Add correlation
         appendWithSeparator(summaryBuilder, ""); // For MCode column
         appendWithSeparator(summaryBuilder, ""); // For ExCode column
-
+        double[] corrValue = getAnswerCorrelations(answerSheetList);
+        for(int i = 0; i < corrValue.length; i++) {
+            appendWithSeparator(summaryBuilder, Double.toString(corrValue[i]));
+        }
         appendWithSeparator(summaryBuilder, ""); // For Result column
         summaryBuilder.append(LINE_SEPARATOR);
         summaryBuilder.append(LINE_SEPARATOR);
@@ -118,16 +126,53 @@ public class AnalysisProcess {
         appendedTo.append(COLUMN_SEPARATOR);
     }
 
-    private static double[] optionsCorrelation(EnumMap<Option, Integer> totalOptionsAnswered, AnswerKey answerKey) {
-        Option[] keyOptions = answerKey.getAnswerKeys();
-        double[] correlationValues = new double[keyOptions.length];
+    private static double[] getAnswerCorrelations(List<AnswerSheet> answerSheets) {
+        int totalNumber = answerSheets.get(0).getTotalAnswer();
+        int totalAnswerSheet = answerSheets.size();
+        double[] correlationValues = new double[totalNumber];
+
+        int[][] verdictArray = new int[totalNumber][totalAnswerSheet];
+        int[] totalCorrectArray = new int[totalAnswerSheet];
+
+        for(int i = 0; i < answerSheets.size(); i++) {
+            for(int number = 1; number <= totalNumber; number++) {
+                verdictArray[number - 1][i] = answerSheets.get(i).isAnswerTrue(number) ? 1 : 0;
+            }
+            totalCorrectArray[i] = answerSheets.get(i).getTotalCorrect();
+        }
 
 /*
         TODO: Insert correlation formula here
 */
         // Calculate correlation value
+        for(int i = 0; i < totalNumber; i++) {
+            correlationValues[i] = getCorrelation(verdictArray[i], totalCorrectArray);
+        }
         // Finish calculation
 
         return correlationValues;
+    }
+
+    private static double getCorrelation(int[] x, int[] y) {
+        if(x.length != y.length)
+            throw new IllegalArgumentException("x and y must have the same length");
+
+        double  sumOfXY = 0,
+                sumOfX = 0,
+                sumOfY = 0,
+                sumOfSquareX = 0,
+                sumOfSquareY = 0,
+                n = x.length;
+
+        for(int i = 0; i < n; i++) {
+            sumOfXY += x[i] * y[i];
+            sumOfX += x[i];
+            sumOfY += y[i];
+            sumOfSquareX += x[i] * x[i];
+            sumOfSquareY += y[i] * y[i];
+        }
+
+        return (n * sumOfXY - sumOfX * sumOfY) /
+                Math.sqrt((n * sumOfSquareX - sumOfX * sumOfX) * (n * sumOfSquareY - sumOfY * sumOfY));
     }
 }

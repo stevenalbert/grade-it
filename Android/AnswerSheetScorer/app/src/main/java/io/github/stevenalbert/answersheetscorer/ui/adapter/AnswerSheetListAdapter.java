@@ -14,7 +14,9 @@ import java.util.List;
 
 import io.github.stevenalbert.answersheetscorer.R;
 import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
+import io.github.stevenalbert.answersheetscorer.model.AnswerKeyCode;
 import io.github.stevenalbert.answersheetscorer.model.AnswerSheet;
+import io.github.stevenalbert.answersheetscorer.model.AnswerSheetCode;
 
 /**
  * Created by Steven Albert on 7/5/2018.
@@ -26,12 +28,12 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
     private OnSelectListener listener;
     private LayoutInflater layoutInflater;
-    private List<AnswerSheet> answerSheets;
-    private List<AnswerKey> answerKeys;
+    private List<AnswerSheetCode> answerSheets;
+    private List<AnswerKeyCode> answerKeys;
 
     public interface OnSelectListener {
-        void onSelectAnswerSheet(AnswerSheet answerSheet);
-        void onSelectAnswerKey(AnswerKey answerKey);
+        void onSelectAnswerSheet(AnswerSheetCode answerSheetCode);
+        void onSelectAnswerKey(AnswerKeyCode answerKeyCode);
     }
 
     public AnswerSheetListAdapter(Context context, OnSelectListener listener) {
@@ -53,7 +55,7 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         if(answerKeys != null) {
             if(position < answerKeys.size()) {
-                AnswerKey answerKey = answerKeys.get(position);
+                AnswerKeyCode answerKey = answerKeys.get(position);
                 AnswerKeyViewHolder viewHolder = (AnswerKeyViewHolder) holder;
 
                 viewHolder.cardView.setCardBackgroundColor(ContextCompat.getColor(layoutInflater.getContext(), R.color.main_menu_item));
@@ -62,7 +64,7 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 position -= answerKeys.size();
 
                 AnswerSheetViewHolder viewHolder = (AnswerSheetViewHolder) holder;
-                AnswerSheet answerSheet = answerSheets.get(position);
+                AnswerSheetCode answerSheet = answerSheets.get(position);
 
                 viewHolder.cardView.setCardBackgroundColor(ContextCompat.getColor(layoutInflater.getContext(), R.color.colorAccent));
                 viewHolder.exCodeTextView.setText(answerSheet.getExCodeString());
@@ -71,12 +73,12 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         }
     }
 
-    public void setAnswerSheets(List<AnswerSheet> answerSheets) {
+    public void setAnswerSheets(List<AnswerSheetCode> answerSheets) {
         this.answerSheets = answerSheets;
         notifyDataSetChanged();
     }
 
-    public void setAnswerKeys(List<AnswerKey> answerKeys) {
+    public void setAnswerKeys(List<AnswerKeyCode> answerKeys) {
         this.answerKeys = answerKeys;
         notifyDataSetChanged();
     }
@@ -91,7 +93,7 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
     @Override
     public int getItemViewType(int position) {
-        if(position < answerKeys.size()) return ANSWER_KEY_VIEW_TYPE;
+        if(answerKeys != null && position < answerKeys.size()) return ANSWER_KEY_VIEW_TYPE;
         else return ANSWER_SHEET_VIEW_TYPE;
     }
 

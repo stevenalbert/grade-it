@@ -28,7 +28,7 @@
     <string name="answer_key_list_item_title">KEY</string>
 
     <!-- View marks -->
-    <string name="mark_ex_code_select">Select available ExCode:</string>
+    <string name="mark_m_code_select">Select available MCode:</string>
     <string name="none">None</string>
 
     <!-- Choices/Options -->

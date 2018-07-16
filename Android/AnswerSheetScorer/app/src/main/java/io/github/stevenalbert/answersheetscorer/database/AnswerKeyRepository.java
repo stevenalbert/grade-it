@@ -8,29 +8,48 @@ import java.util.List;
 
 import io.github.stevenalbert.answersheetscorer.dao.AnswerKeyDao;
 import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
+import io.github.stevenalbert.answersheetscorer.model.AnswerKeyCode;
 
 /**
  * Created by Steven Albert on 7/6/2018.
  */
 public class AnswerKeyRepository {
-    public static final int NO_SPECIFIC_MCODE = -1;
+
+    private static final int NO_CURRENT_MCODE = -2;
 
     private AnswerKeyDao answerKeyDao;
-    private LiveData<List<AnswerKey>> answerSheets;
+    private LiveData<List<AnswerKeyCode>> answerKeysMetadata;
+    private LiveData<List<AnswerKey>> answerKeys;
+    private LiveData<AnswerKey> answerKey;
+
     private int currentMCode;
 
     public AnswerKeyRepository(Application application) {
         AppDatabase database = AppDatabase.getInstance(application);
         answerKeyDao = database.answerKeyDao();
-        currentMCode = -2;
+        currentMCode = NO_CURRENT_MCODE;
     }
 
-    public LiveData<List<AnswerKey>> getAnswerKeys(int mCode) {
-        if(currentMCode != mCode) {
-            answerSheets = (mCode == NO_SPECIFIC_MCODE ?
-                    answerKeyDao.getAllAnswerKeys() : answerKeyDao.getAnswerKey(mCode));
+    public LiveData<List<AnswerKeyCode>> getAnswerKeysMetadata() {
+        if(answerKeysMetadata == null) {
+            answerKeysMetadata = answerKeyDao.getAllAnswerKeysMetadata();
         }
-        return answerSheets;
+        return answerKeysMetadata;
+    }
+
+    public LiveData<List<AnswerKey>> getAnswerKeys() {
+        if(answerKeys == null) {
+            answerKeys = answerKeyDao.getAllAnswerKeys();
+        }
+        return answerKeys;
+    }
+
+    public LiveData<AnswerKey> getAnswerKeyByMCode(int mCode) {
+        if(currentMCode != mCode) {
+            answerKey = answerKeyDao.getAnswerKey(mCode);
+            currentMCode = mCode;
+        }
+        return answerKey;
     }
 
     public void insert(AnswerKey answerKey) {
@@ -49,7 +68,7 @@ public class AnswerKeyRepository {
 
         private AnswerKeyDao answerKeyDao;
 
-        public InsertAsyncTask(AnswerKeyDao answerKeyDao) {
+        private InsertAsyncTask(AnswerKeyDao answerKeyDao) {
             this.answerKeyDao = answerKeyDao;
         }
 
@@ -64,7 +83,7 @@ public class AnswerKeyRepository {
 
         private AnswerKeyDao answerKeyDao;
 
-        public DeleteAsyncTask(AnswerKeyDao answerKeyDao) {
+        private DeleteAsyncTask(AnswerKeyDao answerKeyDao) {
             this.answerKeyDao = answerKeyDao;
         }
 
@@ -79,7 +98,7 @@ public class AnswerKeyRepository {
 
         private AnswerKeyDao answerKeyDao;
 
-        public DeleteAllAsyncTask(AnswerKeyDao answerKeyDao) {
+        private DeleteAllAsyncTask(AnswerKeyDao answerKeyDao) {
             this.answerKeyDao = answerKeyDao;
         }
 

@@ -11,6 +11,7 @@ import android.arch.persistence.room.Update;
 import java.util.List;
 
 import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
+import io.github.stevenalbert.answersheetscorer.model.AnswerKeyCode;
 
 /**
  * Created by Steven Albert on 7/6/2018.
@@ -25,8 +26,10 @@ public interface AnswerKeyDao {
     int delete(AnswerKey answerKey);
     @Query("DELETE FROM answer_key")
     void deleteAll();
+    @Query("SELECT m_code FROM answer_key")
+    LiveData<List<AnswerKeyCode>> getAllAnswerKeysMetadata();
     @Query("SELECT * FROM answer_key")
     LiveData<List<AnswerKey>> getAllAnswerKeys();
     @Query("SELECT * FROM answer_key WHERE m_code = :mCode")
-    LiveData<List<AnswerKey>> getAnswerKey(int mCode);
+    LiveData<AnswerKey> getAnswerKey(int mCode);
 }
