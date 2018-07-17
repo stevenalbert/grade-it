@@ -67,46 +67,4 @@ public class AnswerKeyDetailActivity extends LayoutToolbarActivity {
         super.onResume();
         setTitle(R.string.answer_key_detail_activity_title);
     }
-
-    public void onDeleteAnswerKey(AnswerKey answerKey) {
-        ViewModelProviders.of(this).get(AnswerKeyViewModel.class).delete(answerKey);
-        finish();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.answer_menu, menu);
-
-        Drawable drawable = menu.findItem(R.id.delete).getIcon();
-
-        drawable = DrawableCompat.wrap(drawable);
-        DrawableCompat.setTint(drawable, ContextCompat.getColor(this, android.R.color.white));
-        menu.findItem(R.id.delete).setIcon(drawable);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.delete:
-                AlertDialog alertDialog = new AlertDialog.Builder(this).setCancelable(true)
-                        .setTitle("Delete answer key")
-                        .setMessage("Are you sure?")
-                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                            }
-                        })
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                onDeleteAnswerKey(answerKey);
-                            }
-                        }).create();
-                alertDialog.show();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
 }

@@ -36,6 +36,8 @@
             android:parentActivityName=".ui.activity.MainActivity" />
         <activity android:name=".ui.activity.AnswerKeyDetailActivity"
             android:parentActivityName=".ui.activity.MainActivity" />
+        <activity android:name=".ui.activity.AnalysisProcessActivity"
+            android:parentActivityName=".ui.activity.MainActivity" />
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

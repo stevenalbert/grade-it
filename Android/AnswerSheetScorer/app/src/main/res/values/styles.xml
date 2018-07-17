@@ -27,12 +27,12 @@
         <item name="android:backgroundTint" tools:targetApi="lollipop">@color/main_menu_item</item>
     </style>
 
-    <style name="AppTheme.Button.MenuButton">
+    <style name="AppTheme.Button.MenuButton" parent="AppTheme.Button">
         <item name="android:layout_gravity">center</item>
         <item name="android:paddingStart">28dp</item>
         <item name="android:paddingEnd">28dp</item>
-        <item name="android:paddingTop">12dp</item>
-        <item name="android:paddingBottom">12dp</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
         <item name="android:drawablePadding">16dp</item>
         <item name="android:drawableTint" tools:targetApi="m">@color/main_menu_item_content</item>
     </style>

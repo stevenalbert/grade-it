@@ -54,4 +54,8 @@ public class AnswerSheetViewModel extends AndroidViewModel {
     public void insert(AnswerSheet answerSheet) {
         repository.insert(answerSheet);
     }
+
+    public void delete(AnswerSheet answerSheet) {
+        repository.delete(answerSheet);
+    }
 }

@@ -2,11 +2,19 @@ package io.github.stevenalbert.answersheetscorer.ui.activity;
 
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.DialogInterface;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
+import android.support.v7.app.AlertDialog;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
+import io.github.stevenalbert.answersheetscorer.R;
 import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
 import io.github.stevenalbert.answersheetscorer.model.AnswerSheet;
 import io.github.stevenalbert.answersheetscorer.model.AnswerSheetCode;
@@ -68,6 +76,49 @@ public class AnswerSheetDetailActivity extends LayoutToolbarActivity {
     private synchronized void fillAnswer() {
         if(answerSheetRetrieved != null && answerKeyRetrieved != null) {
             changeFragment(AnswerSheetDetailFragment.newInstance(answerSheetRetrieved, answerKeyRetrieved));
+        }
+    }
+
+
+    public void onDeleteAnswerSheet(AnswerSheet answerSheet) {
+        ViewModelProviders.of(this).get(AnswerSheetViewModel.class).delete(answerSheet);
+        finish();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.answer_menu, menu);
+
+        Drawable drawable = menu.findItem(R.id.delete).getIcon();
+
+        drawable = DrawableCompat.wrap(drawable);
+        DrawableCompat.setTint(drawable, ContextCompat.getColor(this, android.R.color.white));
+        menu.findItem(R.id.delete).setIcon(drawable);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.delete:
+                AlertDialog alertDialog = new AlertDialog.Builder(this).setCancelable(true)
+                        .setTitle("Delete answer key")
+                        .setMessage("Are you sure?")
+                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                            }
+                        })
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                onDeleteAnswerSheet(answerSheetRetrieved);
+                            }
+                        }).create();
+                alertDialog.show();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 }

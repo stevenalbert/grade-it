@@ -3,6 +3,7 @@ package io.github.stevenalbert.answersheetscorer.process;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Locale;
 
 import io.github.stevenalbert.answersheetscorer.model.AnswerKey;
 import io.github.stevenalbert.answersheetscorer.model.AnswerKeyConverter;
@@ -15,7 +16,7 @@ import io.github.stevenalbert.answersheetscorer.model.Option;
  */
 public class AnalysisProcess {
 
-    private static final String COLUMN_SEPARATOR = "\t";
+    private static final String COLUMN_SEPARATOR = ",";
     private static final String LINE_SEPARATOR = "\n";
 
     public static String getAnswersSummary(List<AnswerSheet> answerSheetList, AnswerKey answerKey) throws Exception {
@@ -99,7 +100,7 @@ public class AnalysisProcess {
         appendWithSeparator(summaryBuilder, ""); // For ExCode column
         double[] corrValue = getAnswerCorrelations(answerSheetList);
         for(int i = 0; i < corrValue.length; i++) {
-            appendWithSeparator(summaryBuilder, Double.toString(corrValue[i]));
+            appendWithSeparator(summaryBuilder, String.format(Locale.getDefault(), "%.2f", corrValue[i]));
         }
         appendWithSeparator(summaryBuilder, ""); // For Result column
         summaryBuilder.append(LINE_SEPARATOR);

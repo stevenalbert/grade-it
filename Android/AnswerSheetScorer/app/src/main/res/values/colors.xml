@@ -8,4 +8,5 @@
     <color name="main_menu_item">#ffecbc</color>
     <color name="main_menu_item_content">#b68567</color>
 
+    <color name="black_overlay">#50000000</color>
 </resources>

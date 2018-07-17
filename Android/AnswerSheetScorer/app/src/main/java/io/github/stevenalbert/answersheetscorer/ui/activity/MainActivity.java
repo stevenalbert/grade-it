@@ -1,12 +1,18 @@
 package io.github.stevenalbert.answersheetscorer.ui.activity;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.webkit.MimeTypeMap;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,7 +26,10 @@ import io.github.stevenalbert.answersheetscorer.ui.fragment.GetMarkFragment;
 import io.github.stevenalbert.answersheetscorer.ui.fragment.ViewMarksFragment;
 import io.github.stevenalbert.answersheetscorer.ui.listener.OnFragmentInteractionListener;
 
-public class MainActivity extends TabActivity implements OnFragmentInteractionListener, GetMarkFragment.OnFragmentInteractionListener, ViewMarksFragment.OnSelectListener {
+public class MainActivity extends TabActivity implements
+        GetMarkFragment.OnFragmentInteractionListener,
+        ViewMarksFragment.OnSelectListener,
+        AnalysisFragment.OnSelectItemMCodeListener {
 
     // TAG
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -79,11 +88,6 @@ public class MainActivity extends TabActivity implements OnFragmentInteractionLi
     }
 
     @Override
-    public void onFragmentInteraction(Uri uri) {
-
-    }
-
-    @Override
     public void onProcessImageTaken(Uri uri) {
         Intent processIntent = new Intent(this, ProcessActivity.class);
         processIntent.setData(uri);
@@ -112,5 +116,12 @@ public class MainActivity extends TabActivity implements OnFragmentInteractionLi
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public void onSelectItemMCode(int mCode) {
+        Intent analysisProcessIntent = new Intent(this, AnalysisProcessActivity.class);
+        analysisProcessIntent.putExtra(AnalysisProcessActivity.M_CODE_KEY, mCode);
+        startActivity(analysisProcessIntent);
     }
 }

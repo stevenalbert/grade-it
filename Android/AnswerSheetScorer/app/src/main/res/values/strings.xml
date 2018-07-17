@@ -46,4 +46,9 @@
     <string name="ok">Ok</string>
 
     <string name="answer_key_detail_activity_title">Answer Key</string>
+
+    <string name="save_analysis_as_pdf">Save as PDF</string>
+    <string name="save_analysis_as_csv">Save as CSV</string>
+    <string name="save_success">Save succeed</string>
+    <string name="save_failed">Save failed</string>
 </resources>
