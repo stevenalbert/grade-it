@@ -19,24 +19,29 @@
         android:textColor="@color/colorPrimary"
         android:text="@string/mark_answer" />
 
+    <ImageView
+        android:id="@+id/answer_sheet_image"
+        android:layout_width="wrap_content"
+        android:layout_height="180dp"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/answer_sheet"
+        android:src="@drawable/logo"
+        android:scaleType="fitCenter"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title"
+        app:layout_constraintBottom_toTopOf="@id/menu_layout"/>
+
     <LinearLayout
         android:id="@+id/menu_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/title"
+        app:layout_constraintTop_toBottomOf="@id/answer_sheet_image"
         app:layout_constraintBottom_toTopOf="@id/answer_sheet_que"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:gravity="center_horizontal"
         android:orientation="vertical">
-
-        <ImageView
-            android:id="@+id/answer_sheet_image"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:contentDescription="@string/answer_sheet"
-            android:src="@drawable/ic_launcher_background" />
 
         <Button
             android:id="@+id/photo"

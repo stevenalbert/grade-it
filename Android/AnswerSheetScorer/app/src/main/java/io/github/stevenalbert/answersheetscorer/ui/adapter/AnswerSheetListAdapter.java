@@ -58,7 +58,7 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 AnswerKeyCode answerKey = answerKeys.get(position);
                 AnswerKeyViewHolder viewHolder = (AnswerKeyViewHolder) holder;
 
-                viewHolder.cardView.setCardBackgroundColor(ContextCompat.getColor(layoutInflater.getContext(), R.color.main_menu_item));
+                viewHolder.cardView.setCardBackgroundColor(ContextCompat.getColor(layoutInflater.getContext(), R.color.colorPrimaryDark));
                 viewHolder.mCodeTextView.setText(answerKey.getMCodeString());
             } else {
                 position -= answerKeys.size();
@@ -66,7 +66,7 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 AnswerSheetViewHolder viewHolder = (AnswerSheetViewHolder) holder;
                 AnswerSheetCode answerSheet = answerSheets.get(position);
 
-                viewHolder.cardView.setCardBackgroundColor(ContextCompat.getColor(layoutInflater.getContext(), R.color.colorAccent));
+                viewHolder.cardView.setCardBackgroundColor(ContextCompat.getColor(layoutInflater.getContext(), R.color.colorPrimary));
                 viewHolder.exCodeTextView.setText(answerSheet.getExCodeString());
                 viewHolder.mCodeTextView.setText(answerSheet.getMCodeString());
             }

@@ -193,27 +193,6 @@ public class AnalysisProcessFragment extends Fragment {
     }
 
     private void createNotification(File file) {
-/*
-        MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
-        String mimeString = mimeTypeMap.getMimeTypeFromExtension(file.getName().substring(file.getName().lastIndexOf('.') + 1));
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setDataAndType(Uri.fromFile(file), mimeString);
-
-        PendingIntent pendingIntent = PendingIntent.getActivity(getContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
-
-        Notification notification = new Notification.Builder(getContext())
-                .setContentTitle(getContext().getString(R.string.app_name))
-                .setContentText(file.getName() + " is saved")
-                .setSubText("Location: " + file.getAbsolutePath())
-                .setSmallIcon(R.drawable.ic_launcher_background)
-                .setContentIntent(pendingIntent)
-                .setAutoCancel(true)
-                .build();
-
-        NotificationManager notificationManager = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(0, notification);
-*/
         if(listener != null) {
             listener.onFinishSaveAnalysis(file);
         }
@@ -229,23 +208,34 @@ public class AnalysisProcessFragment extends Fragment {
         tableLayout.removeAllViews();
 
         String[] lines = analysisString.split("\n");
-        Log.d(TAG, "Total lines: " + lines.length);
+        ArrayList<String[]> cellPerLines = new ArrayList<>();
+        int maxColumns = 0;
+
         for(String line : lines) {
             String[] cols = line.split(",");
-            Log.d(TAG, "Total columns: " + cols.length);
-            TableRow tableRow = new TableRow(getContext());
+            cellPerLines.add(cols);
+            maxColumns = Math.max(maxColumns, cols.length);
+        }
 
-            for(String col : cols) {
+        int paddingPixel = getContext().getResources().getDimensionPixelSize(R.dimen.analysis_table_cell_padding);
+        int row = 0;
+        for(String[] cellPerLine : cellPerLines) {
+            TableRow tableRow = new TableRow(getContext());
+            for(int i = 0; i < maxColumns; i++) {
                 TextView textView = new TextView(getContext());
-                textView.setBackgroundColor(ContextCompat.getColor(getContext(), R.color.main_menu_item));
+                textView.setBackgroundResource(R.drawable.cell);
+                textView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
                 textView.setTextColor(ContextCompat.getColor(getContext(), android.R.color.black));
-                textView.setText(col);
-                int paddingPixel = getContext().getResources().getDimensionPixelSize(R.dimen.analysis_table_cell_padding);
+                if(i < cellPerLine.length) textView.setText(cellPerLine[i]);
                 textView.setPadding(paddingPixel, paddingPixel, paddingPixel, paddingPixel);
                 tableRow.addView(textView);
             }
 
+            tableRow.setBackgroundColor(ContextCompat.getColor(getContext(), (row == 0 ? android.R.color.holo_blue_light :
+                    row == 1 ? android.R.color.holo_green_light :
+                    android.R.color.white)));
             tableLayout.addView(tableRow);
+            row++;
         }
     }
 

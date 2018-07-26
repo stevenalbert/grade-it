@@ -23,12 +23,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="ExCode"
+                android:textColor="@color/main_menu_item_content"
                 android:layout_gravity="center" />
 
             <TextView android:id="@+id/ex_code_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
+                android:textColor="@color/main_menu_item_content"
                 style="@style/TextAppearance.AppCompat.Large"
                 android:layout_gravity="center"/>
         </LinearLayout>
@@ -43,6 +45,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
+                android:textColor="@color/main_menu_item_content"
                 android:text="MCode" />
 
             <TextView android:id="@+id/m_code_text"
@@ -50,6 +53,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
                 style="@style/TextAppearance.AppCompat.Large"
+                android:textColor="@color/main_menu_item_content"
                 android:layout_gravity="center"/>
         </LinearLayout>
     </LinearLayout>

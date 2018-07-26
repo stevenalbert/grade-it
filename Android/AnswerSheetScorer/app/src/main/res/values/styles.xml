@@ -10,7 +10,7 @@
 
     <!-- Splash theme -->
     <style name="AppTheme.Splash">
-        <item name="android:windowBackground">@color/colorPrimary</item>
+        <item name="android:windowBackground">@drawable/splash_screen</item>
     </style>
 
     <!-- No action bar theme -->

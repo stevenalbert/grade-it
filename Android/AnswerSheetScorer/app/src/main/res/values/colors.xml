@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#c35c2f</color>
-    <color name="colorPrimaryDark">#c8450b</color>
-    <color name="colorAccent">#ffdc7f</color>
+    <color name="colorPrimary">#0f4f9d</color>
+    <color name="colorPrimaryDark">#09366c</color>
+    <!--<color name="colorAccent">#1468d0</color>-->
+    <color name="colorAccent">@android:color/white</color>
 
-    <color name="app_background">#ffdc7f</color>
-    <color name="main_menu_item">#ffecbc</color>
-    <color name="main_menu_item_content">#b68567</color>
+    <color name="app_background">@android:color/white</color>
+    <color name="main_menu_item">@color/colorPrimary</color>
+    <color name="main_menu_item_content">@android:color/white</color>
 
     <color name="black_overlay">#50000000</color>
 </resources>

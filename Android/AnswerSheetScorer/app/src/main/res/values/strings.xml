@@ -1,10 +1,10 @@
 <resources>
-    <string name="app_name">Answer Sheet Scorer</string>
+    <string name="app_name">Grade it</string>
 
     <!-- Home menu item name -->
 
     <!-- Main menu item names -->
-    <string name="mark_answer_title">Get Mark</string>
+    <string name="mark_answer_title">Home</string>
     <string name="view_marks_title">View Marks</string>
     <string name="answer_analysis_title">Analysis</string>
 
