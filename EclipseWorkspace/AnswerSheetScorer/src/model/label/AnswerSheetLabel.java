@@ -2,8 +2,8 @@ package model.label;
 
 public abstract class AnswerSheetLabel implements Comparable<AnswerSheetLabel> {
 
-    public static final boolean SORT_BY_COLUMN = true;
-    public static final boolean SORT_BY_ROW = false;
+    static final boolean SORT_BY_COLUMN = true;
+    static final boolean SORT_BY_ROW = false;
 
     private String rowInfo;
     private String colInfo;

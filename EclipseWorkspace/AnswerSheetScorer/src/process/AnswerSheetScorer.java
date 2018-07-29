@@ -1,9 +1,6 @@
 package process;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
@@ -24,6 +21,7 @@ import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import model.AnswerKey;
 import model.AnswerMat;
 import model.AnswerSheet;
 import model.AnswerSheetMetadata;
@@ -61,11 +59,13 @@ public class AnswerSheetScorer {
         // Black and white
         // Binary Thresholding
         // Imgproc.threshold(result, result, 120, 255, Imgproc.THRESH_BINARY);
+        Imgproc.blur(result, result, new Size(3, 3));
+        // Imgproc.GaussianBlur(result, result, new Size(3, 3), 0);
         // Adaptive Gaussian Thresholding
-        int blockSize = 201;// (int) (Math.max(PROCESSED_SQUARE_HEIGHT, PROCESSED_SQUARE_WIDTH) *
+        int blockSize = 171;// (int) (Math.max(PROCESSED_SQUARE_HEIGHT, PROCESSED_SQUARE_WIDTH) *
                             // PROCESSED_RATIO * 4) + 1;
-        int C = 15;// (int) (Math.max(PROCESSED_SQUARE_HEIGHT, PROCESSED_SQUARE_WIDTH) *
-                   // PROCESSED_RATIO) / 4;
+        int C = 6;// (int) (Math.max(PROCESSED_SQUARE_HEIGHT, PROCESSED_SQUARE_WIDTH) *
+                  // PROCESSED_RATIO) / 4;
         Imgproc.adaptiveThreshold(result, result, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY,
                 blockSize, C);
         // Adaptive Mean Thresholding
@@ -205,19 +205,6 @@ public class AnswerSheetScorer {
         // Check whether the argument is valid
         if (src == null)
             throw new IllegalArgumentException("Argument src cannot be null");
-        // Check whether the argument is binary image
-        for (int row = 0; row < src.rows(); row++) {
-            for (int col = 0; col < src.cols(); col++) {
-                double[] colors = src.get(row, col);
-                if ((int) colors[0] > 0 && (int) colors[0] < 255)
-                    throw new IllegalArgumentException("Found color value " + (int) colors[0]
-                            + ". Argument src must be binary image (0 = black, 255 = white)");
-                for (int channel = 1; channel < src.channels(); channel++)
-                    if (colors[channel] != colors[channel - 1])
-                        throw new IllegalArgumentException(
-                                "Argument src must be binary image (0 = black, 255 = white)");
-            }
-        }
 
         // Find all contours
         ArrayList<MatOfPoint> contours = new ArrayList<>();
@@ -412,47 +399,7 @@ public class AnswerSheetScorer {
                 Core.bitwise_not(answerMat, outputAnswerMat);
                 Imgcodecs.imwrite(new File(folder, answerMat.getLabel().toString() + "-content.jpg").getAbsolutePath(),
                         outputAnswerMat);
-                /*
-                 * // calculate the moment of the original image Mat tempIn = new
-                 * Mat(outputAnswerMat.rows(), outputAnswerMat.cols(), CvType.CV_32FC3); for
-                 * (int i = 0; i < outputAnswerMat.rows(); i++) { for (int j = 0; j <
-                 * outputAnswerMat.cols(); j++) { tempIn.put(i, j, new double[] {
-                 * outputAnswerMat.get(i, j)[0], outputAnswerMat.get(i, j)[0],
-                 * outputAnswerMat.get(i, j)[0] }); } } Moments moments =
-                 * Imgproc.moments(answerMat, true); double centerXOri = moments.m10 /
-                 * moments.m00; double centerYOri = moments.m01 / moments.m00; double miu20 =
-                 * Math.sqrt(moments.mu20 / moments.m00); double miu02 = Math.sqrt(moments.mu02
-                 * / moments.m00);
-                 * 
-                 * // expand/trim the dimension of the original image using moment (the start
-                 * index // is inclusive while the end is exclusive) int startingOriRowIndex =
-                 * (int) Math.floor(centerYOri - 2 * miu02), startingOriColIndex = (int)
-                 * Math.floor(centerXOri - 2 * miu20); int endOriRowIndex = (int)
-                 * Math.floor(centerYOri + 2 * miu02), endOriColIndex = (int)
-                 * Math.floor(centerXOri + 2 * miu20); MatOfPoint matOfPoint = new
-                 * MatOfPoint(new Point(startingOriColIndex, startingOriRowIndex), new
-                 * Point(startingOriColIndex, endOriRowIndex), new Point(endOriColIndex,
-                 * endOriRowIndex), new Point(endOriColIndex, startingOriRowIndex));
-                 * Imgproc.drawContours(tempIn, Arrays.asList(matOfPoint), 0, new Scalar(255, 0,
-                 * 255), 3);
-                 * 
-                 * for (int i = (int) centerXOri - 1; i <= (int) centerXOri + 1; i++) { for (int
-                 * j = (int) centerYOri - 1; j <= (int) centerYOri + 1; j++) { tempIn.put(j, i,
-                 * 0, 255, 0); } }
-                 * 
-                 * Imgcodecs.imwrite(new File(folder, answerMat.getLabel().toString() +
-                 * "-cropped.jpg").getAbsolutePath(), tempIn);
-                 * 
-                 * Mat object = new Mat(endOriRowIndex - startingOriRowIndex, endOriColIndex -
-                 * startingOriColIndex, CvType.CV_32FC1); for (int i = startingOriRowIndex; i <
-                 * endOriRowIndex; i++) { for (int j = startingOriColIndex; j < endOriColIndex;
-                 * j++) { if (i < 0 || i >= answerMat.rows() || j < 0 || j >= answerMat.cols())
-                 * { object.put(i - startingOriRowIndex, j - startingOriColIndex, 0); } else
-                 * object.put(i - startingOriRowIndex, j - startingOriColIndex, answerMat.get(i,
-                 * j)[0]); } } Imgcodecs.imwrite( new File(folder,
-                 * answerMat.getLabel().toString() + "-cropped-res.jpg").getAbsolutePath(),
-                 * object);
-                 */ }
+            }
             Imgcodecs.imwrite(new File(file, "overall-content.jpg").getAbsolutePath(), res);
         }
         // End draw
@@ -460,37 +407,17 @@ public class AnswerSheetScorer {
         return answerMats;
     }
 
-    public static AnswerSheet scoreAnswerSheet(ArrayList<AnswerMat> answerMats, File outputDir, String filename,
-            boolean debugOutput) {
+    public static AnswerSheet recognizeAnswerSheet(ArrayList<AnswerMat> answerMats, File dir) {
         final int TOTAL_ANSWER = 40;
         AnswerSheet answerSheet = new AnswerSheet(TOTAL_ANSWER);
         StringBuilder mCode = new StringBuilder("000");
         StringBuilder exCode = new StringBuilder("000");
 
-        PrintWriter printWriter = null;
-        try {
-            File file = new File(outputDir, filename);
-            file.createNewFile();
-            printWriter = new PrintWriter(file);
-        } catch (FileNotFoundException e) {
-            System.err.println("File not found!");
-        } catch (IOException e) {
-            System.err.println("Can't create file!");
-        }
-
-        int i = 0;
         for (AnswerMat answerMat : answerMats) {
-            StringBuilder builder = new StringBuilder();
-            builder.append(answerMat.getLabel().toString());
-            int value = (int) FeatureExtractor.getFeatureX(answerMat,
-                    outputDir.getAbsolutePath() + "/" + builder.toString());
-            builder.append("\t");
+            int value = (int) FeatureExtractor.getFeatureX(answerMat, true, true, dir.getAbsolutePath() + "/" + answerMat.getLabel().toString());
             double zVal = BigDecimal.valueOf((double) value).round(new MathContext(3)).doubleValue();
-            final double zThreshold = 15.0;
+            final double zThreshold = 10.0;
             boolean isX = (zVal >= zThreshold);
-            builder.append(String.format("\t%f\t%s", zVal, (isX ? "1" : "0")));
-            printWriter.println(builder.toString());
-            printWriter.flush();
 
             AnswerSheetLabel label = answerMat.getLabel();
             if (label instanceof AnswerLabel) {
@@ -508,20 +435,17 @@ public class AnswerSheetScorer {
                 if (isX)
                     mCode.setCharAt(mCodeLabel.getColumnNumber(), (char) (mCodeLabel.getValue() + '0'));
             }
-
-            if (++i == 5) {
-                printWriter.println();
-                i = 0;
-            }
         }
 
         // Set ExCode and MCode
         answerSheet.setExCode(exCode.toString());
         answerSheet.setMCode(mCode.toString());
 
-        printWriter.close();
-
         return answerSheet;
+    }
+
+    public static void scoreAnswerSheet(AnswerSheet answerSheet, AnswerKey answerKey) {
+        answerSheet.scoreAnswerSheet(answerKey);
     }
 
     private static ArrayList<AnswerMat> findAllRect(Mat src, Mat drawOn, ArrayList<Rect> vertical,
@@ -537,7 +461,7 @@ public class AnswerSheetScorer {
             Rect secondVerticalRect, Rect firstHorizontalRect, Rect secondHorizontalRect, int numberOfRows,
             int numberOfCols, int averageWidth, int averageHeight, String firstname, int firstExt, int secondExt,
             PaperDimension paperDimension) {
-        final int RADIUS = 4;
+        final int RADIUS = 3;
         ArrayList<AnswerMat> answerMats = new ArrayList<>();
         Point centerStartVerticalPoint = getCenter(firstVerticalRect);
         Point centerEndVerticalPoint = getCenter(secondVerticalRect);
@@ -593,16 +517,16 @@ public class AnswerSheetScorer {
 
         // Find the most fit rectangle
         Point rectStartPoint = findMostFitRect(square, width, height, dimension.squareAnswerBorder);
-        currentRect = new Rect(rectStartPoint, new Size(width, height));
-        drawContour(sqDrawOn, currentRect, new Scalar(0, 255, 0), 2);
+//        currentRect = new Rect(rectStartPoint, new Size(width, height));
+//        drawContour(sqDrawOn, currentRect, new Scalar(0, 255, 0), 2);
         /*
          * currentRect = scaleRectOnCenter(currentRect, 1 - 2.5 * (double)
          * dimension.squareAnswerBorder / (double) Math.min(width, height));
          */
-        int contentPadding = dimension.squareAnswerBorder * 3 / 2;
+        int contentPadding = dimension.squareAnswerBorder;
         currentRect = new Rect((int) (rectStartPoint.x + contentPadding), (int) (rectStartPoint.y + contentPadding),
                 width - 2 * contentPadding, height - 2 * contentPadding);
-        drawContour(sqDrawOn, currentRect, new Scalar(255, 0, 255), 2);
+        drawContour(sqDrawOn, currentRect, new Scalar(0, 255, 0), 2);
         // Imgcodecs.imwrite(new File(directory, filename + ".jpg").getAbsolutePath(),
         // sqDrawOn);
 

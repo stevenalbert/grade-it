@@ -553,7 +553,7 @@ public class GrayImgProc {
         double centerYOri = moments.m01 / moments.m00;
         double miu20 = Math.sqrt(moments.mu20 / moments.m00);
         double miu02 = Math.sqrt(moments.mu02 / moments.m00);
-
+        // System.out.println(in.cols() + " " + in.rows() + " " + moments.m00 + " " + Math.sqrt(moments.mu20) + " " + Math.sqrt(moments.mu02) + " " + miu20 + " " + miu02);
         // expand/trim the dimension of the original image using moment (the start index
         // is inclusive while the end is exclusive)
         int startingOriRowIndex = (int) Math.round(centerYOri - 2 * miu02),

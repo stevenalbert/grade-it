@@ -9,17 +9,14 @@ public enum Option {
     }
 
     public static boolean isValid(Character c) {
-        if (getOption(c) != null)
-            return true;
-        else
-            return false;
+        return getOption(c) != null;
     }
 
     public static Option getOption(Character c) {
         Option[] options = Option.values();
-        for (int i = 0; i < options.length; i++) {
-            if (options[i].getOption().equals(c)) {
-                return options[i];
+        for (Option option : options) {
+            if (option.getOption().equals(c)) {
+                return option;
             }
         }
         return null;

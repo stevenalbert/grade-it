@@ -469,7 +469,7 @@ public class FeatureExtractor {
      * @return a number indicating whether the given image contains an X or not. The
      *         more positive it is, the higher the chance
      */
-    public static double getFeatureX(Mat imgThreshold, String temp) {
+    public static double getFeatureX(Mat imgThreshold, boolean newKernel, boolean newShiftKernel, String temp) {
         // =============
         // preprocessing
         // =============
@@ -520,10 +520,22 @@ public class FeatureExtractor {
         // ==============================
         // create the mask
         final int CENTER_SIZE = 5;
-        Mat maskCenter = new Mat(CENTER_SIZE, CENTER_SIZE, CvType.CV_8SC1);
-        byte[] maskCenterValue = new byte[] { 2, 1, 0, 1, 2, 1, 4, 3, 4, 1, 0, 3, 6, 3, 0, 1, 4, 3, 4, 1, 2, 1, 0, 1,
-                2 };
-        maskCenter.put(0, 0, maskCenterValue);
+        Mat maskCenter;
+
+        if (newShiftKernel) {
+            maskCenter = new Mat(CENTER_SIZE, CENTER_SIZE, CvType.CV_8SC1);
+            byte[] maskCenterValue = new byte[] { 
+                    2,1,0,1,2,
+                    1,4,3,4,1,
+                    0,3,6,3,0,
+                    1,4,3,4,1,
+                    2,1,0,1,2
+            };
+            maskCenter.put(0, 0, maskCenterValue);
+        } else {
+            maskCenter = Mat.ones(CENTER_SIZE, CENTER_SIZE, CvType.CV_8SC1);
+            maskCenter.put(2, 2, 5);
+        }
 
         // index for masking (adjustment by +1 and -1 to get the center)
         int idxStartCenterRow = (imgNorm.rows() + 1) / 2 - 1 - maskCenter.rows() / 2;
@@ -584,8 +596,8 @@ public class FeatureExtractor {
         // masking to find the result of convolution with X-mask
         // =====================================================
         // create the mask, then dot the features
-        // Mat mask = createMaskX11();
-        Mat mask = createNewMaskX11();
+        Mat mask;
+        mask = (newKernel ? createNewMaskX11() : createMaskX11());
         imgShifted.convertTo(imgShifted, CvType.CV_8SC1);
         double result = imgShifted.dot(mask);
 
@@ -593,20 +605,20 @@ public class FeatureExtractor {
         // drawing the image
 
         if (true) {
-            Core.bitwise_not(imgCropped, imgCropped);
-            Imgcodecs.imwrite(temp + "-1crop.jpg", imgCropped);
-            imgNorm.convertTo(imgNorm, CvType.CV_8UC1);
-            Imgproc.threshold(imgNorm, imgNorm, 0, 255, Imgproc.THRESH_BINARY);
-            Core.bitwise_not(imgNorm, imgNorm);
-            Imgcodecs.imwrite(temp + "-2norm.jpg", imgNorm);
-            Core.bitwise_not(imgNorm, imgNorm);
-            GrayImgProc.matToTxt(imgNorm, temp + "-2norm.txt");
+            // Core.bitwise_not(imgCropped, imgCropped);
+            // Imgcodecs.imwrite(temp + "-1crop.jpg", imgCropped);
+            // imgNorm.convertTo(imgNorm, CvType.CV_8UC1);
+            // Imgproc.threshold(imgNorm, imgNorm, 0, 255, Imgproc.THRESH_BINARY);
+            // Core.bitwise_not(imgNorm, imgNorm);
+            // Imgcodecs.imwrite(temp + "-2norm.jpg", imgNorm);
+            // Core.bitwise_not(imgNorm, imgNorm);
+            // GrayImgProc.matToTxt(imgNorm, temp + "-2norm.txt");
             imgShifted.convertTo(imgShifted, CvType.CV_8UC1);
             Imgproc.threshold(imgShifted, imgShifted, 0, 255, Imgproc.THRESH_BINARY);
             Core.bitwise_not(imgShifted, imgShifted);
-            Imgcodecs.imwrite(temp + "-4shifted.jpg", imgShifted);
-            Core.bitwise_not(imgShifted, imgShifted);
-            GrayImgProc.matToTxt(imgShifted, temp + "-4shifted.txt");
+            Imgcodecs.imwrite(temp + "-shifted.jpg", imgShifted);
+            // Core.bitwise_not(imgShifted, imgShifted);
+            // GrayImgProc.matToTxt(imgShifted, temp + "-shifted.txt");
         }
 
         return result;
@@ -630,149 +642,20 @@ public class FeatureExtractor {
      */
     private static Mat createMaskX11() {
         Mat mask = Mat.zeros(11, 11, CvType.CV_8SC1);
+        byte[] maskVal = new byte[] { 
+                1, 1, 0, -9, -9, -9, -9, -9, 0, 1, 1, 
+                1, 1, 1, 0, -9, -9, -9, 0, 1, 1, 1, 
+                0, 1, 1, 1, 0, -9, 0, 1, 1, 1, 0, 
+                -9, 0, 1, 1, 1, 0, 1, 1, 1, 0, -9, 
+                -9, -9, 0, 1, 1, 1, 1, 1, 0, -9, -9, 
+                -9, -9, -9, 0, 1, 1, 1, 0, -9, -9, -9, 
+                -9, -9, 0, 1, 1, 1, 1, 1, 0, -9, -9, 
+                -9, 0, 1, 1, 1, 0, 1, 1, 1, 0, -9,
+                0, 1, 1, 1, 0, -9, 0, 1, 1, 1, 0, 
+                1, 1, 1, 0, -9, -9, -9, 0, 1, 1, 1, 
+                1, 1, 0, -9, -9, -9, -9, -9, 0, 1, 1 };
 
-        // the first row
-        mask.put(0, 0, 10);
-        mask.put(0, 1, 10);
-        mask.put(0, 2, 10);
-        mask.put(0, 3, 0);
-        mask.put(0, 4, -90);
-        mask.put(0, 5, -90);
-        mask.put(0, 6, -90);
-        mask.put(0, 7, 0);
-        mask.put(0, 8, 10);
-        mask.put(0, 9, 10);
-        mask.put(0, 10, 10);
-
-        // the second row
-        mask.put(1, 0, 10);
-        mask.put(1, 1, 10);
-        mask.put(1, 2, 10);
-        mask.put(1, 3, 10);
-        mask.put(1, 4, 0);
-        mask.put(1, 5, -90);
-        mask.put(1, 6, 0);
-        mask.put(1, 7, 10);
-        mask.put(1, 8, 10);
-        mask.put(1, 9, 10);
-        mask.put(1, 10, 10);
-
-        // the third row
-        mask.put(2, 0, 10);
-        mask.put(2, 1, 10);
-        mask.put(2, 2, 10);
-        mask.put(2, 3, 10);
-        mask.put(2, 4, 10);
-        mask.put(2, 5, 0);
-        mask.put(2, 6, 10);
-        mask.put(2, 7, 10);
-        mask.put(2, 8, 10);
-        mask.put(2, 9, 10);
-        mask.put(2, 10, 10);
-
-        // the fourth row
-        mask.put(3, 0, 0);
-        mask.put(3, 1, 10);
-        mask.put(3, 2, 10);
-        mask.put(3, 3, 10);
-        mask.put(3, 4, 10);
-        mask.put(3, 5, 10);
-        mask.put(3, 6, 10);
-        mask.put(3, 7, 10);
-        mask.put(3, 8, 10);
-        mask.put(3, 9, 10);
-        mask.put(3, 10, 0);
-
-        // the fifth row
-        mask.put(4, 0, -90);
-        mask.put(4, 1, 0);
-        mask.put(4, 2, 10);
-        mask.put(4, 3, 10);
-        mask.put(4, 4, 10);
-        mask.put(4, 5, 10);
-        mask.put(4, 6, 10);
-        mask.put(4, 7, 10);
-        mask.put(4, 8, 10);
-        mask.put(4, 9, 0);
-        mask.put(4, 10, -90);
-
-        // the sixth row
-        mask.put(5, 0, -90);
-        mask.put(5, 1, -90);
-        mask.put(5, 2, 0);
-        mask.put(5, 3, 10);
-        mask.put(5, 4, 10);
-        mask.put(5, 5, 10);
-        mask.put(5, 6, 10);
-        mask.put(5, 7, 10);
-        mask.put(5, 8, 0);
-        mask.put(5, 9, -90);
-        mask.put(5, 10, -90);
-
-        // the seventh row
-        mask.put(6, 0, -90);
-        mask.put(6, 1, 0);
-        mask.put(6, 2, 10);
-        mask.put(6, 3, 10);
-        mask.put(6, 4, 10);
-        mask.put(6, 5, 10);
-        mask.put(6, 6, 10);
-        mask.put(6, 7, 10);
-        mask.put(6, 8, 10);
-        mask.put(6, 9, 0);
-        mask.put(6, 10, -90);
-
-        // the eight row
-        mask.put(7, 0, 0);
-        mask.put(7, 1, 10);
-        mask.put(7, 2, 10);
-        mask.put(7, 3, 10);
-        mask.put(7, 4, 10);
-        mask.put(7, 5, 10);
-        mask.put(7, 6, 10);
-        mask.put(7, 7, 10);
-        mask.put(7, 8, 10);
-        mask.put(7, 9, 10);
-        mask.put(7, 10, 0);
-
-        // the ninth row
-        mask.put(8, 0, 10);
-        mask.put(8, 1, 10);
-        mask.put(8, 2, 10);
-        mask.put(8, 3, 10);
-        mask.put(8, 4, 10);
-        mask.put(8, 5, 0);
-        mask.put(8, 6, 10);
-        mask.put(8, 7, 10);
-        mask.put(8, 8, 10);
-        mask.put(8, 9, 10);
-        mask.put(8, 10, 10);
-
-        // the tenth row
-        mask.put(9, 0, 10);
-        mask.put(9, 1, 10);
-        mask.put(9, 2, 10);
-        mask.put(9, 3, 10);
-        mask.put(9, 4, 0);
-        mask.put(9, 5, -90);
-        mask.put(9, 6, 0);
-        mask.put(9, 7, 10);
-        mask.put(9, 8, 10);
-        mask.put(9, 9, 10);
-        mask.put(9, 10, 10);
-
-        // the eleventh row
-        mask.put(10, 0, 10);
-        mask.put(10, 1, 10);
-        mask.put(10, 2, 10);
-        mask.put(10, 3, 0);
-        mask.put(10, 4, -90);
-        mask.put(10, 5, -90);
-        mask.put(10, 6, -90);
-        mask.put(10, 7, 0);
-        mask.put(10, 8, 10);
-        mask.put(10, 9, 10);
-        mask.put(10, 10, 10);
+        mask.put(0, 0, maskVal);
 
         return mask;
     }
@@ -795,12 +678,19 @@ public class FeatureExtractor {
      */
     private static Mat createNewMaskX11() {
         Mat mask = new Mat(11, 11, CvType.CV_8SC1);
-        byte[] maskVal = new byte[] { 1, 1, -1, -5, -15, -15, -15, -5, -1, 1, 1, 1, 2, 1, -1, -5, -15, -5, -1, 1, 2, 1,
-                -1, 1, 2, 1, -1, -5, -1, 1, 2, 1, -1, -5, -1, 1, 2, 1, -1, 1, 2, 1, -1, -5, -15, -5, -1, 1, 2, 1, 2, 1,
-                -1, -5, -15, -15, -15, -5, -1, 1, 2, 1, -1, -5, -15, -15, -15, -5, -1, 1, 2, 1, 2, 1, -1, -5, -15, -5,
-                -1, 1, 2, 1, -1, 1, 2, 1, -1, -5, -1, 1, 2, 1, -1, -5, -1, 1, 2, 1, -1, 1, 2, 1, -1, -5, -15, -5, -1, 1,
-                2, 1, 1, 1, -1, -5, -15, -15, -15, -5, -1, 1, 1 };
-
+        byte[] maskVal = new byte[] { 
+                2, 1, -1, -7, -15, -15, -15, -7, -1, 1, 2,
+                1, 2, 1, -1, -7, -15, -7, -1, 1, 2, 1,
+                -1, 1, 2, 1, -1, -7, -1, 1, 2, 1, -1,
+                -7, -1, 1, 2, 1, -1, 1, 2, 1, -1, -7,
+                -15, -7, -1, 1, 2, 1, 2, 1, -1, -7, -15,
+                -15, -15, -7, -1, 1, 2, 1, -1, -7, -15, -15,
+                -15, -7, -1, 1, 2, 1, 2, 1, -1, -7, -15,
+                -7, -1, 1, 2, 1, -1, 1, 2, 1, -1, -7,
+                -1, 1, 2, 1, -1, -7, -1, 1, 2, 1, -1,
+                1, 2, 1, -1, -7, -15, -7, -1, 1, 2, 1,
+                2, 1, -1, -7, -15, -15, -15, -7, -1, 1, 2,
+        };
         mask.put(0, 0, maskVal);
         return mask;
     }

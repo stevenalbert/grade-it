@@ -7,7 +7,7 @@ public class Answer {
     private EnumMap<Option, Boolean> isChosen;
 
     public Answer() {
-        isChosen = new EnumMap<Option, Boolean>(Option.class);
+        isChosen = new EnumMap<>(Option.class);
     }
 
     public void setOptionChosen(Option option, boolean value) {
@@ -15,7 +15,7 @@ public class Answer {
     }
 
     public boolean isOptionChosen(Option option) {
-        return isChosen.get(option);
+        return ( isChosen.containsKey(option) ? isChosen.get(option) : false );
     }
 
     @Override
@@ -24,7 +24,7 @@ public class Answer {
             Answer answer = (Answer) obj;
             Option[] options = Option.values();
             for (Option option : options) {
-                if (isChosen.get(option) != answer.isChosen.get(option))
+                if (this.isOptionChosen(option) != answer.isOptionChosen(option))
                     return false;
             }
             return true;
