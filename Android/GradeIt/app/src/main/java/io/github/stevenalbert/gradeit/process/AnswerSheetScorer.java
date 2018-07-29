@@ -40,6 +40,7 @@ public class AnswerSheetScorer {
      * @return processable answer sheet image
      */
     public static Mat convertAnswerSheet(Mat src, AnswerSheetMetadata metadata) {
+        long ttlTime = -System.nanoTime();
         // Check whether the argument is valid
         if (src == null) {
             throw new IllegalArgumentException("Argument cannot be null");
@@ -53,22 +54,31 @@ public class AnswerSheetScorer {
         if(src.channels() == 4) Imgproc.cvtColor(src, result, Imgproc.COLOR_RGBA2GRAY);
         else Imgproc.cvtColor(src, result, Imgproc.COLOR_RGB2GRAY);
 
-        // Adaptive Gaussian Thresholding
-        int blockSize = 201;
-        int C = 15;
+		// Normalized Box Blur
+		Imgproc.blur(result, result, new Size(3, 3));
 
+        // Adaptive Gaussian Thresholding
+        int blockSize = 171;
+        int C = 6;
+
+        long time = -System.nanoTime();
         Imgproc.adaptiveThreshold(result, result, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY,
                 blockSize, C);
-
+        time += System.nanoTime();
+        System.out.println("convert - Adaptive: " + String.format("%.3f", time / 1e9) + "s");
         // Find all contour on mat
         ArrayList<MatOfPoint> contours = new ArrayList<>();
+        time = -System.nanoTime();
         Mat copyResultForContour = result.clone();
         Imgproc.findContours(copyResultForContour, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
         copyResultForContour.release();
+        time += System.nanoTime();
+        System.out.println("convert - Find contours: " + String.format("%.3f", time / 1e9) + "s");
 
         ArrayList<MatOfPoint> squares = new ArrayList<>();
 
         // Test contours
+        time = -System.nanoTime();
         MatOfPoint2f approx = new MatOfPoint2f();
         for (int i = 0; i < contours.size(); i++) {
             // approximate contour with accuracy proportional
@@ -89,9 +99,12 @@ public class AnswerSheetScorer {
                 squares.add(approxArray);
             }
         }
+        time += System.nanoTime();
+        System.out.println("convert - Filter contours: " + String.format("%.3f", time / 1e9) + "s");
 
         double maxArea = -1, secondMaxArea = -1;
         int maxIdx = -1, secondMaxIdx = -1;
+        time = -System.nanoTime();
         for (int j = 0; j < squares.size(); j++) {
             Rect rect = Imgproc.boundingRect(squares.get(j));
             double area = rect.area();
@@ -105,6 +118,8 @@ public class AnswerSheetScorer {
                 secondMaxIdx = j;
             }
         }
+        time += System.nanoTime();
+        System.out.println("convert - Find 2nd max area: " + String.format("%.3f", time / 1e9) + "s");
 
         if (secondMaxIdx < 0 && maxIdx < 0)
             return null;
@@ -156,6 +171,7 @@ public class AnswerSheetScorer {
         perspectiveHeight = metadata.getDimension().height;
         perspectiveWidth = metadata.getDimension().width;
 
+        time = -System.nanoTime();
         Mat perspective = new Mat(perspectiveHeight, perspectiveWidth, src.type());
         MatOfPoint2f srcPoints = new MatOfPoint2f(topLeftPoint, topRightPoint, bottomRightPoint, bottomLeftPoint);
         MatOfPoint2f dst = new MatOfPoint2f(new Point(0, 0), new Point(perspectiveWidth - 1, 0),
@@ -163,9 +179,14 @@ public class AnswerSheetScorer {
 
         Mat transform = Imgproc.getPerspectiveTransform(srcPoints, dst);
         Imgproc.warpPerspective(result, perspective, transform, new Size(perspectiveWidth, perspectiveHeight));
+        time += System.nanoTime();
+        System.out.println("convert - Perspective transform: " + String.format("%.3f", time / 1e9) + "s");
 
         Imgproc.adaptiveThreshold(perspective, perspective, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
                 Imgproc.THRESH_BINARY, blockSize, C);
+
+        ttlTime += System.nanoTime();
+        System.out.println("convert - Total time: " + String.format("%.3f", ttlTime / 1e9) + "s");
 
         return perspective;
     }
@@ -447,11 +468,7 @@ public class AnswerSheetScorer {
             blackPixel[0][x] = 0;
         }
 
-        // Integral image (OpenCV)
-/*
-        Mat sum = new Mat(mat.rows(), mat.cols(), CvType.CV_32SC1);
-        Imgproc.integral(mat, sum);
-*/
+        // Integral image
         for (y = 1; y <= mat.rows(); y++) {
             for (x = 1; x <= mat.cols(); x++) {
                 blackPixel[y][x] = blackPixel[y - 1][x] + blackPixel[y][x - 1] - blackPixel[y - 1][x - 1];
@@ -486,12 +503,6 @@ public class AnswerSheetScorer {
         return new Point(xStart - 1, yStart - 1);
     }
 
-    /*
-     * private static double angle(Point pt1, Point pt2, Point pt0) { double dx1 =
-     * pt1.x - pt0.x; double dy1 = pt1.y - pt0.y; double dx2 = pt2.x - pt0.x; double
-     * dy2 = pt2.y - pt0.y; return (dx1 * dx2 + dy1 * dy2) / Math.sqrt((dx1 * dx1 +
-     * dy1 * dy1) * (dx2 * dx2 + dy2 * dy2) + 1e-10); }
-     */
     private static Point getCenter(Rect rect) {
         if (rect == null)
             return null;

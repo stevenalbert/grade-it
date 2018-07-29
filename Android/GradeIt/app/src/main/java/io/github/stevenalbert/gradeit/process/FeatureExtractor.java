@@ -67,8 +67,7 @@ public class FeatureExtractor {
         // create the mask
         final int CENTER_SIZE = 5;
         Mat maskCenter = new Mat(CENTER_SIZE, CENTER_SIZE, CvType.CV_8SC1);
-        byte[] maskCenterValue = new byte[] { 2, 1, 0, 1, 2, 1, 4, 3, 4, 1, 0, 3, 6, 3, 0, 1, 4, 3, 4, 1, 2, 1, 0, 1,
-                2 };
+        byte[] maskCenterValue = new byte[] { 2, 1, 0, 1, 2, 1, 4, 3, 4, 1, 0, 3, 6, 3, 0, 1, 4, 3, 4, 1, 2, 1, 0, 1, 2 };
         maskCenter.put(0, 0, maskCenterValue);
 
         // index for masking (adjustment by +1 and -1 to get the center)

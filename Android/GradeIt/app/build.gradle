@@ -47,12 +47,12 @@ dependencies {
     implementation "com.android.support:recyclerview-v7:$support_version"
     implementation project(':openCVLibrary341')
     /* EJML library for matrix operation */
-    implementation group: 'org.ejml', name: 'ejml-all', version: '0.34'
+    implementation 'org.ejml:ejml-all:0.34'
     /* Room and lifecycle library */
     implementation "android.arch.lifecycle:extensions:$lifecycle_version"
     implementation "android.arch.persistence.room:runtime:$room_version"
     annotationProcessor "android.arch.lifecycle:compiler:$lifecycle_version"
     annotationProcessor "android.arch.persistence.room:compiler:$room_version"
     /* PDF Writer */
-    implementation "com.itextpdf:itextg:5.5.10"
+    implementation 'com.itextpdf:itextg:5.5.10'
 }

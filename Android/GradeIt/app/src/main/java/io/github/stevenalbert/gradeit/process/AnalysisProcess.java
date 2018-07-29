@@ -95,18 +95,68 @@ public class AnalysisProcess {
         }
         // End of answer sheets
 
+        // Data for analysis
+        totalNumber = answerSheetList.get(0).getTotalAnswer();
+        int totalAnswerSheet = answerSheetList.size();
+        double[] correlationValues = new double[totalNumber];
+
+        int[][] verdictArray = new int[totalNumber][totalAnswerSheet];
+        int[] totalCorrectArray = new int[totalAnswerSheet];
+
+        for(int i = 0; i < answerSheetList.size(); i++) {
+            for(int number = 1; number <= totalNumber; number++) {
+                verdictArray[number - 1][i] = answerSheetList.get(i).isAnswerTrue(number) ? 1 : 0;
+            }
+            totalCorrectArray[i] = answerSheetList.get(i).getTotalCorrect();
+        }
+
+
+        // Calculate validity
+        for(int i = 0; i < totalNumber; i++) {
+            correlationValues[i] = correlation(verdictArray[i], totalCorrectArray);
+        }
         // Add correlation
         appendWithSeparator(summaryBuilder, ""); // For MCode column
         appendWithSeparator(summaryBuilder, ""); // For ExCode column
-        double[] corrValue = getAnswerCorrelations(answerSheetList);
-        for(int i = 0; i < corrValue.length; i++) {
-            appendWithSeparator(summaryBuilder, String.format(Locale.getDefault(), "%.2f", corrValue[i]));
+        for(int i = 0; i < correlationValues.length; i++) {
+            appendWithSeparator(summaryBuilder, String.format(Locale.getDefault(), "%.2f", correlationValues[i]));
         }
         appendWithSeparator(summaryBuilder, ""); // For Result column
         summaryBuilder.append(LINE_SEPARATOR);
         summaryBuilder.append(LINE_SEPARATOR);
         summaryBuilder.append(LINE_SEPARATOR);
-        // End of correlation
+        // End of validity
+
+        // Calculate reliability
+        int[] score = new int[answerSheetList.size()];
+        int[] correctAnswerOnNumber = new int[totalNumber];
+        double[] p = new double[totalNumber];
+        double[] q = new double[totalNumber];
+        double[] pq = new double[totalNumber];
+        double sumOfPQ = 0, KR20Value;
+
+        for(int i = 0; i < score.length; i++) {
+            score[i] = answerSheetList.get(i).getTotalCorrect();
+        }
+        double variance = variance(score);
+
+        // Calculate correct answers
+        for (int i = 0; i < totalNumber; i++) {
+            correctAnswerOnNumber[i] = (int) sum(verdictArray[i]);
+            p[i] = ((double) correctAnswerOnNumber[i]) / (double) totalAnswerSheet;
+            q[i] = 1 - p[i];
+            pq[i] = p[i] * q[i];
+            sumOfPQ = pq[i];
+        }
+
+        KR20Value = (((double) totalNumber) / (double) (totalNumber - 1)) * (1 - sumOfPQ / variance);
+        // End of reliability
+
+        // Calculate item discriminator
+        // End of reliability
+
+        // Calculate difficulty level
+        // End of reliability
 
         // Add options statistics
         for(Option option : allOptions) {
@@ -142,19 +192,16 @@ public class AnalysisProcess {
             totalCorrectArray[i] = answerSheets.get(i).getTotalCorrect();
         }
 
-/*
-        TODO: Insert correlation formula here
-*/
         // Calculate correlation value
         for(int i = 0; i < totalNumber; i++) {
-            correlationValues[i] = getCorrelation(verdictArray[i], totalCorrectArray);
+            correlationValues[i] = correlation(verdictArray[i], totalCorrectArray);
         }
         // Finish calculation
 
         return correlationValues;
     }
 
-    private static double getCorrelation(int[] x, int[] y) {
+    private static double correlation(int[] x, int[] y) {
         if(x.length != y.length)
             throw new IllegalArgumentException("x and y must have the same length");
 
@@ -175,5 +222,28 @@ public class AnalysisProcess {
 
         return (n * sumOfXY - sumOfX * sumOfY) /
                 Math.sqrt((n * sumOfSquareX - sumOfX * sumOfX) * (n * sumOfSquareY - sumOfY * sumOfY));
+    }
+
+    private static double variance(int[] x) {
+        double  sum = 0,
+                sumOfSquare = 0,
+                mean;
+
+        for (int v : x) {
+            sum += v;
+            sumOfSquare += v * v;
+        }
+
+        mean = sum / (double) x.length;
+
+        return (sumOfSquare / (double) x.length - mean * mean);
+    }
+
+    private static double sum(int[] x) {
+        double sum = 0;
+        for (int v : x) {
+            sum += v;
+        }
+        return sum;
     }
 }
