@@ -56,7 +56,7 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 AnswerKeyCode answerKey = answerKeys.get(position);
                 AnswerKeyViewHolder viewHolder = (AnswerKeyViewHolder) holder;
 
-                viewHolder.cardView.setCardBackgroundColor(ContextCompat.getColor(layoutInflater.getContext(), R.color.colorPrimaryDark));
+                viewHolder.cardView.setCardBackgroundColor(ContextCompat.getColor(layoutInflater.getContext(), R.color.dark_blue));
                 viewHolder.mCodeTextView.setText(answerKey.getMCodeString());
             } else {
                 position -= answerKeys.size();
@@ -64,9 +64,10 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 AnswerSheetViewHolder viewHolder = (AnswerSheetViewHolder) holder;
                 AnswerSheetCode answerSheet = answerSheets.get(position);
 
-                viewHolder.cardView.setCardBackgroundColor(ContextCompat.getColor(layoutInflater.getContext(), R.color.colorPrimary));
+                viewHolder.cardView.setCardBackgroundColor(ContextCompat.getColor(layoutInflater.getContext(), R.color.blue));
                 viewHolder.exCodeTextView.setText(answerSheet.getExCodeString());
                 viewHolder.mCodeTextView.setText(answerSheet.getMCodeString());
+                viewHolder.scoreTextView.setText(answerSheet.getScore());
             }
         }
     }
@@ -100,12 +101,14 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         private CardView cardView;
         private TextView exCodeTextView;
         private TextView mCodeTextView;
+        private TextView scoreTextView;
 
         private AnswerSheetViewHolder(View itemView) {
             super(itemView);
             cardView = itemView.findViewById(R.id.answer_sheet_info_card_view);
             exCodeTextView = itemView.findViewById(R.id.ex_code_text);
             mCodeTextView = itemView.findViewById(R.id.m_code_text);
+            scoreTextView = itemView.findViewById(R.id.score_text);
             cardView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

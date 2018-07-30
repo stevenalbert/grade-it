@@ -34,6 +34,9 @@ public class AnalysisProcess {
             }
         }
 
+        final int TOTAL_NUMBER = answerKey.getTotalNumber();
+        final int TOTAL_ANSWER_SHEET = answerSheetList.size();
+
         StringBuilder summaryBuilder = new StringBuilder();
         EnumMap<Option, Integer>[] totalOptionsOfNumber;
         List<int[]> verdictList = new ArrayList<>();
@@ -42,9 +45,8 @@ public class AnalysisProcess {
         // Create table header
         appendWithSeparator(summaryBuilder, "MCode");
         appendWithSeparator(summaryBuilder, "ExCode");
-        int totalNumber = answerKey.getAnswerKeys().length;
 
-        for(int i = 1; i <= totalNumber; i++) {
+        for(int i = 1; i <= TOTAL_NUMBER; i++) {
             appendWithSeparator(summaryBuilder, String.valueOf(i));
         }
         appendWithSeparator(summaryBuilder, "Result");
@@ -55,7 +57,7 @@ public class AnalysisProcess {
         appendWithSeparator(summaryBuilder, answerKey.getMCodeString());
         appendWithSeparator(summaryBuilder, "000");
         String optionsString = AnswerKeyConverter.optionsToString(answerKey.getAnswerKeys());
-        for(int i = 0; i < optionsString.length(); i++) {
+        for(int i = 0; i < TOTAL_NUMBER; i++) {
             appendWithSeparator(summaryBuilder, String.valueOf(optionsString.charAt(i)));
         }
         appendWithSeparator(summaryBuilder, "KEY");
@@ -63,7 +65,7 @@ public class AnalysisProcess {
         // End of answer key
 
         // Initialize option statistic
-        totalOptionsOfNumber = new EnumMap[totalNumber];
+        totalOptionsOfNumber = new EnumMap[TOTAL_NUMBER];
         Option[] allOptions = Option.values();
         for(int i = 0; i < totalOptionsOfNumber.length; i++) {
             totalOptionsOfNumber[i] = new EnumMap<>(Option.class);
@@ -79,7 +81,7 @@ public class AnalysisProcess {
             appendWithSeparator(summaryBuilder, answerSheet.getExCodeString());
             verdictList.add(answerSheet.getVerdicts());
             int trueAnswerTotal = 0;
-            for (int number = 1; number <= totalNumber; number++) {
+            for (int number = 1; number <= TOTAL_NUMBER; number++) {
                 String answerString = AnswerSheetConverter.answerToString(answerSheet.getAnswerOn(number));
                 appendWithSeparator(summaryBuilder, answerString);
                 trueAnswerTotal += answerSheet.isAnswerTrue(number) ? 1 : 0;
@@ -96,15 +98,13 @@ public class AnalysisProcess {
         // End of answer sheets
 
         // Data for analysis
-        totalNumber = answerSheetList.get(0).getTotalAnswer();
-        int totalAnswerSheet = answerSheetList.size();
-        double[] correlationValues = new double[totalNumber];
+        double[] correlationValues = new double[TOTAL_NUMBER];
 
-        int[][] verdictArray = new int[totalNumber][totalAnswerSheet];
-        int[] totalCorrectArray = new int[totalAnswerSheet];
+        int[][] verdictArray = new int[TOTAL_NUMBER][TOTAL_ANSWER_SHEET];
+        int[] totalCorrectArray = new int[TOTAL_ANSWER_SHEET];
 
         for(int i = 0; i < answerSheetList.size(); i++) {
-            for(int number = 1; number <= totalNumber; number++) {
+            for(int number = 1; number <= TOTAL_NUMBER; number++) {
                 verdictArray[number - 1][i] = answerSheetList.get(i).isAnswerTrue(number) ? 1 : 0;
             }
             totalCorrectArray[i] = answerSheetList.get(i).getTotalCorrect();
@@ -112,14 +112,15 @@ public class AnalysisProcess {
 
 
         // Calculate validity
-        for(int i = 0; i < totalNumber; i++) {
+        for(int i = 0; i < TOTAL_NUMBER; i++) {
             correlationValues[i] = correlation(verdictArray[i], totalCorrectArray);
         }
         // Add correlation
         appendWithSeparator(summaryBuilder, ""); // For MCode column
-        appendWithSeparator(summaryBuilder, ""); // For ExCode column
+        appendWithSeparator(summaryBuilder, "Validity score"); // For ExCode column
         for(int i = 0; i < correlationValues.length; i++) {
-            appendWithSeparator(summaryBuilder, String.format(Locale.getDefault(), "%.2f", correlationValues[i]));
+            appendWithSeparator(summaryBuilder, new Double(correlationValues[i]).isNaN() ? "---" :
+                    String.format(Locale.getDefault(), "%.2f", correlationValues[i]));
         }
         appendWithSeparator(summaryBuilder, ""); // For Result column
         summaryBuilder.append(LINE_SEPARATOR);
@@ -129,10 +130,10 @@ public class AnalysisProcess {
 
         // Calculate reliability
         int[] score = new int[answerSheetList.size()];
-        int[] correctAnswerOnNumber = new int[totalNumber];
-        double[] p = new double[totalNumber];
-        double[] q = new double[totalNumber];
-        double[] pq = new double[totalNumber];
+        int[] correctAnswerOnNumber = new int[TOTAL_NUMBER];
+        double[] p = new double[TOTAL_NUMBER];
+        double[] q = new double[TOTAL_NUMBER];
+        double[] pq = new double[TOTAL_NUMBER];
         double sumOfPQ = 0, KR20Value;
 
         for(int i = 0; i < score.length; i++) {
@@ -141,15 +142,20 @@ public class AnalysisProcess {
         double variance = variance(score);
 
         // Calculate correct answers
-        for (int i = 0; i < totalNumber; i++) {
+        for (int i = 0; i < TOTAL_NUMBER; i++) {
             correctAnswerOnNumber[i] = (int) sum(verdictArray[i]);
-            p[i] = ((double) correctAnswerOnNumber[i]) / (double) totalAnswerSheet;
+            p[i] = ((double) correctAnswerOnNumber[i]) / (double) TOTAL_ANSWER_SHEET;
             q[i] = 1 - p[i];
             pq[i] = p[i] * q[i];
-            sumOfPQ = pq[i];
+            sumOfPQ += pq[i];
         }
 
-        KR20Value = (((double) totalNumber) / (double) (totalNumber - 1)) * (1 - sumOfPQ / variance);
+        KR20Value = (((double) TOTAL_NUMBER) / (double) (TOTAL_NUMBER - 1)) * (1 - sumOfPQ / variance);
+        appendWithSeparator(summaryBuilder, "");
+        appendWithSeparator(summaryBuilder, "Reliability score");
+        appendWithSeparator(summaryBuilder, String.format("%.2f", KR20Value));
+        appendWithSeparator(summaryBuilder, reliabilityResult(KR20Value));
+        summaryBuilder.append(LINE_SEPARATOR);
         // End of reliability
 
         // Calculate item discriminator
@@ -175,30 +181,6 @@ public class AnalysisProcess {
     private static void appendWithSeparator(StringBuilder appendedTo, String appendedString) {
         appendedTo.append(appendedString);
         appendedTo.append(COLUMN_SEPARATOR);
-    }
-
-    private static double[] getAnswerCorrelations(List<AnswerSheet> answerSheets) {
-        int totalNumber = answerSheets.get(0).getTotalAnswer();
-        int totalAnswerSheet = answerSheets.size();
-        double[] correlationValues = new double[totalNumber];
-
-        int[][] verdictArray = new int[totalNumber][totalAnswerSheet];
-        int[] totalCorrectArray = new int[totalAnswerSheet];
-
-        for(int i = 0; i < answerSheets.size(); i++) {
-            for(int number = 1; number <= totalNumber; number++) {
-                verdictArray[number - 1][i] = answerSheets.get(i).isAnswerTrue(number) ? 1 : 0;
-            }
-            totalCorrectArray[i] = answerSheets.get(i).getTotalCorrect();
-        }
-
-        // Calculate correlation value
-        for(int i = 0; i < totalNumber; i++) {
-            correlationValues[i] = correlation(verdictArray[i], totalCorrectArray);
-        }
-        // Finish calculation
-
-        return correlationValues;
     }
 
     private static double correlation(int[] x, int[] y) {
@@ -245,5 +227,14 @@ public class AnalysisProcess {
             sum += v;
         }
         return sum;
+    }
+
+    private static String reliabilityResult(double reliabilityScore) {
+        if(reliabilityScore >= 0.9) return "Excellent";
+        else if(reliabilityScore >= 0.8) return "Good";
+        else if(reliabilityScore >= 0.7) return "Acceptable";
+        else if(reliabilityScore >= 0.6) return "Questionable";
+        else if(reliabilityScore >= 0.5) return "Poor";
+        else return "Unacceptable";
     }
 }

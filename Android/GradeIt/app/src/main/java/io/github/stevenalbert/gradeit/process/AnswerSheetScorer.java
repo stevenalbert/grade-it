@@ -446,7 +446,7 @@ public class AnswerSheetScorer {
         // Find the most fit rectangle
         Point rectStartPoint = findMostFitRect(square, width, height, dimension.squareAnswerBorder);
 
-        int contentPadding = dimension.squareAnswerBorder * 3 / 2;
+        int contentPadding = dimension.squareAnswerBorder;
         currentRect = new Rect((int) (rectStartPoint.x + contentPadding), (int) (rectStartPoint.y + contentPadding),
                 width - 2 * contentPadding, height - 2 * contentPadding);
 

@@ -18,15 +18,15 @@ import io.github.stevenalbert.gradeit.model.AnswerKeyCode;
  */
 @Dao
 public interface AnswerKeyDao {
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     long insert(AnswerKey answerKey);
-    @Update(onConflict = OnConflictStrategy.IGNORE)
+    @Update(onConflict = OnConflictStrategy.REPLACE)
     int update(AnswerKey answerKey);
     @Delete
     int delete(AnswerKey answerKey);
     @Query("DELETE FROM answer_key")
     void deleteAll();
-    @Query("SELECT m_code FROM answer_key")
+    @Query("SELECT m_code, total_number FROM answer_key")
     LiveData<List<AnswerKeyCode>> getAllAnswerKeysMetadata();
     @Query("SELECT * FROM answer_key")
     LiveData<List<AnswerKey>> getAllAnswerKeys();

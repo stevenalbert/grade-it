@@ -28,6 +28,15 @@
             android:gravity="center"/>
     </LinearLayout>
 
+    <TextView android:id="@+id/score_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/TextAppearance.AppCompat.Title"
+        android:padding="16dp"
+        android:background="@color/dark_blue"
+        android:textColor="@color/main_menu_item_content"
+        android:gravity="center"/>
+
     <android.support.v7.widget.RecyclerView android:id="@+id/answer_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"

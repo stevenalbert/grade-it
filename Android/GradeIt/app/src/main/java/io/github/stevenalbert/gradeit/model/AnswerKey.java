@@ -26,22 +26,26 @@ public class AnswerKey implements Parcelable {
     protected int mCode;
     @ColumnInfo(name = "answer_keys")
     protected Option[] answerKeys;
+    @ColumnInfo(name = "total_number")
+    protected int totalNumber;
 
-    public AnswerKey(int mCode, Option[] answerKeys) {
+    public AnswerKey(int mCode, Option[] answerKeys, int totalNumber) {
         setMCode(mCode);
         setAnswerKeys(answerKeys);
+        setTotalNumber(totalNumber);
     }
 
     @Ignore
     public AnswerKey(int mCode, int totalNumber) {
         setMCode(mCode);
-        setAnswerKeys(answerKeys);
+        createAnswerKeys(totalNumber);
     }
 
     @Ignore
     protected AnswerKey(Parcel in) {
         mCode = in.readInt();
         answerKeys = AnswerKeyConverter.optionsFromString(in.readString());
+        totalNumber = in.readInt();
     }
 
     @Ignore
@@ -83,6 +87,14 @@ public class AnswerKey implements Parcelable {
         return mCode;
     }
 
+    public void setTotalNumber(int totalNumber) {
+        this.totalNumber = totalNumber;
+    }
+
+    public int getTotalNumber() {
+        return totalNumber;
+    }
+
     public String getMCodeString() {
         StringBuilder mCodeTextBuilder = new StringBuilder("000");
         String mCodeTextString = Integer.toString(getMCode());
@@ -111,12 +123,17 @@ public class AnswerKey implements Parcelable {
             AnswerKey answerKey = new AnswerKey(answerSheet.getMCode(), answerSheet.getTotalAnswer());
             Option[] options = Option.values();
             for(int i = 1; i <= answerSheet.getTotalAnswer(); i++) {
+                boolean hasAnswer = false;
                 Answer answer = answerSheet.getAnswerOn(i);
                 for(Option option : options) {
                     if(answer.isOptionChosen(option)) {
                         answerKey.setAnswerKey(i, option);
+                        hasAnswer = true;
                         break;
                     }
+                }
+                if(hasAnswer) {
+                    answerKey.totalNumber = i;
                 }
             }
             return answerKey;
@@ -132,5 +149,6 @@ public class AnswerKey implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(mCode);
         dest.writeString(AnswerKeyConverter.optionsToString(answerKeys));
+        dest.writeInt(totalNumber);
     }
 }

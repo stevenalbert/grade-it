@@ -51,6 +51,8 @@ public class AnswerSheet implements Parcelable {
     protected int[] verdicts;
     @ColumnInfo(name = "correct")
     protected int totalCorrect;
+    @ColumnInfo(name = "total_number")
+    protected int totalNumber = -1;
 
     public AnswerSheet(int exCode, int mCode, Answer[] answers, int[] verdicts, int totalCorrect) {
         setExCode(exCode);
@@ -128,6 +130,7 @@ public class AnswerSheet implements Parcelable {
         if(this.getMCode() == answerKey.getMCode()) {
             int totalCorrect = 0;
             Option[] options = Option.values();
+            this.totalNumber = answerKey.getTotalNumber();
             for(int number = 1; number <= getTotalAnswer(); number++) {
                 Option keyOption = answerKey.getAnswerKey(number);
                 Answer answer = getAnswerOn(number);
@@ -230,8 +233,16 @@ public class AnswerSheet implements Parcelable {
         } else throw new IndexOutOfBoundsException("Number starts from 1 to " + answers.length);
     }
 
+    public void setTotalNumber(int totalNumber) {
+        this.totalNumber = totalNumber;
+    }
+
+    public int getTotalNumber() {
+        return totalNumber;
+    }
+
     public int getTotalAnswer() {
-        return answers.length;
+        return totalNumber == -1 ? answers.length : totalNumber;
     }
 
     public int getExCode() {

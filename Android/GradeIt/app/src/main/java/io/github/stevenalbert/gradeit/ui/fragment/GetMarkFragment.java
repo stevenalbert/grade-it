@@ -36,7 +36,6 @@ import io.github.stevenalbert.gradeit.util.FileUtils;
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link OnFragmentInteractionListener} interface
  * to handle interaction events.
  */
 public class GetMarkFragment extends Fragment {
@@ -117,7 +116,7 @@ public class GetMarkFragment extends Fragment {
         Intent photoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
         if (photoIntent.resolveActivity(getContext().getPackageManager()) != null) {
-            final String subDirectory = "Answersheet";
+            final String subDirectory = "Gradeit_Answersheet";
 
             // Create the image File
 /*
@@ -136,10 +135,12 @@ public class GetMarkFragment extends Fragment {
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
             String imageFileName = "AS_" + timeStamp + ".jpg";
             File imageFile = new File(storageDir, imageFileName);
+/*
             imageUri = FileProvider.getUriForFile(getContext(),
                     BuildConfig.APPLICATION_ID + ".fileprovider",
                     imageFile);
-//            imageUri = Uri.fromFile(imageFile);
+*/
+            imageUri = Uri.fromFile(imageFile);
 
             Log.d(TAG, "Image Uri: " + imageUri);
             photoIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
@@ -160,7 +161,7 @@ public class GetMarkFragment extends Fragment {
     }
 
     private void downloadAnswerSheet() {
-        String subDirectory = "Answersheet";
+        String subDirectory = "Gradeit_Answersheet";
         File storageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), subDirectory);
         storageDir.mkdirs();
 

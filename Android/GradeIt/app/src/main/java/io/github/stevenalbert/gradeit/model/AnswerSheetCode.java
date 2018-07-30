@@ -12,15 +12,23 @@ public class AnswerSheetCode implements Parcelable {
     public int exCode;
     @ColumnInfo(name = "m_code")
     public int mCode;
+    @ColumnInfo(name = "correct")
+    public int totalCorrect;
+    @ColumnInfo(name = "total_number")
+    public int totalNumber;
 
-    public AnswerSheetCode(int exCode, int mCode) {
+    public AnswerSheetCode(int exCode, int mCode, int totalCorrect, int totalNumber) {
         this.exCode = exCode;
         this.mCode = mCode;
+        this.totalCorrect = totalCorrect;
+        this.totalNumber = totalNumber;
     }
 
     protected AnswerSheetCode(Parcel in) {
         exCode = in.readInt();
         mCode = in.readInt();
+        totalCorrect = in.readInt();
+        totalNumber = in.readInt();
     }
 
     public static final Creator<AnswerSheetCode> CREATOR = new Creator<AnswerSheetCode>() {
@@ -49,6 +57,10 @@ public class AnswerSheetCode implements Parcelable {
         return mCodeTextBuilder.toString();
     }
 
+    public String getScore() {
+        return totalCorrect + "/" + totalNumber;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -58,5 +70,7 @@ public class AnswerSheetCode implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(exCode);
         dest.writeInt(mCode);
+        dest.writeInt(totalCorrect);
+        dest.writeInt(totalNumber);
     }
 }

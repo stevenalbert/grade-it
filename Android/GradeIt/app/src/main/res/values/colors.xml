@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#0f4f9d</color>
-    <color name="colorPrimaryDark">#09366c</color>
+    <color name="colorPrimary">@color/dark_blue</color>
+    <color name="colorPrimaryDark">@color/dark_blue</color>
     <!--<color name="colorAccent">#1468d0</color>-->
     <color name="colorAccent">@android:color/white</color>
 
@@ -9,5 +9,7 @@
     <color name="main_menu_item">@color/colorPrimary</color>
     <color name="main_menu_item_content">@android:color/white</color>
 
+    <color name="blue">#0f4f9d</color>
+    <color name="dark_blue">#09366c</color>
     <color name="black_overlay">#50000000</color>
 </resources>

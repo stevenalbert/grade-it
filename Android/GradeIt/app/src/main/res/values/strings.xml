@@ -1,10 +1,10 @@
 <resources>
-    <string name="app_name">Grade it</string>
+    <string name="app_name">Grade It!</string>
 
     <!-- Home menu item name -->
 
     <!-- Main menu item names -->
-    <string name="mark_answer_title">Home</string>
+    <string name="mark_answer_title">Get Mark</string>
     <string name="view_marks_title">View Marks</string>
     <string name="answer_analysis_title">Analysis</string>
 
@@ -43,9 +43,11 @@
 
     <string name="m_code">MCode: %1$s</string>
     <string name="ex_code">ExCode: %1$s</string>
+    <string name="score">Score: %1$s</string>
     <string name="ok">Ok</string>
 
     <string name="answer_key_detail_activity_title">Answer Key</string>
+    <string name="answer_sheet_detail_activity_title">Answer Sheet</string>
 
     <string name="save_analysis_as_pdf">Save as PDF</string>
     <string name="save_analysis_as_csv">Save as CSV</string>

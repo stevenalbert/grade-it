@@ -5,7 +5,8 @@
 
     <TextView android:id="@+id/number"
         style="@style/OptionItem"
-        android:background="@color/colorPrimary"/>
+        android:background="@color/colorPrimary"
+        android:textColor="@color/main_menu_item_content"/>
 
     <TextView android:id="@+id/option_a"
         style="@style/OptionItem"

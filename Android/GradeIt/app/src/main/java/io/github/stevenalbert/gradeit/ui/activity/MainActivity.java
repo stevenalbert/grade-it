@@ -72,9 +72,11 @@ public class MainActivity extends TabActivity implements
         if (id == R.id.help) {
             return true;
         }
+/*
         else if (id == R.id.about_us) {
             return true;
         }
+*/
 
         return super.onOptionsItemSelected(item);
     }

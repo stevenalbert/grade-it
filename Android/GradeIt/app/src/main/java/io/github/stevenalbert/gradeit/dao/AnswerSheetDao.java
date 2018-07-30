@@ -18,17 +18,17 @@ import io.github.stevenalbert.gradeit.model.AnswerSheetCode;
  */
 @Dao
 public interface AnswerSheetDao {
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     long insert(AnswerSheet answerSheet);
-    @Update(onConflict = OnConflictStrategy.IGNORE)
+    @Update(onConflict = OnConflictStrategy.REPLACE)
     int update(AnswerSheet answerSheet);
     @Delete
     int delete(AnswerSheet answerSheet);
     @Query("DELETE FROM answer_sheet")
     void deleteAll();
-    @Query("SELECT ex_code, m_code FROM answer_sheet ORDER BY m_code, ex_code ASC")
+    @Query("SELECT ex_code, m_code, correct, total_number FROM answer_sheet ORDER BY m_code, ex_code ASC")
     LiveData<List<AnswerSheetCode>> getAllAnswerSheetsMetadata();
-    @Query("SELECT ex_code, m_code FROM answer_sheet WHERE m_code = :mCode ORDER BY m_code, ex_code ASC")
+    @Query("SELECT ex_code, m_code, correct, total_number FROM answer_sheet WHERE m_code = :mCode ORDER BY m_code, ex_code ASC")
     LiveData<List<AnswerSheetCode>> getAllAnswerSheetsMetadataByMCode(int mCode);
     @Query("SELECT * FROM answer_sheet ORDER BY m_code, ex_code ASC")
     LiveData<List<AnswerSheet>> getAllAnswerSheets();

@@ -33,6 +33,7 @@ public class AnswerSheetDetailFragment extends Fragment {
     private RecyclerView answerRecyclerView;
     private TextView exCodeText;
     private TextView mCodeText;
+    private TextView scoreText;
 
     public AnswerSheetDetailFragment() {
         // Required empty public constructor
@@ -74,6 +75,9 @@ public class AnswerSheetDetailFragment extends Fragment {
 
         exCodeText = view.findViewById(R.id.ex_code_text);
         exCodeText.setText(getString(R.string.ex_code, answerSheet.getExCodeString()));
+
+        scoreText = view.findViewById(R.id.score_text);
+        scoreText.setText(getString(R.string.score, answerSheet.getTotalCorrect() + " / " + answerSheet.getTotalNumber()));
     }
 
     public static AnswerSheetDetailFragment newInstance(AnswerSheet answerSheet, AnswerKey answerKey) {

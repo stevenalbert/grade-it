@@ -120,4 +120,10 @@ public class AnswerSheetDetailActivity extends LayoutToolbarActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setTitle(R.string.answer_sheet_detail_activity_title);
+    }
 }

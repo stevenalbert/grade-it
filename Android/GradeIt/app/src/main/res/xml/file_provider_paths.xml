@@ -2,14 +2,14 @@
 <paths>
     <external-path
         name="as_images_public"
-        path="Pictures/Answersheet" />
+        path="Pictures/Gradeit_Answersheet" />
     <external-path
         name="as_download"
-        path="Download/Answersheet" />
+        path="Download/Gradeit_Answersheet" />
     <external-path
         name="as_images_private"
-        path="Android/data/io.github.stevenalbert.gradeit/files/Pictures/Answersheet" />
+        path="Android/data/io.github.stevenalbert.gradeit/files/Pictures/Gradeit_Answersheet" />
     <external-path
         name="as_docs"
-        path="Android/data/io.github.stevenalbert.gradeit/files/Answersheet" />
+        path="Android/data/io.github.stevenalbert.gradeit/files/Gradeit_Answersheet" />
 </paths>

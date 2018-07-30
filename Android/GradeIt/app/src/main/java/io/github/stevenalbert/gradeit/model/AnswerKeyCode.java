@@ -1,6 +1,7 @@
 package io.github.stevenalbert.gradeit.model;
 
 import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Ignore;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -10,13 +11,23 @@ import android.os.Parcelable;
 public class AnswerKeyCode implements Parcelable {
     @ColumnInfo(name = "m_code")
     public int mCode;
+    @ColumnInfo(name = "total_number")
+    public int totalNumber;
 
+    @Ignore
     public AnswerKeyCode(int mCode) {
         this.mCode = mCode;
+        this.totalNumber = 0;
+    }
+
+    public AnswerKeyCode(int mCode, int totalNumber) {
+        this.mCode = mCode;
+        this.totalNumber = totalNumber;
     }
 
     protected AnswerKeyCode(Parcel in) {
         mCode = in.readInt();
+        totalNumber = in.readInt();
     }
 
     public static final Creator<AnswerKeyCode> CREATOR = new Creator<AnswerKeyCode>() {
@@ -46,5 +57,6 @@ public class AnswerKeyCode implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(mCode);
+        dest.writeInt(totalNumber);
     }
 }
