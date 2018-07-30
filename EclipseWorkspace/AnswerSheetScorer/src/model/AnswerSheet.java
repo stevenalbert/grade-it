@@ -20,6 +20,7 @@ public class AnswerSheet {
     protected Answer[] answers;
     protected int[] verdicts;
     protected int totalCorrect;
+    protected int totalNumber = -1;
 
     public AnswerSheet(int exCode, int mCode, Answer[] answers, int[] verdicts, int totalCorrect) {
         setExCode(exCode);
@@ -67,7 +68,8 @@ public class AnswerSheet {
         if(this.getMCode() == answerKey.getMCode()) {
             int totalCorrect = 0;
             Option[] options = Option.values();
-            for(int number = 1; number <= getTotalAnswer(); number++) {
+            this.totalNumber = answerKey.getTotalNumber();
+            for(int number = 1; number <= answerKey.getTotalNumber(); number++) {
                 Option keyOption = answerKey.getAnswerKey(number);
                 Answer answer = getAnswerOn(number);
                 if(answer.isOptionChosen(keyOption)) {
@@ -170,7 +172,7 @@ public class AnswerSheet {
     }
 
     public int getTotalAnswer() {
-        return answers.length;
+        return totalNumber == -1 ? answers.length : totalNumber;
     }
 
     public int getExCode() {

@@ -11,6 +11,7 @@ public class AnswerKey {
 
     protected int mCode;
     protected Option[] answerKeys;
+    protected int totalNumber;
 
     public AnswerKey(int mCode, Option[] answerKeys) {
         setMCode(mCode);
@@ -64,6 +65,10 @@ public class AnswerKey {
             return this.answerKeys[number - 1];
         } else throw new IndexOutOfBoundsException("Number starts from 1 to " + answerKeys.length);
     }
+    
+    public int getTotalNumber() {
+        return totalNumber;
+    }
 
     public static boolean isAnswerKey(AnswerSheet answerSheet) {
         return answerSheet.getExCode() == ANSWER_KEY_EX_CODE;
@@ -74,12 +79,17 @@ public class AnswerKey {
             AnswerKey answerKey = new AnswerKey(answerSheet.getMCode(), answerSheet.getTotalAnswer());
             Option[] options = Option.values();
             for(int i = 1; i <= answerSheet.getTotalAnswer(); i++) {
+                boolean hasAnswer = false;
                 Answer answer = answerSheet.getAnswerOn(i);
                 for(Option option : options) {
                     if(answer.isOptionChosen(option)) {
                         answerKey.setAnswerKey(i, option);
+                        hasAnswer = true;
                         break;
                     }
+                }
+                if(hasAnswer) {
+                    answerKey.totalNumber = i;
                 }
             }
             return answerKey;

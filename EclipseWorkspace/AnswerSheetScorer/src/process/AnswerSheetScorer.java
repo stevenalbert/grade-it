@@ -128,7 +128,7 @@ public class AnswerSheetScorer {
         if (debugOutput) {
             Mat drawSquareMat = new Mat(result, Range.all());
             Imgproc.cvtColor(drawSquareMat, drawSquareMat, Imgproc.COLOR_GRAY2RGB);
-            Imgproc.drawContours(drawSquareMat, squares, idx, new Scalar(0, 0, 255), 3);
+            Imgproc.drawContours(drawSquareMat, squares, idx, new Scalar(0, 255, 0), 10);
             Imgcodecs.imwrite(new File(file, (counter++) + "-bw-getsquare.jpg").getAbsolutePath(), drawSquareMat);
         }
 

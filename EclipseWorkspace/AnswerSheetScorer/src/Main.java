@@ -13,6 +13,7 @@ import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 
 import model.Answer;
+import model.AnswerKey;
 import model.AnswerMat;
 import model.AnswerSheet;
 import model.AnswerSheetMetadata;
@@ -23,14 +24,15 @@ import process.FeatureExtractor;
 public class Main {
 
     public static final String RES_DIR = "res";
-
+    private static AnswerKey answerKey;
+    
     public static void main(String[] args) {
         // load OpenCV library
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         // read directory
         File resDirectory = new File(RES_DIR);
-        File ansSheetDirectory = new File(resDirectory, "Test-MCode-649");
+        File ansSheetDirectory = new File(resDirectory, "Test-Not-X");
 //        Calendar calendar = Calendar.getInstance();
         StringBuilder folderName = new StringBuilder(ansSheetDirectory.getName() + "-Result");
 //        folderName.append(String.valueOf(calendar.get(Calendar.MONTH) + 1) + "-");
@@ -38,7 +40,7 @@ public class Main {
 //        folderName.append(String.valueOf(calendar.get(Calendar.YEAR)));
         File processedDirectory = new File(resDirectory, folderName.toString());
         processedDirectory.mkdirs();
-        processDirectory(ansSheetDirectory, processedDirectory, false);
+        processDirectory(ansSheetDirectory, processedDirectory, true);
 
         File[] files = processedDirectory.listFiles();
         File newDirectory = new File(processedDirectory, "PerspectiveTransform");
@@ -149,6 +151,15 @@ public class Main {
                 endTime = System.nanoTime();
                 System.out.println("Scoring answer sheet in " + ((double) (endTime - startTime)) / (double) 1e9);
                 
+                boolean scored = false;
+                
+                if(AnswerKey.isAnswerKey(answerSheet)) {
+                    answerKey = AnswerKey.fromAnswerSheet(answerSheet);
+                } else if(answerKey != null) {
+                    AnswerSheetScorer.scoreAnswerSheet(answerSheet, answerKey);
+                    scored = true;
+                }
+                
                 File recognitionResult = new File(output, "result.txt");
     
                 try {
@@ -165,13 +176,21 @@ public class Main {
                         for (Option option : options) {
                             if(answer.isOptionChosen(option)) pw.print(option.getOption());
                         }
+                        
+                        if(scored) {
+                            pw.print("\t" + answerSheet.getAnswerVerdict(number));
+                        }
+                        
                         pw.println();
                         pw.flush();
+                    }
+                    if(scored) {
+                        pw.println("Score = " + answerSheet.getTotalCorrect() + " / " + answerSheet.getTotalAnswer());
                     }
                     pw.close();
                 } catch (IOException e) {
                     e.printStackTrace();
-                }
+                }                
             }
             
             System.out.println("File " + files[i].getName() + " is processed.");
