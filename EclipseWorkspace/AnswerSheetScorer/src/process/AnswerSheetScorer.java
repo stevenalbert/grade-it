@@ -35,6 +35,8 @@ import model.label.MCodeLabel;
 
 public class AnswerSheetScorer {
 
+    private static int count = 0;
+    private static File currentFolder;
     /**
      * Convert answer sheet photo image to processable answer sheet image
      * 
@@ -72,13 +74,22 @@ public class AnswerSheetScorer {
         // Imgproc.adaptiveThreshold(result, result, 255,
         // Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 69, 25);
 
-        // Imgcodecs.imwrite(new File(file, (counter++) +
-        // "-black-white.jpg").getAbsolutePath(), result);
+        // DEBUG
+        if(debugOutput) {
+            Imgcodecs.imwrite(new File(file, (counter++) + "-thres.jpg").getAbsolutePath(), result);
+        }
 
         // Find all contour on mat
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         Imgproc.findContours(result, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        if (debugOutput) {
+            Mat drawSquareMat = new Mat(result, Range.all());
+            Imgproc.cvtColor(drawSquareMat, drawSquareMat, Imgproc.COLOR_GRAY2RGB);
+            Imgproc.drawContours(drawSquareMat, contours, -1, new Scalar(0, 0, 255), 10);
+            Imgcodecs.imwrite(new File(file, (counter++) + "-contours.jpg").getAbsolutePath(), drawSquareMat);
+        }
 
         ArrayList<MatOfPoint> squares = new ArrayList<>();
 
@@ -128,7 +139,7 @@ public class AnswerSheetScorer {
         if (debugOutput) {
             Mat drawSquareMat = new Mat(result, Range.all());
             Imgproc.cvtColor(drawSquareMat, drawSquareMat, Imgproc.COLOR_GRAY2RGB);
-            Imgproc.drawContours(drawSquareMat, squares, idx, new Scalar(0, 255, 0), 10);
+            Imgproc.drawContours(drawSquareMat, squares, idx, new Scalar(0, 0, 255), 10);
             Imgcodecs.imwrite(new File(file, (counter++) + "-bw-getsquare.jpg").getAbsolutePath(), drawSquareMat);
         }
 
@@ -206,9 +217,18 @@ public class AnswerSheetScorer {
         if (src == null)
             throw new IllegalArgumentException("Argument src cannot be null");
 
+        int counter = 1;
+        
         // Find all contours
         ArrayList<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(src, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(src.clone(), contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        if (debugOutput) {
+            Mat drawSquareMat = src.clone();
+            Imgproc.cvtColor(drawSquareMat, drawSquareMat, Imgproc.COLOR_GRAY2RGB);
+            Imgproc.drawContours(drawSquareMat, contours, -1, new Scalar(0, 0, 255), 4);
+            Imgcodecs.imwrite(new File(file, "2-" + (counter++) + "-contours.jpg").getAbsolutePath(), drawSquareMat);
+        }
 
         // Find the fit squares
         ArrayList<MatOfPoint> squares = new ArrayList<>();
@@ -251,13 +271,15 @@ public class AnswerSheetScorer {
                             new Point(rect.x + rect.width, rect.y),
                             new Point(rect.x + rect.width, rect.y + rect.height),
                             new Point(rect.x, rect.y + rect.height));
-                    Imgproc.drawContours(res, Arrays.asList(matOfPoint), 0, new Scalar(0, 255, 0), 3);
+                    Imgproc.drawContours(res, Arrays.asList(matOfPoint), 0, new Scalar(0, 255, 0), 5);
                 }
             }
         }
 
         // DEBUG OUTPUT
-        // Imgcodecs.imwrite(new File(file, "1-contour.jpg").getAbsolutePath(), res);
+        if (debugOutput) {
+            Imgcodecs.imwrite(new File(file, "2-" + (counter++) + "-key-squares.jpg").getAbsolutePath(), res);
+        }
 
         if (blackSquaresRect.size() == 0) {
             if (debugOutput) {
@@ -333,7 +355,7 @@ public class AnswerSheetScorer {
                     }
                 }
             }
-            Imgcodecs.imwrite(new File(file, "squares.jpg").getAbsolutePath(), res);
+            Imgcodecs.imwrite(new File(file, "2-" + (counter++) + "-v-h-key.jpg").getAbsolutePath(), res);
         }
         Collections.sort(verticalSquares, new Comparator<Rect>() {
             @Override
@@ -354,18 +376,18 @@ public class AnswerSheetScorer {
         for (int i = 0; i < verticalSquares.size(); i++) {
             averageHeight += verticalSquares.get(i).height;
         }
-        averageHeight /= verticalSquares.size();
-        averageHeight = averageHeight * 96 / 100;
+        averageHeight = averageHeight / verticalSquares.size() + (averageHeight % verticalSquares.size() * 2 >= verticalSquares.size() ? 1 : 0);
+//        averageHeight = averageHeight * 96 / 100;
 
         for (int i = 0; i < horizontalSquares.size(); i++) {
             averageWidth += horizontalSquares.get(i).width;
         }
-        averageWidth /= horizontalSquares.size();
-        averageWidth = averageWidth * 96 / 100;
+        averageWidth = averageWidth / horizontalSquares.size() + (averageWidth % horizontalSquares.size() * 2 >= horizontalSquares.size() ? 1 : 0);
+//        averageWidth = averageWidth * 96 / 100;
 
         // Create debug folder
         File folder = new File(file, "Content");
-
+        currentFolder = folder;
         if (debugOutput)
             folder.mkdirs();
 
@@ -378,16 +400,22 @@ public class AnswerSheetScorer {
 
         // Filter Noise AnswerMat
         for (AnswerMat answerMat : answerMats) {
-            ArrayList<MatOfPoint> answerMatContours = new ArrayList<>();
-            Imgproc.findContours(answerMat, answerMatContours, new Mat(), Imgproc.RETR_LIST,
-                    Imgproc.CHAIN_APPROX_SIMPLE);
             Scalar blackScalar = new Scalar(0);
+//            drawContour(answerMat, new Rect(0, 0, answerMat.cols(), answerMat.rows()), blackScalar, 2);
+            ArrayList<MatOfPoint> answerMatContours = new ArrayList<>(), filledContours = new ArrayList<>();
+            Mat copyAnswerMat = answerMat.clone();
+            Imgproc.findContours(copyAnswerMat, answerMatContours, new Mat(), Imgproc.RETR_LIST,
+                    Imgproc.CHAIN_APPROX_SIMPLE);
+            copyAnswerMat.release();
             for (MatOfPoint contour : answerMatContours) {
                 Rect contourRect = Imgproc.boundingRect(contour);
-                if (contourRect.area() < area / 10) {
-                    Imgproc.drawContours(answerMat, Arrays.asList(contour), 0, blackScalar, Core.FILLED);
+                if (contourRect.area() < area / 25) {
+                    filledContours.add(contour);
                 }
             }
+            Imgproc.drawContours(answerMat, filledContours, -1, blackScalar, Core.FILLED);
+            answerMatContours.clear();
+            filledContours.clear();
         }
 
         // Write to file for debug
@@ -416,7 +444,7 @@ public class AnswerSheetScorer {
         for (AnswerMat answerMat : answerMats) {
             int value = (int) FeatureExtractor.getFeatureX(answerMat, true, true, dir.getAbsolutePath() + "/" + answerMat.getLabel().toString());
             double zVal = BigDecimal.valueOf((double) value).round(new MathContext(3)).doubleValue();
-            final double zThreshold = 10.0;
+            final double zThreshold = 15.0;
             boolean isX = (zVal >= zThreshold);
 
             AnswerSheetLabel label = answerMat.getLabel();
@@ -478,10 +506,6 @@ public class AnswerSheetScorer {
                         drawOn.put(y, x, 0, 255, 0);
                     }
                 }
-                Mat mat = findSquareFromCenter(src, drawOn, (int) Math.round(startCenterX),
-                        (int) Math.round(startCenterY), averageWidth, averageHeight, paperDimension,
-                        firstname + "-" + String.valueOf(firstExt + i) + "-" + (char) (secondExt + j));
-
                 AnswerSheetLabel label = null;
                 if (firstname.equals("ExCode")) {
                     label = new ExCodeLabel(secondExt + j - '1', firstExt + i);
@@ -490,6 +514,12 @@ public class AnswerSheetScorer {
                 } else {
                     label = new AnswerLabel(firstExt + i, Option.getOption((char) (secondExt + j)));
                 }
+                
+//                System.out.print(label.toString());
+                Mat mat = findSquareFromCenter(src, drawOn, (int) Math.round(startCenterX),
+                        (int) Math.round(startCenterY), averageWidth, averageHeight, paperDimension,
+                        firstname + "-" + String.valueOf(firstExt + i) + "-" + (char) (secondExt + j));
+
                 answerMats.add(new AnswerMat(mat, label));
             }
         }
@@ -515,18 +545,29 @@ public class AnswerSheetScorer {
         Mat square = src.submat(currentRect);
         Mat sqDrawOn = drawOn.submat(currentRect);
 
+        if(count == 0) {
+            Imgcodecs.imwrite(new File(currentFolder, "../interest-square.jpg").getAbsolutePath(), sqDrawOn);
+            count++;
+        }
+        
         // Find the most fit rectangle
-        Point rectStartPoint = findMostFitRect(square, width, height, dimension.squareAnswerBorder);
-//        currentRect = new Rect(rectStartPoint, new Size(width, height));
-//        drawContour(sqDrawOn, currentRect, new Scalar(0, 255, 0), 2);
+        int border = dimension.squareAnswerBorder;
+        Point rectStartPoint = findMostFitRect(square, width, height, border);
+        currentRect = new Rect(rectStartPoint, new Size(width, height));
+//        drawContour(sqDrawOn, currentRect, new Scalar(0, 0, 255), 3);
         /*
          * currentRect = scaleRectOnCenter(currentRect, 1 - 2.5 * (double)
          * dimension.squareAnswerBorder / (double) Math.min(width, height));
          */
-        int contentPadding = dimension.squareAnswerBorder;
+        if(count == 1) {
+            Imgcodecs.imwrite(new File(currentFolder, "../interest-square.jpg").getAbsolutePath(), sqDrawOn);
+            count++;
+        }
+
+        int contentPadding = border;
         currentRect = new Rect((int) (rectStartPoint.x + contentPadding), (int) (rectStartPoint.y + contentPadding),
                 width - 2 * contentPadding, height - 2 * contentPadding);
-        drawContour(sqDrawOn, currentRect, new Scalar(0, 255, 0), 2);
+        drawContour(sqDrawOn, currentRect, new Scalar(0, 255, 0), 3);
         // Imgcodecs.imwrite(new File(directory, filename + ".jpg").getAbsolutePath(),
         // sqDrawOn);
 
@@ -534,15 +575,16 @@ public class AnswerSheetScorer {
     }
 
     private static Point findMostFitRect(Mat mat, int width, int height, int insideBorderThickness) {
-        int maxCol = mat.cols() - width + 1, maxRow = mat.rows() - height + 1;
+        int matRows = mat.rows(), matCols = mat.cols();
+        int maxCol = matCols - width + 1, maxRow = matRows - height + 1;
         if (maxCol <= 0 || maxRow <= 0)
             return new Point(0, 0);
         int x, y, maxBlackPixel, xStart, yStart, outsideRectBlackPixel, insideRectBlackPixel, currBlackPixel;
-        int[][] blackPixel = new int[mat.rows() + 1][mat.cols() + 1];
-        for (y = 0; y < mat.rows(); y++) {
+        int[][] blackPixel = new int[matRows + 1][matCols + 1];
+        for (y = 0; y < matRows; y++) {
             blackPixel[y][0] = 0;
         }
-        for (x = 0; x < mat.cols(); x++) {
+        for (x = 0; x < matCols; x++) {
             blackPixel[0][x] = 0;
         }
         /*
@@ -550,14 +592,20 @@ public class AnswerSheetScorer {
          * Imgproc.integral(mat, sum);
          */
         // Integral image (OpenCV)
-        for (y = 1; y <= mat.rows(); y++) {
-            for (x = 1; x <= mat.cols(); x++) {
+        for (y = 1; y <= matRows; y++) {
+            for (x = 1; x <= matCols; x++) {
                 blackPixel[y][x] = blackPixel[y - 1][x] + blackPixel[y][x - 1] - blackPixel[y - 1][x - 1];
                 if (mat.get(y - 1, x - 1)[0] == 0) { // if the color is black
                     blackPixel[y][x]++;
                 }
             }
         }
+        
+        int centerRow = matRows / 2;
+        int centerCol = matCols / 2;
+        int sqDistToCenter = matRows * matRows + matCols * matCols, sqDist;
+        double intensity, maxIntensity = 0;
+        double area = width * height - (width - 2 * insideBorderThickness) * (height - 2 * insideBorderThickness);
 
         xStart = yStart = -1;
         maxBlackPixel = -1;
@@ -573,14 +621,27 @@ public class AnswerSheetScorer {
                         + blackPixel[y + insideBorderThickness - 1][x + insideBorderThickness - 1];
 
                 currBlackPixel = outsideRectBlackPixel - insideRectBlackPixel;
-                if (maxBlackPixel < currBlackPixel) {
-                    maxBlackPixel = currBlackPixel;
+                intensity = ((double) currBlackPixel) / area;
+//                intensity = new Double(Math.round(intensity * 100.0) / 100.0);
+                if (maxIntensity < intensity) {
+                    maxIntensity = intensity;
+//                    sqDistToCenter = (((x - 1 + width) / 2) - centerCol) * (((x - 1 + width) / 2) - centerCol) 
+//                            + (((y - 1 + height) / 2) - centerRow) * (((y - 1 + height) / 2) - centerRow);
                     xStart = x;
                     yStart = y;
+//                } else if(maxIntensity == intensity) {
+//                    sqDist = (((x - 1 + width) / 2) - centerCol) * (((x - 1 + width) / 2) - centerCol) 
+//                            + (((y - 1 + height) / 2) - centerRow) * (((y - 1 + height) / 2) - centerRow);
+//                    if(sqDistToCenter > sqDist) {
+//                        sqDistToCenter = sqDist;
+//                        xStart = x;
+//                        yStart = y;
+//                    }
                 }
             }
         }
 
+//        System.out.println(" " + maxIntensity + " " + sqDistToCenter + " " + centerRow + " " + centerCol + " " + ((xStart - 1 + width) / 2) + " " + ((yStart - 1 + height) / 2));
         return new Point(xStart - 1, yStart - 1);
     }
 

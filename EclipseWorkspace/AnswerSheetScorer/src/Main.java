@@ -32,7 +32,7 @@ public class Main {
 
         // read directory
         File resDirectory = new File(RES_DIR);
-        File ansSheetDirectory = new File(resDirectory, "Test-Not-X");
+        File ansSheetDirectory = new File(resDirectory, "Test-MCode-649");
 //        Calendar calendar = Calendar.getInstance();
         StringBuilder folderName = new StringBuilder(ansSheetDirectory.getName() + "-Result");
 //        folderName.append(String.valueOf(calendar.get(Calendar.MONTH) + 1) + "-");
@@ -40,14 +40,14 @@ public class Main {
 //        folderName.append(String.valueOf(calendar.get(Calendar.YEAR)));
         File processedDirectory = new File(resDirectory, folderName.toString());
         processedDirectory.mkdirs();
-        processDirectory(ansSheetDirectory, processedDirectory, true);
+        processDirectory(ansSheetDirectory, processedDirectory, false);
 
         File[] files = processedDirectory.listFiles();
         File newDirectory = new File(processedDirectory, "PerspectiveTransform");
         newDirectory.mkdirs();
         for (File file : files) {
             String name = file.getName();
-            file = new File(new File(file, "0-Preprocess"), "2-transform.jpg");
+            file = new File(new File(file, "1-Retrieve squares content"), "overall-content.jpg");
             if (!file.exists())
                 continue;
             File newFile = new File(newDirectory, name + ".jpg");
@@ -129,7 +129,7 @@ public class Main {
             // CALCULATE THRESHOLD AND ACCURACY
             if(recognize) {
                 final double maxNewKernel = 78.0;
-                final double newKernelThreshold = 10.0 / maxNewKernel;
+                final double newKernelThreshold = 15.0 / maxNewKernel;
                 final double oldKernelThreshold = 0.05;
                 for (AnswerMat answerMat : answerMats) {
                     String temp = output.getName() + "-" + answerMat.getLabel().toString();
@@ -165,28 +165,26 @@ public class Main {
                 try {
                     recognitionResult.createNewFile();
                     PrintWriter pw = new PrintWriter(recognitionResult);
-                    pw.println("EXCode = " + answerSheet.getExCode());
-                    pw.println("MCode = " + answerSheet.getMCode());
-                    pw.println();
+                    pw.println(answerSheet.getExCodeString());
+                    pw.println(answerSheet.getMCodeString());
                     pw.flush();
                     Option[] options = Option.values();
                     for (int number = 1; number <= answerSheet.getTotalAnswer(); number++) {
                         Answer answer = answerSheet.getAnswerOn(number);
-                        pw.print(number + "\t");
                         for (Option option : options) {
                             if(answer.isOptionChosen(option)) pw.print(option.getOption());
                         }
                         
-                        if(scored) {
-                            pw.print("\t" + answerSheet.getAnswerVerdict(number));
-                        }
+//                        if(scored) {
+//                            pw.print("\t" + answerSheet.getAnswerVerdict(number));
+//                        }
                         
                         pw.println();
                         pw.flush();
                     }
-                    if(scored) {
-                        pw.println("Score = " + answerSheet.getTotalCorrect() + " / " + answerSheet.getTotalAnswer());
-                    }
+//                    if(scored) {
+//                        pw.println("Score = " + answerSheet.getTotalCorrect() + " / " + answerSheet.getTotalAnswer());
+//                    }
                     pw.close();
                 } catch (IOException e) {
                     e.printStackTrace();

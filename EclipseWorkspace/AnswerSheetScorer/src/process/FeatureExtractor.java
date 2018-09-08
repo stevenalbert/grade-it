@@ -487,9 +487,9 @@ public class FeatureExtractor {
         int[] projHorVal = new int[(int) projHor.total()];
         projHor.get(0, 0, projHorVal);
         int idxTop = 0, idxBottom = projHorVal.length - 1;
-        while (projHorVal[idxTop] == 0)
+        while (idxTop < projHorVal.length && projHorVal[idxTop] == imgThreshold.cols())
             idxTop++;
-        while (projHorVal[idxBottom] == 0)
+        while (idxBottom >= 0 && projHorVal[idxBottom] == imgThreshold.cols())
             idxBottom--;
 
         // left and right pixels
@@ -497,14 +497,17 @@ public class FeatureExtractor {
         int[] projVerVal = new int[(int) projVer.total()];
         projVer.get(0, 0, projVerVal);
         int idxLeft = 0, idxRight = projVerVal.length - 1;
-        while (projVerVal[idxLeft] == 0)
+        while (idxLeft < projVerVal.length && projVerVal[idxLeft] == imgThreshold.rows())
             idxLeft++;
-        while (projVerVal[idxRight] == 0)
+        while (idxRight >= 0 && projVerVal[idxRight] == imgThreshold.rows())
             idxRight--;
 
         // crop the character, then convert the image so that black indicates
         // background, while white indicates object
-        Mat imgCropped = imgThreshold.submat(idxTop, idxBottom + 1, idxLeft, idxRight + 1);
+        Mat imgCropped;
+        if(idxTop < idxBottom && idxLeft < idxRight) 
+            imgCropped = imgThreshold.submat(idxTop, idxBottom + 1, idxLeft, idxRight + 1);
+        else imgCropped = imgThreshold;
 
         // ================================
         // normalize using F9 Normalization
@@ -605,12 +608,12 @@ public class FeatureExtractor {
         // drawing the image
 
         if (true) {
-            // Core.bitwise_not(imgCropped, imgCropped);
-            // Imgcodecs.imwrite(temp + "-1crop.jpg", imgCropped);
-            // imgNorm.convertTo(imgNorm, CvType.CV_8UC1);
-            // Imgproc.threshold(imgNorm, imgNorm, 0, 255, Imgproc.THRESH_BINARY);
-            // Core.bitwise_not(imgNorm, imgNorm);
-            // Imgcodecs.imwrite(temp + "-2norm.jpg", imgNorm);
+            Core.bitwise_not(imgCropped, imgCropped);
+            Imgcodecs.imwrite(temp + "-1crop.jpg", imgCropped);
+            imgNorm.convertTo(imgNorm, CvType.CV_8UC1);
+            Imgproc.threshold(imgNorm, imgNorm, 0, 255, Imgproc.THRESH_BINARY);
+            Core.bitwise_not(imgNorm, imgNorm);
+            Imgcodecs.imwrite(temp + "-norm.jpg", imgNorm);
             // Core.bitwise_not(imgNorm, imgNorm);
             // GrayImgProc.matToTxt(imgNorm, temp + "-2norm.txt");
             imgShifted.convertTo(imgShifted, CvType.CV_8UC1);

@@ -305,14 +305,14 @@ public class AnswerSheetScorer {
         for (int i = 0; i < verticalSquares.size(); i++) {
             averageHeight += verticalSquares.get(i).height;
         }
-        averageHeight /= verticalSquares.size();
-        averageHeight = averageHeight * 96 / 100;
+        averageHeight = averageHeight / verticalSquares.size() + (averageHeight % verticalSquares.size() * 2 >= verticalSquares.size() ? 1 : 0);
+//        averageHeight = averageHeight * 96 / 100;
 
         for (int i = 0; i < horizontalSquares.size(); i++) {
             averageWidth += horizontalSquares.get(i).width;
         }
-        averageWidth /= horizontalSquares.size();
-        averageWidth = averageWidth * 96 / 100;
+        averageWidth = averageWidth / horizontalSquares.size() + (averageWidth % horizontalSquares.size() * 2 >= horizontalSquares.size() ? 1 : 0);
+//        averageWidth = averageWidth * 96 / 100;
 
         ArrayList<AnswerMat> answerMats = new ArrayList<>();
         // Get all rectangles using meta data
@@ -323,15 +323,16 @@ public class AnswerSheetScorer {
 
         // Filter Noise AnswerMat
         for (AnswerMat answerMat : answerMats) {
+            Scalar blackScalar = new Scalar(0);
+//            drawContour(answerMat, new Rect(0, 0, answerMat.cols(), answerMat.rows()), blackScalar, 2);
             ArrayList<MatOfPoint> answerMatContours = new ArrayList<>(), filledContours = new ArrayList<>();
             Mat copyAnswerMat = answerMat.clone();
             Imgproc.findContours(copyAnswerMat, answerMatContours, new Mat(), Imgproc.RETR_LIST,
                     Imgproc.CHAIN_APPROX_SIMPLE);
             copyAnswerMat.release();
-            Scalar blackScalar = new Scalar(0);
             for (MatOfPoint contour : answerMatContours) {
                 Rect contourRect = Imgproc.boundingRect(contour);
-                if (contourRect.area() < area / 10) {
+                if (contourRect.area() < area / 25) {
                     filledContours.add(contour);
                 }
             }

@@ -124,8 +124,6 @@ public class AnalysisProcess {
         }
         appendWithSeparator(summaryBuilder, ""); // For Result column
         summaryBuilder.append(LINE_SEPARATOR);
-        summaryBuilder.append(LINE_SEPARATOR);
-        summaryBuilder.append(LINE_SEPARATOR);
         // End of validity
 
         // Calculate reliability
@@ -151,23 +149,38 @@ public class AnalysisProcess {
         }
 
         KR20Value = (((double) TOTAL_NUMBER) / (double) (TOTAL_NUMBER - 1)) * (1 - sumOfPQ / variance);
-        appendWithSeparator(summaryBuilder, "");
-        appendWithSeparator(summaryBuilder, "Reliability score");
-        appendWithSeparator(summaryBuilder, String.format("%.2f", KR20Value));
-        appendWithSeparator(summaryBuilder, reliabilityResult(KR20Value));
-        summaryBuilder.append(LINE_SEPARATOR);
         // End of reliability
 
         // Calculate item discriminator
-        // End of reliability
+        // End of item discriminator
 
         // Calculate difficulty level
-        // End of reliability
+        double diffLevel;
+        appendWithSeparator(summaryBuilder, "");
+        appendWithSeparator(summaryBuilder, "Difficulty level");
+        for(int i = 0; i < TOTAL_NUMBER; i++) {
+            diffLevel = 1.0 - ((double) correctAnswerOnNumber[i]) / (double) TOTAL_ANSWER_SHEET;
+            appendWithSeparator(summaryBuilder, String.format("%.2f", diffLevel));
+        }
+        summaryBuilder.append(LINE_SEPARATOR);
+        // End of difficulty level
+
+        // Output reliability
+        summaryBuilder.append(LINE_SEPARATOR);
+        summaryBuilder.append(LINE_SEPARATOR);
+        appendWithSeparator(summaryBuilder, "");
+        appendWithSeparator(summaryBuilder, "Reliability score");
+        appendWithSeparator(summaryBuilder, String.format("%.2f", KR20Value));
+//        appendWithSeparator(summaryBuilder, reliabilityResult(KR20Value));
+        summaryBuilder.append(LINE_SEPARATOR);
+        // End of output reliability
+
 
         // Add options statistics
+        summaryBuilder.append(LINE_SEPARATOR);
         for(Option option : allOptions) {
             appendWithSeparator(summaryBuilder, ""); // For MCode column
-            appendWithSeparator(summaryBuilder, option.getOption().toString()); // For ExCode column
+            appendWithSeparator(summaryBuilder, "Total " + option.getOption().toString()); // For ExCode column
             for(int i = 0; i < totalOptionsOfNumber.length; i++) {
                 appendWithSeparator(summaryBuilder, String.valueOf(totalOptionsOfNumber[i].get(option)));
             }

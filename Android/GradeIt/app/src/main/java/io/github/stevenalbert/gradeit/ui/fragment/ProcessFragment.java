@@ -64,6 +64,9 @@ public class ProcessFragment extends Fragment {
     // OnProcessFinishListener object
     private OnProcessFinishListener onProcessFinishListener;
 
+    // Process AsyncTask
+    private ProcessAsyncTask processAsyncTask;
+
     public interface OnProcessFinishListener {
         void onFinish(AnswerSheet answerSheet);
     }
@@ -136,6 +139,12 @@ public class ProcessFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        cancelProcessImage();
+    }
+
     public static ProcessFragment newInstance(Uri imageUri) {
         if(imageUri == null) return null;
 
@@ -165,7 +174,18 @@ public class ProcessFragment extends Fragment {
 
     private void startProcessImage() {
         ProcessAsyncTask task = new ProcessAsyncTask();
+        processAsyncTask = task;
         task.execute(Uri.parse(getArguments().getString(IMAGE_URI)));
+    }
+
+    private void cancelProcessImage() {
+        if(processAsyncTask != null) {
+            processAsyncTask.cancel(true);
+        }
+
+        progressBar.setVisibility(View.INVISIBLE);
+        processButton.setVisibility(View.VISIBLE);
+        insertScaledImage();
     }
 
     private void nextProcessAnswerSheet(AnswerSheet answerSheet) {
