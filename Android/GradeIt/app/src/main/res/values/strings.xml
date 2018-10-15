@@ -44,7 +44,7 @@
     <string name="m_code">MCode: %1$s</string>
     <string name="ex_code">ExCode: %1$s</string>
     <string name="score">Score: %1$s</string>
-    <string name="ok">Ok</string>
+    <string name="ok">Retry</string>
 
     <string name="answer_key_detail_activity_title">Answer Key</string>
     <string name="answer_sheet_detail_activity_title">Answer Sheet</string>
@@ -53,4 +53,20 @@
     <string name="save_analysis_as_csv">Save as CSV</string>
     <string name="save_success">Save succeed</string>
     <string name="save_failed">Save failed</string>
+
+    <!-- Metadata -->
+    <string-array name="metadata_formats_name">
+        <item>Form 20 Numbers</item>
+        <item>Form 40 Numbers</item>
+        <item>Form 60 Numbers</item>
+        <item>Form 80 Numbers</item>
+        <item>Form 100 Numbers</item>
+    </string-array>
+    <string-array name="metadata_filename">
+        <item>F-20</item>
+        <item>F-40</item>
+        <item>F-60</item>
+        <item>F-80</item>
+        <item>F-100</item>
+    </string-array>
 </resources>

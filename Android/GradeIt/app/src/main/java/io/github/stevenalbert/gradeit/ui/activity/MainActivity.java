@@ -4,9 +4,12 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +28,8 @@ public class MainActivity extends TabActivity implements
 
     // TAG
     private static final String TAG = MainActivity.class.getSimpleName();
+    // Parent Layout
+    private CoordinatorLayout parentLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +41,8 @@ public class MainActivity extends TabActivity implements
 
         // Setup Tab Layout and View
         setupTabActivity(getAllTabFragments());
+
+        parentLayout = findViewById(R.id.parent_layout);
     }
 
     @Override
@@ -86,6 +93,12 @@ public class MainActivity extends TabActivity implements
         Intent processIntent = new Intent(this, ProcessActivity.class);
         processIntent.setData(uri);
         startActivity(processIntent);
+    }
+
+    @Override
+    public void onFinishDownloadAnswerSheet(File downloadFolder) {
+        Snackbar snackbar = Snackbar.make(parentLayout, "Download finish, open in " + downloadFolder.getPath(), Snackbar.LENGTH_LONG);
+        snackbar.show();
     }
 
     @Override

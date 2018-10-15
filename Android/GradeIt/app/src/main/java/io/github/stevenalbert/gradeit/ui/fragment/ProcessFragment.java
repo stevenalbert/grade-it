@@ -3,7 +3,6 @@ package io.github.stevenalbert.gradeit.ui.fragment;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -16,9 +15,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -60,6 +62,10 @@ public class ProcessFragment extends Fragment {
     private ProgressBar progressBar;
     private TextView progressText;
     private TextView progressDescription;
+
+    // Metadata Chooser
+    private Spinner metadataSpinner;
+    private String chosenMetadata;
 
     // OnProcessFinishListener object
     private OnProcessFinishListener onProcessFinishListener;
@@ -104,6 +110,9 @@ public class ProcessFragment extends Fragment {
             public void onClick(View v) {
                 Toast.makeText(getContext(), R.string.process_button_start, Toast.LENGTH_SHORT).show();
 
+                // Disable spinner
+                metadataSpinner.setEnabled(false);
+
                 // Disable button
                 processButton.setEnabled(false);
                 processButton.setVisibility(View.INVISIBLE);
@@ -126,6 +135,25 @@ public class ProcessFragment extends Fragment {
 
         progressText = view.findViewById(R.id.progress_text);
         progressDescription = view.findViewById(R.id.progress_description);
+
+        metadataSpinner = view.findViewById(R.id.metadata_format_spinner);
+        String[] metadataStrings = getResources().getStringArray(R.array.metadata_formats_name);
+        ArrayAdapter<String> metadataAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, metadataStrings);
+        metadataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        metadataSpinner.setAdapter(metadataAdapter);
+        metadataSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String[] filenames = getResources().getStringArray(R.array.metadata_filename);
+                chosenMetadata = filenames[position] + ".asmf";
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+        metadataSpinner.setSelection(1);
     }
 
     @Override
@@ -215,7 +243,8 @@ public class ProcessFragment extends Fragment {
 
             InputStream metadataInputStream = null;
             try {
-                metadataInputStream = getContext().getAssets().open("P-40.asmf");
+                if(chosenMetadata == null) chosenMetadata = "F-40.asmf";
+                metadataInputStream = getContext().getAssets().open("metadata/" + chosenMetadata);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -258,7 +287,6 @@ public class ProcessFragment extends Fragment {
 
                 return answerSheet;
             } catch (Exception e) {
-                publishProgress(e.getMessage());
                 return null;
             }
         }

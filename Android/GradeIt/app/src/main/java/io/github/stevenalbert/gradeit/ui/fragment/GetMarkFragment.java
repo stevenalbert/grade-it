@@ -14,6 +14,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
@@ -46,6 +47,7 @@ public class GetMarkFragment extends Fragment {
     // Permission Request Code
     private static final int READ_EXTERNAL_STORAGE_PERMISSION_CODE = 101;
     private static final int CAMERA_PERMISSION_CODE = 102;
+    private static final int WRITE_EXTERNAL_STORAGE_PERMISSION_CODE = 103;
 
     // Action Request Code
     private static final int PHOTO_REQUEST = 1000;
@@ -150,8 +152,8 @@ public class GetMarkFragment extends Fragment {
     }
 
     private void getImageFromGallery() {
-        if(ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
+        if(ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     READ_EXTERNAL_STORAGE_PERMISSION_CODE);
             return;
         }
@@ -161,41 +163,22 @@ public class GetMarkFragment extends Fragment {
     }
 
     private void downloadAnswerSheet() {
+        if(ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[] {
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+            }, WRITE_EXTERNAL_STORAGE_PERMISSION_CODE);
+            return;
+        }
         String subDirectory = "Gradeit_Answersheet";
         File storageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), subDirectory);
         storageDir.mkdirs();
 
-        File answerSheetFile = FileUtils.copyFromAsset(getContext(), "answer_sheet_template.pdf", storageDir);
+        String[] pdfFilenames = getResources().getStringArray(R.array.metadata_filename);
+        for(String filename : pdfFilenames) {
+            FileUtils.copyFromAsset(getContext(), "pdf_form/" + filename + ".pdf", new File(storageDir, filename + ".pdf"));
+        }
 
-        MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
-        String mimeString = mimeTypeMap.getMimeTypeFromExtension(".pdf");
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setDataAndType(Uri.fromFile(answerSheetFile), mimeString);
-
-        PendingIntent pendingIntent = PendingIntent.getActivity(getContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
-
-        Notification notification = new Notification.Builder(getContext())
-                .setContentTitle(getContext().getString(R.string.app_name))
-                .setContentText("Download complete")
-                .setSubText(answerSheetFile.getAbsolutePath())
-                .setSmallIcon(R.drawable.ic_launcher_background)
-                .setContentIntent(pendingIntent)
-                .setAutoCancel(true)
-                .build();
-
-        NotificationManager notificationManager = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(0, notification);
-/*
-        DownloadManager downloadManager = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
-
-        DownloadManager.Request request = new DownloadManager.Request(answerSheetUri);
-        request.setTitle("Downloading Answer Sheet");
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, answerSheetFile.getName());
-        request.setVisibleInDownloadsUi(true);
-
-        downloadManager.enqueue(request);
-*/
+        mListener.onFinishDownloadAnswerSheet(storageDir);
     }
 
     private void processImage(Uri uri) {
@@ -225,6 +208,7 @@ public class GetMarkFragment extends Fragment {
 
     public interface OnFragmentInteractionListener {
         void onProcessImageTaken(Uri uri);
+        void onFinishDownloadAnswerSheet(File downloadFolder);
     }
 
     @Override
@@ -255,6 +239,14 @@ public class GetMarkFragment extends Fragment {
                 getImageFromGallery();
             } else {
                 Toast.makeText(getContext(), "Can't get image from gallery", Toast.LENGTH_SHORT).show();
+            }
+        }
+        if(requestCode == WRITE_EXTERNAL_STORAGE_PERMISSION_CODE) {
+            if(grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "onRequestPermissionsResult in download");
+                downloadAnswerSheet();
+            } else {
+                Toast.makeText(getContext(), "Can't write to storage", Toast.LENGTH_SHORT).show();
             }
         }
         if(requestCode == CAMERA_PERMISSION_CODE) {

@@ -13,10 +13,9 @@ import java.io.OutputStream;
  */
 public class FileUtils {
 
-    public static File copyFromAsset(Context context, String assetFilename, File outputDirectory) {
+    public static File copyFromAsset(Context context, String assetFilename, File outputFile) {
         InputStream inputStream = null;
         OutputStream outputStream = null;
-        File outputFile = new File(outputDirectory, assetFilename);
 
         if(outputFile.exists()) return outputFile;
 

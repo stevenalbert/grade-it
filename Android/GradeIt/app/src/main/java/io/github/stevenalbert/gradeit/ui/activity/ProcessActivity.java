@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
@@ -76,14 +77,11 @@ public class ProcessActivity extends LayoutToolbarActivity implements ProcessFra
         if(answerSheet == null) {
             AlertDialog alertDialog = new AlertDialog.Builder(this)
                     .setMessage(getString(R.string.no_answer_sheet_error_message))
-                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    .setOnDismissListener(new DialogInterface.OnDismissListener() {
                         @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            finish();
-                        }
+                        public void onDismiss(DialogInterface dialog) {finish();}
                     })
                     .create();
-
             alertDialog.show();
         } else {
             if(AnswerKey.isAnswerKey(answerSheet)) {
