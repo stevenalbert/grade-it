@@ -49,6 +49,10 @@ public class AnswerKeyViewModel extends AndroidViewModel {
         repository.delete(answerKey);
     }
 
+    public void deleteByMCode(Integer mCode) {
+        repository.deleteByMCode(mCode);
+    }
+
     public void deleteAll() {
         repository.deleteAll();
     }

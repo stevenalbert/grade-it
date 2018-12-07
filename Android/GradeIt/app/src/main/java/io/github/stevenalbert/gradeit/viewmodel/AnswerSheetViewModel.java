@@ -58,4 +58,12 @@ public class AnswerSheetViewModel extends AndroidViewModel {
     public void delete(AnswerSheet answerSheet) {
         repository.delete(answerSheet);
     }
+
+    public void deleteByMCode(Integer mCode) {
+        repository.deleteByMCode(mCode);
+    }
+
+    public void deleteAll() {
+        repository.deleteAll();
+    }
 }

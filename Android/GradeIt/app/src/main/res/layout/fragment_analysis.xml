@@ -11,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:text="Select MCode:"
+        android:text="@string/mark_m_code_select"
         android:textColor="@color/colorPrimary"/>
 
     <android.support.v7.widget.RecyclerView android:id="@+id/m_code_recycler_view"

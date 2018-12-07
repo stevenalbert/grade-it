@@ -42,7 +42,7 @@ public class AnswerKeyDetailActivity extends LayoutToolbarActivity {
                 });
             }
         } else {
-            Toast.makeText(this, "No answer key is found", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.no_answer_key_found, Toast.LENGTH_SHORT).show();
         }
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);

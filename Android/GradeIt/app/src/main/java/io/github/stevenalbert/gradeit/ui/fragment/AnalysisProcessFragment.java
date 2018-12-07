@@ -1,7 +1,6 @@
 package io.github.stevenalbert.gradeit.ui.fragment;
 
 
-import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.os.AsyncTask;
@@ -70,6 +69,7 @@ public class AnalysisProcessFragment extends Fragment {
 
     public interface OnAnalysisListener {
         void onFinishSaveAnalysis(File file);
+        void onFailedGetAnalysis(String message);
     }
 
     public AnalysisProcessFragment() {
@@ -100,35 +100,19 @@ public class AnalysisProcessFragment extends Fragment {
         AnswerKeyViewModel answerKeyViewModel = ViewModelProviders.of(this).get(AnswerKeyViewModel.class);
         AnswerSheetViewModel answerSheetViewModel = ViewModelProviders.of(this).get(AnswerSheetViewModel.class);
 
-        answerKeyViewModel.getAnswerKeyByMCode(mCode).observe(this, new Observer<AnswerKey>() {
-            @Override
-            public void onChanged(@Nullable AnswerKey answerKey) {
-                answerKeyReceived = answerKey;
-                getAnalysisReport();
-            }
+        answerKeyViewModel.getAnswerKeyByMCode(mCode).observe(this, (answerKey) -> {
+            answerKeyReceived = answerKey;
+            getAnalysisReport();
         });
 
-        answerSheetViewModel.getAnswerSheetsByMCode(mCode).observe(this, new Observer<List<AnswerSheet>>() {
-            @Override
-            public void onChanged(@Nullable List<AnswerSheet> answerSheets) {
-                answerSheetList = answerSheets;
-                getAnalysisReport();
-            }
+        answerSheetViewModel.getAnswerSheetsByMCode(mCode).observe(this, (answerSheets) -> {
+            answerSheetList = answerSheets;
+            getAnalysisReport();
         });
 
-        saveButtonCsv.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                saveAnalysisCsv();
-            }
-        });
+        saveButtonCsv.setOnClickListener((v) -> saveAnalysisCsv());
 
-        saveButtonPdf.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                saveAnalysisPdf();
-            }
-        });
+        saveButtonPdf.setOnClickListener((v) -> saveAnalysisPdf());
     }
 
     @Override
@@ -151,7 +135,7 @@ public class AnalysisProcessFragment extends Fragment {
     }
 
     private void saveAnalysisCsv() {
-        String filename = "MC" + answerKeyReceived.getMCodeString() + ".csv";
+        String filename = getString(R.string.analysis_save_filename, answerKeyReceived.getMCodeString()) + ".csv";
         File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
         File analysisFile = new File(storageDir, filename);
         try {
@@ -164,7 +148,7 @@ public class AnalysisProcessFragment extends Fragment {
     }
 
     private void saveAnalysisPdf() {
-        String filename = "MC" + answerKeyReceived.getMCodeString() + ".pdf";
+        String filename = getString(R.string.analysis_save_filename, answerKeyReceived.getMCodeString()) + ".pdf";
         File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
         File analysisFile = new File(storageDir, filename);
         try {
@@ -224,8 +208,8 @@ public class AnalysisProcessFragment extends Fragment {
                 tableRow.addView(textView);
             }
 
-            tableRow.setBackgroundColor(ContextCompat.getColor(getContext(), (row == 0 ? android.R.color.holo_blue_light :
-                    row == 1 ? android.R.color.holo_green_light :
+            tableRow.setBackgroundColor(ContextCompat.getColor(getContext(), (row == 0 ? android.R.color.holo_blue_dark :
+                    row == 1 ? android.R.color.darker_gray :
                     android.R.color.white)));
             tableLayout.addView(tableRow);
             row++;
@@ -239,7 +223,9 @@ public class AnalysisProcessFragment extends Fragment {
     }
 
     private void onFailedReceiveAnalysis(String message) {
-        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+        if(listener != null) {
+            listener.onFailedGetAnalysis(message);
+        }
     }
 
     private class GetAnalysisAsyncTask extends AsyncTask<Integer, Void, String> {
@@ -328,7 +314,6 @@ public class AnalysisProcessFragment extends Fragment {
                         ArrayList<String[]> cellPerLines = new ArrayList<>();
                         int[] colsWidth;
                         int maxColumns = 0;
-                        Log.d(TAG, "Total lines: " + lines.length);
                         for(String line : lines) {
                             String[] cols = line.split(",");
                             cellPerLines.add(cols);

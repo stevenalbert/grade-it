@@ -9,6 +9,7 @@
     android:layout_margin="8dp">
 
     <LinearLayout
+        android:baselineAligned="false"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal">
@@ -22,7 +23,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ExCode"
+                android:text="@string/ex_code_title"
                 android:textColor="@color/main_menu_item_content"
                 android:layout_gravity="center" />
 
@@ -46,7 +47,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:textColor="@color/main_menu_item_content"
-                android:text="MCode" />
+                android:text="@string/m_code_title" />
 
             <TextView android:id="@+id/m_code_text"
                 android:layout_width="wrap_content"
@@ -66,7 +67,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Score"
+                android:text="@string/score_title"
                 android:textColor="@color/main_menu_item_content"
                 android:layout_gravity="center" />
 

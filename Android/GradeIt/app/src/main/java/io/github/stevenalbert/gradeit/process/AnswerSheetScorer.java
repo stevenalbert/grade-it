@@ -40,7 +40,7 @@ public class AnswerSheetScorer {
      * @return processable answer sheet image
      */
     public static Mat convertAnswerSheet(Mat src, AnswerSheetMetadata metadata) {
-        long ttlTime = -System.nanoTime();
+        // long ttlTime = -System.nanoTime();
         // Check whether the argument is valid
         if (src == null) {
             throw new IllegalArgumentException("Argument cannot be null");
@@ -61,24 +61,24 @@ public class AnswerSheetScorer {
         int blockSize = 171;
         int C = 6;
 
-        long time = -System.nanoTime();
+        // long time = -System.nanoTime();
         Imgproc.adaptiveThreshold(result, result, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY,
                 blockSize, C);
-        time += System.nanoTime();
-        System.out.println("convert - Adaptive: " + String.format("%.3f", time / 1e9) + "s");
+        // time += System.nanoTime();
+        // System.out.println("convert - Adaptive: " + String.format("%.3f", time / 1e9) + "s");
         // Find all contour on mat
         ArrayList<MatOfPoint> contours = new ArrayList<>();
-        time = -System.nanoTime();
+        // time = -System.nanoTime();
         Mat copyResultForContour = result.clone();
         Imgproc.findContours(copyResultForContour, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
         copyResultForContour.release();
-        time += System.nanoTime();
-        System.out.println("convert - Find contours: " + String.format("%.3f", time / 1e9) + "s");
+        // time += System.nanoTime();
+        // System.out.println("convert - Find contours: " + String.format("%.3f", time / 1e9) + "s");
 
         ArrayList<MatOfPoint> squares = new ArrayList<>();
 
         // Test contours
-        time = -System.nanoTime();
+        // time = -System.nanoTime();
         MatOfPoint2f approx = new MatOfPoint2f();
         for (int i = 0; i < contours.size(); i++) {
             // approximate contour with accuracy proportional
@@ -99,12 +99,12 @@ public class AnswerSheetScorer {
                 squares.add(approxArray);
             }
         }
-        time += System.nanoTime();
-        System.out.println("convert - Filter contours: " + String.format("%.3f", time / 1e9) + "s");
+        // time += System.nanoTime();
+        // System.out.println("convert - Filter contours: " + String.format("%.3f", time / 1e9) + "s");
 
         double maxArea = -1, secondMaxArea = -1;
         int maxIdx = -1, secondMaxIdx = -1;
-        time = -System.nanoTime();
+        // time = -System.nanoTime();
         for (int j = 0; j < squares.size(); j++) {
             Rect rect = Imgproc.boundingRect(squares.get(j));
             double area = rect.area();
@@ -118,8 +118,8 @@ public class AnswerSheetScorer {
                 secondMaxIdx = j;
             }
         }
-        time += System.nanoTime();
-        System.out.println("convert - Find 2nd max area: " + String.format("%.3f", time / 1e9) + "s");
+        // time += System.nanoTime();
+        // System.out.println("convert - Find 2nd max area: " + String.format("%.3f", time / 1e9) + "s");
 
         if (secondMaxIdx < 0 && maxIdx < 0)
             return null;
@@ -171,7 +171,7 @@ public class AnswerSheetScorer {
         perspectiveHeight = metadata.getDimension().height;
         perspectiveWidth = metadata.getDimension().width;
 
-        time = -System.nanoTime();
+        // time = -System.nanoTime();
         Mat perspective = new Mat(perspectiveHeight, perspectiveWidth, src.type());
         MatOfPoint2f srcPoints = new MatOfPoint2f(topLeftPoint, topRightPoint, bottomRightPoint, bottomLeftPoint);
         MatOfPoint2f dst = new MatOfPoint2f(new Point(0, 0), new Point(perspectiveWidth - 1, 0),
@@ -179,14 +179,14 @@ public class AnswerSheetScorer {
 
         Mat transform = Imgproc.getPerspectiveTransform(srcPoints, dst);
         Imgproc.warpPerspective(result, perspective, transform, new Size(perspectiveWidth, perspectiveHeight));
-        time += System.nanoTime();
-        System.out.println("convert - Perspective transform: " + String.format("%.3f", time / 1e9) + "s");
+        // time += System.nanoTime();
+        // System.out.println("convert - Perspective transform: " + String.format("%.3f", time / 1e9) + "s");
 
         Imgproc.adaptiveThreshold(perspective, perspective, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
                 Imgproc.THRESH_BINARY, blockSize, C);
 
-        ttlTime += System.nanoTime();
-        System.out.println("convert - Total time: " + String.format("%.3f", ttlTime / 1e9) + "s");
+        // ttlTime += System.nanoTime();
+        // System.out.println("convert - Total time: " + String.format("%.3f", ttlTime / 1e9) + "s");
 
         return perspective;
     }
@@ -218,7 +218,7 @@ public class AnswerSheetScorer {
         // Find the fit squares
         ArrayList<MatOfPoint> squares = new ArrayList<>();
         MatOfPoint2f approx = new MatOfPoint2f();
-        int area = (int) (metadata.getDimension().squareHeight * metadata.getDimension().squareWidth);
+        int area = metadata.getDimension().squareHeight * metadata.getDimension().squareWidth;
         for (int i = 0; i < contours.size(); i++) {
             // approximate contour with accuracy proportional
             // to the contour perimeter
@@ -347,10 +347,15 @@ public class AnswerSheetScorer {
     }
 
     public static AnswerSheet recognizeAnswerSheet(ArrayList<AnswerMat> answerMats) {
-        final int TOTAL_ANSWER = 40;
-        AnswerSheet answerSheet = new AnswerSheet(TOTAL_ANSWER);
-        StringBuilder mCode = new StringBuilder("000");
-        StringBuilder exCode = new StringBuilder("000");
+        int totalAnswer = 0;
+        for (AnswerMat answerMat : answerMats) {
+            if (answerMat.getLabel() instanceof AnswerLabel) {
+                totalAnswer = Math.max(totalAnswer, ((AnswerLabel) answerMat.getLabel()).getNumber());
+            }
+        }
+        AnswerSheet answerSheet = new AnswerSheet(totalAnswer);
+        StringBuilder mCode = new StringBuilder("999");
+        StringBuilder exCode = new StringBuilder("999");
 
         for (AnswerMat answerMat : answerMats) {
             int value = (int) FeatureExtractor.getFeatureX(answerMat);
@@ -400,7 +405,6 @@ public class AnswerSheetScorer {
             Rect secondVerticalRect, Rect firstHorizontalRect, Rect secondHorizontalRect, int numberOfRows,
             int numberOfCols, int averageWidth, int averageHeight, String firstname, int firstExt, int secondExt,
             PaperDimension paperDimension) {
-        final int RADIUS = 4;
         ArrayList<AnswerMat> answerMats = new ArrayList<>();
         Point centerStartVerticalPoint = getCenter(firstVerticalRect);
         Point centerEndVerticalPoint = getCenter(secondVerticalRect);
@@ -416,12 +420,16 @@ public class AnswerSheetScorer {
                         (int) Math.round(startCenterY), averageWidth, averageHeight, paperDimension);
 
                 AnswerSheetLabel label;
-                if (firstname.equals("ExCode")) {
-                    label = new ExCodeLabel(secondExt + j - '1', firstExt + i);
-                } else if (firstname.equals("MCode")) {
-                    label = new MCodeLabel(secondExt + j - '1', firstExt + i);
-                } else {
-                    label = new AnswerLabel(firstExt + i, Option.getOption((char) (secondExt + j)));
+                switch (firstname) {
+                    case "ExCode":
+                        label = new ExCodeLabel(secondExt + j - '1', firstExt + i);
+                        break;
+                    case "MCode":
+                        label = new MCodeLabel(secondExt + j - '1', firstExt + i);
+                        break;
+                    default:
+                        label = new AnswerLabel(firstExt + i, Option.getOption((char) (secondExt + j)));
+                        break;
                 }
                 answerMats.add(new AnswerMat(mat, label));
             }
@@ -517,6 +525,6 @@ public class AnswerSheetScorer {
     private static void drawContour(Mat mat, Rect rect, Scalar color, int thickness) {
         MatOfPoint matOfPoint = new MatOfPoint(new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y),
                 new Point(rect.x + rect.width, rect.y + rect.height), new Point(rect.x, rect.y + rect.height));
-        Imgproc.drawContours(mat, Arrays.asList(matOfPoint), 0, color, thickness);
+        Imgproc.drawContours(mat, Collections.singletonList(matOfPoint), 0, color, thickness);
     }
 }

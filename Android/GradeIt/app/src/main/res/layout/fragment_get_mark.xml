@@ -43,6 +43,19 @@
         android:gravity="center_horizontal"
         android:orientation="vertical">
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimary"
+            android:gravity="center_horizontal"
+            android:text="@string/form_format_que" />
+
+        <Spinner
+            android:id="@+id/metadata_format_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp" />
+
         <Button
             android:id="@+id/photo"
             android:layout_width="match_parent"

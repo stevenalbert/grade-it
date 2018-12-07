@@ -24,6 +24,8 @@ public interface AnswerKeyDao {
     int update(AnswerKey answerKey);
     @Delete
     int delete(AnswerKey answerKey);
+    @Query("DELETE FROM answer_key WHERE m_code = :mCode")
+    void deleteByMCode(int mCode);
     @Query("DELETE FROM answer_key")
     void deleteAll();
     @Query("SELECT m_code, total_number FROM answer_key")

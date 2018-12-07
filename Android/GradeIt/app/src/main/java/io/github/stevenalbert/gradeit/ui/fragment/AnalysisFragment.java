@@ -19,15 +19,8 @@ import java.util.List;
 import io.github.stevenalbert.gradeit.R;
 import io.github.stevenalbert.gradeit.model.AnswerKeyCode;
 import io.github.stevenalbert.gradeit.ui.adapter.AnswerMCodeAdapter;
-import io.github.stevenalbert.gradeit.ui.listener.OnFragmentInteractionListener;
 import io.github.stevenalbert.gradeit.viewmodel.AnswerKeyViewModel;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link OnFragmentInteractionListener} interface
- * to handle interaction events.
- */
 public class AnalysisFragment extends Fragment implements AnswerMCodeAdapter.OnSelectMCodeListener {
 
     private RecyclerView mCodeRecyclerView;
@@ -71,12 +64,7 @@ public class AnalysisFragment extends Fragment implements AnswerMCodeAdapter.OnS
 
         answerKeyList = answerKeyViewModel.getAnswerKeysMetadata();
 
-        answerKeyList.observe(this, new Observer<List<AnswerKeyCode>>() {
-            @Override
-            public void onChanged(@Nullable List<AnswerKeyCode> answerKeyCodes) {
-                adapter.setAnswerKeyCodes(answerKeyCodes);
-            }
-        });
+        answerKeyList.observe(this, (answerKeyCodes) -> adapter.setAnswerKeyCodes(answerKeyCodes));
     }
 
     @Override

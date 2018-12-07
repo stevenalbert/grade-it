@@ -2,37 +2,37 @@ package io.github.stevenalbert.gradeit.ui.fragment;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.MimeTypeMap;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
-import io.github.stevenalbert.gradeit.BuildConfig;
 import io.github.stevenalbert.gradeit.R;
+import io.github.stevenalbert.gradeit.util.AppSharedPreference;
 import io.github.stevenalbert.gradeit.util.FileUtils;
+import io.github.stevenalbert.gradeit.util.MetadataUtils;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -53,9 +53,12 @@ public class GetMarkFragment extends Fragment {
     private static final int PHOTO_REQUEST = 1000;
     private static final int GALLERY_REQUEST = 2000;
 
-    private OnFragmentInteractionListener mListener;
+    private GetMarkListener mListener;
 
     private Uri imageUri;
+
+    // Metadata
+    private List<String> metadataFormatsFilename;
 
     public GetMarkFragment() {
     }
@@ -75,34 +78,47 @@ public class GetMarkFragment extends Fragment {
         Button takePhotoButton;
         Button fromGalleryButton;
         Button downloadAnswerSheet;
+        Spinner formFormatSpinner;
 
         takePhotoButton = view.findViewById(R.id.photo);
         fromGalleryButton = view.findViewById(R.id.gallery);
         downloadAnswerSheet = view.findViewById(R.id.download_answer_sheet);
+        formFormatSpinner = view.findViewById(R.id.metadata_format_spinner);
 
-        takePhotoButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        takePhotoButton.setOnClickListener((v) ->
                 // Take picture from camera
-                getPhotoByCamera();
-            }
-        });
+                getPhotoByCamera());
 
-        fromGalleryButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        fromGalleryButton.setOnClickListener((v) ->
                 // Take picture from gallery
-                getImageFromGallery();
-            }
-        });
+                getImageFromGallery());
 
-        downloadAnswerSheet.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        downloadAnswerSheet.setOnClickListener((v) ->
                 // Download to "Download" directory
-                downloadAnswerSheet();
+                downloadAnswerSheet());
+
+        metadataFormatsFilename = MetadataUtils.metadataFormatsFilename();
+        ArrayAdapter<String> formFormatAdapter = new ArrayAdapter<>(getContext(), R.layout.spinner_item, metadataFormatsFilename);
+        formFormatAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        formFormatSpinner.setAdapter(formFormatAdapter);
+        formFormatSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                AppSharedPreference.saveMetadataString(getContext(), metadataFormatsFilename.get(position));
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
             }
         });
+        String savedMetadataFilename = AppSharedPreference.getSavedMetadataString(getContext());
+        int indexOfSavedMetadata;
+        if((indexOfSavedMetadata = metadataFormatsFilename.indexOf(savedMetadataFilename)) != -1) {
+            formFormatSpinner.setSelection(indexOfSavedMetadata);
+        } else {
+            formFormatSpinner.setSelection(0);
+        }
     }
 
     private void getPhotoByCamera() {
@@ -118,7 +134,7 @@ public class GetMarkFragment extends Fragment {
         Intent photoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
         if (photoIntent.resolveActivity(getContext().getPackageManager()) != null) {
-            final String subDirectory = "Gradeit_Answersheet";
+            final String subDirectory = getString(R.string.app_directory_name);
 
             // Create the image File
 /*
@@ -135,7 +151,7 @@ public class GetMarkFragment extends Fragment {
             File storageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), subDirectory);
             storageDir.mkdirs();
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            String imageFileName = "AS_" + timeStamp + ".jpg";
+            String imageFileName = getString(R.string.taken_image_filename, timeStamp);
             File imageFile = new File(storageDir, imageFileName);
 /*
             imageUri = FileProvider.getUriForFile(getContext(),
@@ -144,9 +160,7 @@ public class GetMarkFragment extends Fragment {
 */
             imageUri = Uri.fromFile(imageFile);
 
-            Log.d(TAG, "Image Uri: " + imageUri);
             photoIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-            photoIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             startActivityForResult(photoIntent, PHOTO_REQUEST);
         }
     }
@@ -169,13 +183,13 @@ public class GetMarkFragment extends Fragment {
             }, WRITE_EXTERNAL_STORAGE_PERMISSION_CODE);
             return;
         }
-        String subDirectory = "Gradeit_Answersheet";
+        String subDirectory = getString(R.string.app_directory_name);
         File storageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), subDirectory);
         storageDir.mkdirs();
 
         String[] pdfFilenames = getResources().getStringArray(R.array.metadata_filename);
         for(String filename : pdfFilenames) {
-            FileUtils.copyFromAsset(getContext(), "pdf_form/" + filename + ".pdf", new File(storageDir, filename + ".pdf"));
+            FileUtils.copyFromAsset(getContext(), getString(R.string.pdf_form_asset_file, filename), new File(storageDir, filename + ".pdf"));
         }
 
         mListener.onFinishDownloadAnswerSheet(storageDir);
@@ -183,7 +197,7 @@ public class GetMarkFragment extends Fragment {
 
     private void processImage(Uri uri) {
         if(uri == null) {
-            Toast.makeText(getContext(), "No image chosen", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), R.string.no_image_chosen, Toast.LENGTH_SHORT).show();
         }
         if(mListener != null)
             mListener.onProcessImageTaken(uri);
@@ -192,11 +206,11 @@ public class GetMarkFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
+        if (context instanceof GetMarkListener) {
+            mListener = (GetMarkListener) context;
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+                    + " must implement " + GetMarkListener.class.getSimpleName());
         }
     }
 
@@ -206,7 +220,7 @@ public class GetMarkFragment extends Fragment {
         mListener = null;
     }
 
-    public interface OnFragmentInteractionListener {
+    public interface GetMarkListener {
         void onProcessImageTaken(Uri uri);
         void onFinishDownloadAnswerSheet(File downloadFolder);
     }
@@ -218,6 +232,7 @@ public class GetMarkFragment extends Fragment {
         if(requestCode == PHOTO_REQUEST && resultCode == Activity.RESULT_OK) {
             // Send to next activity for processing answer sheet
             // Log.d(TAG, "Activity result: " + imageUri.answerToString());
+            MediaScannerConnection.scanFile(getContext(), new String[]{imageUri.getPath()}, null, ((path, uri1) -> Log.d(TAG, path + " | " + uri1)));
             processImage(imageUri);
         }
         if(requestCode == GALLERY_REQUEST && resultCode == Activity.RESULT_OK) {
@@ -232,30 +247,26 @@ public class GetMarkFragment extends Fragment {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        Log.d(TAG, "onRequestPermissionsResult in");
         if(requestCode == READ_EXTERNAL_STORAGE_PERMISSION_CODE) {
             if(grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.d(TAG, "onRequestPermissionsResult in gallery");
                 getImageFromGallery();
             } else {
-                Toast.makeText(getContext(), "Can't get image from gallery", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), R.string.gallery_restrict_message, Toast.LENGTH_SHORT).show();
             }
         }
         if(requestCode == WRITE_EXTERNAL_STORAGE_PERMISSION_CODE) {
             if(grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.d(TAG, "onRequestPermissionsResult in download");
                 downloadAnswerSheet();
             } else {
-                Toast.makeText(getContext(), "Can't write to storage", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), R.string.storage_restrict_message, Toast.LENGTH_SHORT).show();
             }
         }
         if(requestCode == CAMERA_PERMISSION_CODE) {
             if(grantResults.length == 2 && grantResults[0] == PackageManager.PERMISSION_GRANTED
                     && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                Log.d(TAG, "onRequestPermissionsResult in photo");
                 getPhotoByCamera();
             } else {
-                Toast.makeText(getContext(), "Camera permission denied", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), R.string.camera_restrict_message, Toast.LENGTH_SHORT).show();
             }
         }
     }

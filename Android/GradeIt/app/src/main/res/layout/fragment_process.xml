@@ -7,16 +7,11 @@
     android:padding="16dp"
     android:orientation="vertical">
 
-    <TextView
+    <TextView android:id="@+id/metadata_format_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:text="Choose answer sheet format"
         android:textColor="@color/colorPrimary"/>
-
-    <Spinner android:id="@+id/metadata_format_spinner"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
 
     <ImageView
         android:id="@+id/answer_sheet_image"

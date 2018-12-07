@@ -57,7 +57,7 @@ public class AnswerKeyNumberAdapter extends RecyclerView.Adapter<AnswerKeyNumber
 
     @Override
     public int getItemCount() {
-        if(answerKey != null) return answerKey.getAnswerKeys().length;
+        if(answerKey != null) return answerKey.getTotalNumber();
         else return 0;
 
     }

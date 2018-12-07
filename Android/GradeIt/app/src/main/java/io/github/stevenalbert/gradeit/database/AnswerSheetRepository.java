@@ -68,6 +68,14 @@ public class AnswerSheetRepository {
         new DeleteAsyncTask(answerSheetDao).execute(answerSheet);
     }
 
+    public void deleteByMCode(Integer mCode) {
+        new DeleteByMCodeAsyncTask(answerSheetDao).execute(mCode);
+    }
+
+    public void deleteAll() {
+        new DeleteAllAsyncTask(answerSheetDao).execute();
+    }
+
     private static class InsertAsyncTask extends AsyncTask<AnswerSheet, Void, Void> {
 
         private AnswerSheetDao answerSheetDao;
@@ -94,6 +102,36 @@ public class AnswerSheetRepository {
         @Override
         protected Void doInBackground(AnswerSheet... answerSheets) {
             answerSheetDao.delete(answerSheets[0]);
+            return null;
+        }
+    }
+
+    private static class DeleteByMCodeAsyncTask extends AsyncTask<Integer, Void, Void> {
+
+        private AnswerSheetDao answerSheetDao;
+
+        private DeleteByMCodeAsyncTask(AnswerSheetDao answerSheetDao) {
+            this.answerSheetDao = answerSheetDao;
+        }
+
+        @Override
+        protected Void doInBackground(Integer... mCodes) {
+            answerSheetDao.deleteAllByMCode(mCodes[0]);
+            return null;
+        }
+    }
+
+    private static class DeleteAllAsyncTask extends AsyncTask<Void, Void, Void> {
+
+        private AnswerSheetDao answerSheetDao;
+
+        private DeleteAllAsyncTask(AnswerSheetDao answerSheetDao) {
+            this.answerSheetDao = answerSheetDao;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            answerSheetDao.deleteAll();
             return null;
         }
     }

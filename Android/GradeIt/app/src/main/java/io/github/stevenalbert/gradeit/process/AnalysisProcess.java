@@ -38,7 +38,7 @@ public class AnalysisProcess {
         final int TOTAL_ANSWER_SHEET = answerSheetList.size();
 
         StringBuilder summaryBuilder = new StringBuilder();
-        EnumMap<Option, Integer>[] totalOptionsOfNumber;
+        List<EnumMap<Option, Integer>> totalOptionsOfNumber;
         List<int[]> verdictList = new ArrayList<>();
         List<Integer> trueAnswerTotalList = new ArrayList<>();
 
@@ -65,12 +65,12 @@ public class AnalysisProcess {
         // End of answer key
 
         // Initialize option statistic
-        totalOptionsOfNumber = new EnumMap[TOTAL_NUMBER];
+        totalOptionsOfNumber = new ArrayList<>(TOTAL_NUMBER);
         Option[] allOptions = Option.values();
-        for(int i = 0; i < totalOptionsOfNumber.length; i++) {
-            totalOptionsOfNumber[i] = new EnumMap<>(Option.class);
+        for(int i = 0; i < TOTAL_NUMBER; i++) {
+            totalOptionsOfNumber.add(new EnumMap<>(Option.class));
             for(Option option : allOptions) {
-                totalOptionsOfNumber[i].put(option, 0);
+                totalOptionsOfNumber.get(i).put(option, 0);
             }
         }
 
@@ -85,9 +85,9 @@ public class AnalysisProcess {
                 String answerString = AnswerSheetConverter.answerToString(answerSheet.getAnswerOn(number));
                 appendWithSeparator(summaryBuilder, answerString);
                 trueAnswerTotal += answerSheet.isAnswerTrue(number) ? 1 : 0;
-                if(answerString.length() > 0) {
-                    Option option = Option.getOption(answerString.charAt(0));
-                    totalOptionsOfNumber[number - 1].put(option, totalOptionsOfNumber[number - 1].get(option) + 1);
+                for(int i=0; i<answerString.length(); i++) {
+                    Option option = Option.getOption(answerString.charAt(i));
+                    totalOptionsOfNumber.get(number - 1).put(option, totalOptionsOfNumber.get(number - 1).get(option) + 1);
                 }
             }
             trueAnswerTotalList.add(trueAnswerTotal);
@@ -181,8 +181,8 @@ public class AnalysisProcess {
         for(Option option : allOptions) {
             appendWithSeparator(summaryBuilder, ""); // For MCode column
             appendWithSeparator(summaryBuilder, "Total " + option.getOption().toString()); // For ExCode column
-            for(int i = 0; i < totalOptionsOfNumber.length; i++) {
-                appendWithSeparator(summaryBuilder, String.valueOf(totalOptionsOfNumber[i].get(option)));
+            for(int i = 0; i < totalOptionsOfNumber.size(); i++) {
+                appendWithSeparator(summaryBuilder, String.valueOf(totalOptionsOfNumber.get(i).get(option)));
             }
             appendWithSeparator(summaryBuilder, ""); // For Result column
             summaryBuilder.append(LINE_SEPARATOR);

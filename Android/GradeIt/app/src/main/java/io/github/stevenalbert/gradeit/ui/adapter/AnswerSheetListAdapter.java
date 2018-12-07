@@ -21,6 +21,7 @@ import io.github.stevenalbert.gradeit.model.AnswerSheetCode;
  */
 public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
+    private static final int EMPTY_VIEW_TYPE = 0;
     private static final int ANSWER_KEY_VIEW_TYPE = 1;
     private static final int ANSWER_SHEET_VIEW_TYPE = 2;
 
@@ -45,20 +46,23 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         return (viewType == ANSWER_KEY_VIEW_TYPE ?
                 new AnswerKeyViewHolder(
                         layoutInflater.inflate(R.layout.answer_key_list_item, parent, false))
-                : new AnswerSheetViewHolder(
-                        layoutInflater.inflate(R.layout.answer_sheet_list_item, parent, false)));
+                : (viewType == ANSWER_SHEET_VIEW_TYPE ? new AnswerSheetViewHolder(
+                        layoutInflater.inflate(R.layout.answer_sheet_list_item, parent, false))
+                : new EmptyViewHolder(layoutInflater.inflate(R.layout.empty_list, parent, false))));
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        if(answerKeys != null) {
-            if(position < answerKeys.size()) {
+        switch (getItemViewType(position)) {
+            case ANSWER_KEY_VIEW_TYPE: {
                 AnswerKeyCode answerKey = answerKeys.get(position);
                 AnswerKeyViewHolder viewHolder = (AnswerKeyViewHolder) holder;
 
                 viewHolder.cardView.setCardBackgroundColor(ContextCompat.getColor(layoutInflater.getContext(), R.color.dark_blue));
                 viewHolder.mCodeTextView.setText(answerKey.getMCodeString());
-            } else {
+                break;
+            }
+            case ANSWER_SHEET_VIEW_TYPE: {
                 position -= answerKeys.size();
 
                 AnswerSheetViewHolder viewHolder = (AnswerSheetViewHolder) holder;
@@ -68,7 +72,10 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 viewHolder.exCodeTextView.setText(answerSheet.getExCodeString());
                 viewHolder.mCodeTextView.setText(answerSheet.getMCodeString());
                 viewHolder.scoreTextView.setText(answerSheet.getScore());
+                break;
             }
+            case EMPTY_VIEW_TYPE:
+                break;
         }
     }
 
@@ -87,11 +94,13 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         int count = 0;
         if(answerKeys != null) count += answerKeys.size();
         if(answerSheets != null) count += answerSheets.size();
-        return count;
+        return count == 0 ? 1 : count;
     }
 
     @Override
     public int getItemViewType(int position) {
+        if((answerKeys == null || answerKeys.size() == 0) &&
+                (answerSheets == null || answerSheets.size() == 0)) return EMPTY_VIEW_TYPE;
         if(answerKeys != null && position < answerKeys.size()) return ANSWER_KEY_VIEW_TYPE;
         else return ANSWER_SHEET_VIEW_TYPE;
     }
@@ -109,13 +118,10 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             exCodeTextView = itemView.findViewById(R.id.ex_code_text);
             mCodeTextView = itemView.findViewById(R.id.m_code_text);
             scoreTextView = itemView.findViewById(R.id.score_text);
-            cardView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if(listener != null) {
-                        int adapterPosition = getAdapterPosition() - (answerKeys != null ? answerKeys.size() : 0);
-                        listener.onSelectAnswerSheet(answerSheets.get(adapterPosition));
-                    }
+            cardView.setOnClickListener((v) -> {
+                if(listener != null) {
+                    int adapterPosition = getAdapterPosition() - (answerKeys != null ? answerKeys.size() : 0);
+                    listener.onSelectAnswerSheet(answerSheets.get(adapterPosition));
                 }
             });
         }
@@ -130,15 +136,19 @@ public class AnswerSheetListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             super(itemView);
             cardView = itemView.findViewById(R.id.answer_sheet_info_card_view);
             mCodeTextView = itemView.findViewById(R.id.m_code_text);
-            cardView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if(listener != null) {
-                        int adapterPosition = getAdapterPosition();
-                        listener.onSelectAnswerKey(answerKeys.get(adapterPosition));
-                    }
+            cardView.setOnClickListener((v) -> {
+                if(listener != null) {
+                    int adapterPosition = getAdapterPosition();
+                    listener.onSelectAnswerKey(answerKeys.get(adapterPosition));
                 }
             });
+        }
+    }
+
+    public class EmptyViewHolder extends RecyclerView.ViewHolder {
+
+        public EmptyViewHolder(View itemView) {
+            super(itemView);
         }
     }
 }

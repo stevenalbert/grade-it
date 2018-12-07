@@ -77,10 +77,7 @@ public class ProcessActivity extends LayoutToolbarActivity implements ProcessFra
         if(answerSheet == null) {
             AlertDialog alertDialog = new AlertDialog.Builder(this)
                     .setMessage(getString(R.string.no_answer_sheet_error_message))
-                    .setOnDismissListener(new DialogInterface.OnDismissListener() {
-                        @Override
-                        public void onDismiss(DialogInterface dialog) {finish();}
-                    })
+                    .setOnDismissListener((dialog) -> finish())
                     .create();
             alertDialog.show();
         } else {
@@ -93,18 +90,14 @@ public class ProcessActivity extends LayoutToolbarActivity implements ProcessFra
                 this.answerSheet = answerSheet;
                 answerKeyViewModel = ViewModelProviders.of(this).get(AnswerKeyViewModel.class);
 
-                answerKeyViewModel.getAnswerKeyByMCode(answerSheet.getMCode()).observe(this, new Observer<AnswerKey>() {
-                    @Override
-                    public void onChanged(@Nullable AnswerKey answerKey) {
-                        scoreAnswerSheet(answerKey);
-                    }
-                });
+                answerKeyViewModel.getAnswerKeyByMCode(answerSheet.getMCode()).observe(this,
+                        (answerKey) -> scoreAnswerSheet(answerKey)
+                );
             }
         }
     }
 
     private void scoreAnswerSheet(AnswerKey answerKey) {
-        Log.d(TAG, "AnswerKey = " + answerKey);
         if(answerKey == null) {
             AlertDialog alertDialog = new AlertDialog.Builder(this)
                     .setMessage(getString(R.string.no_answer_key_error_message, answerSheet.getMCodeString()))

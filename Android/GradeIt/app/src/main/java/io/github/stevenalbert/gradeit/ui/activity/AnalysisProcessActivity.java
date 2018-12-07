@@ -8,6 +8,7 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.view.View;
 import android.webkit.MimeTypeMap;
+import android.widget.Toast;
 
 import java.io.File;
 
@@ -49,18 +50,21 @@ public class AnalysisProcessActivity extends LayoutToolbarActivity implements An
     @Override
     public void onFinishSaveAnalysis(File file) {
         this.currentFile = file;
-        Snackbar snackbar = Snackbar.make(parentLayout, "Saved in " + file.getAbsolutePath(), Snackbar.LENGTH_LONG);
-        snackbar.setAction("Open", new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
-                String mimeString = mimeTypeMap.getMimeTypeFromExtension(currentFile.getName().substring(currentFile.getName().lastIndexOf('.') + 1));
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.setDataAndType(Uri.fromFile(currentFile), mimeString);
-                startActivity(intent);
-            }
+        Snackbar snackbar = Snackbar.make(parentLayout, getString(R.string.success_save_analysis, file.getAbsolutePath()), Snackbar.LENGTH_LONG);
+        snackbar.setAction(R.string.open_saved_analysis, (v) -> {
+            MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
+            String mimeString = mimeTypeMap.getMimeTypeFromExtension(currentFile.getName().substring(currentFile.getName().lastIndexOf('.') + 1));
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.setDataAndType(Uri.fromFile(currentFile), mimeString);
+            startActivity(intent);
         });
         snackbar.show();
+    }
+
+    @Override
+    public void onFailedGetAnalysis(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        finish();
     }
 }

@@ -16,6 +16,8 @@
     <string name="help">Help</string>
     <string name="about_us">About us</string>
 
+    <string name="form_format_que">Use form format:</string>
+    <string name="form_format_text">Use form format: %1$s</string>
     <string name="photo">Take photo</string>
     <string name="gallery">From gallery</string>
     <string name="download_answer_sheet">Download answer sheet</string>
@@ -41,6 +43,9 @@
     <string name="no_answer_sheet_error_message">Answer sheet can\'t be found.\nPlease retry again.</string>
     <string name="no_answer_key_error_message">There is no answer key with MCode: %1$s.\nPlease add the respective answer key first (using ExCode: 000)</string>
 
+    <string name="m_code_title">MCode</string>
+    <string name="ex_code_title">ExCode</string>
+    <string name="score_title">Score</string>
     <string name="m_code">MCode: %1$s</string>
     <string name="ex_code">ExCode: %1$s</string>
     <string name="score">Score: %1$s</string>
@@ -53,6 +58,38 @@
     <string name="save_analysis_as_csv">Save as CSV</string>
     <string name="save_success">Save succeed</string>
     <string name="save_failed">Save failed</string>
+
+    <string name="progress_number">%1$d / %2$d</string>
+    <string-array name="grade_process">
+        <item>Converting image</item>
+        <item>Retrieving answer sheet squares</item>
+        <item>Recognizing answer sheet</item>
+    </string-array>
+    <string name="success_grade_notification">Answer sheet retrieved! Well done!</string>
+    <string name="failed_grade_notification">Failed to get answer sheet</string>
+    <string name="app_directory_name">Gradeit_Answersheet</string>
+    <string name="metadata_directory_name">metadata</string>
+    <string name="taken_image_filename">AS_%1$s.jpg</string>
+    <string name="pdf_form_asset_file">pdf_form/%1$s.pdf</string>
+    <string name="no_image_chosen">No image chosen</string>
+    <string name="gallery_restrict_message">Can\'t get image from gallery</string>
+    <string name="storage_restrict_message">Can\'t write to storage</string>
+    <string name="camera_restrict_message">Can\'t open camera</string>
+    <string name="success_save_analysis">Saved in %1$s</string>
+    <string name="analysis_save_filename">MC%1$s</string>
+    <string name="success_download_answer_sheet">Download finish, open in %1$s</string>
+    <string name="open_saved_analysis">Open</string>
+    <string name="no_answer_key_found">No answer key is found</string>
+    <string name="no_answer_sheet_found">No answer sheet is found</string>
+    <string name="delete_answer_sheet_title">Delete answer sheet</string>
+    <string name="delete_confirmation_message">Are you sure?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="delete_marks">Clear %1$s marks history</string>
+    <string name="delete_marks_title">Clear %1$s marks history?</string>
+    <string name="all">all</string>
+    <string name="specific_m_code">MCode %1$s</string>
+    <string name="no_items">No items</string>
 
     <!-- Metadata -->
     <string-array name="metadata_formats_name">

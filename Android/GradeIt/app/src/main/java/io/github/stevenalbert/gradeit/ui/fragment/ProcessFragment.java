@@ -15,12 +15,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,6 +25,7 @@ import org.opencv.android.Utils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -37,7 +35,9 @@ import io.github.stevenalbert.gradeit.model.AnswerMat;
 import io.github.stevenalbert.gradeit.model.AnswerSheet;
 import io.github.stevenalbert.gradeit.model.AnswerSheetMetadata;
 import io.github.stevenalbert.gradeit.process.AnswerSheetScorer;
+import io.github.stevenalbert.gradeit.util.AppSharedPreference;
 import io.github.stevenalbert.gradeit.util.BitmapProcess;
+import io.github.stevenalbert.gradeit.util.MetadataUtils;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -63,15 +63,14 @@ public class ProcessFragment extends Fragment {
     private TextView progressText;
     private TextView progressDescription;
 
-    // Metadata Chooser
-    private Spinner metadataSpinner;
-    private String chosenMetadata;
-
     // OnProcessFinishListener object
     private OnProcessFinishListener onProcessFinishListener;
 
     // Process AsyncTask
     private ProcessAsyncTask processAsyncTask;
+
+    // Metadata Filename
+    private String chosenMetadata;
 
     public interface OnProcessFinishListener {
         void onFinish(AnswerSheet answerSheet);
@@ -110,9 +109,6 @@ public class ProcessFragment extends Fragment {
             public void onClick(View v) {
                 Toast.makeText(getContext(), R.string.process_button_start, Toast.LENGTH_SHORT).show();
 
-                // Disable spinner
-                metadataSpinner.setEnabled(false);
-
                 // Disable button
                 processButton.setEnabled(false);
                 processButton.setVisibility(View.INVISIBLE);
@@ -136,24 +132,9 @@ public class ProcessFragment extends Fragment {
         progressText = view.findViewById(R.id.progress_text);
         progressDescription = view.findViewById(R.id.progress_description);
 
-        metadataSpinner = view.findViewById(R.id.metadata_format_spinner);
-        String[] metadataStrings = getResources().getStringArray(R.array.metadata_formats_name);
-        ArrayAdapter<String> metadataAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, metadataStrings);
-        metadataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        metadataSpinner.setAdapter(metadataAdapter);
-        metadataSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String[] filenames = getResources().getStringArray(R.array.metadata_filename);
-                chosenMetadata = filenames[position] + ".asmf";
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-        metadataSpinner.setSelection(1);
+        TextView formFormatText = view.findViewById(R.id.metadata_format_text);
+        chosenMetadata = AppSharedPreference.getSavedMetadataString(getContext());
+        formFormatText.setText(getString(R.string.form_format_text, chosenMetadata));
     }
 
     @Override
@@ -186,10 +167,7 @@ public class ProcessFragment extends Fragment {
 
     private void insertScaledImage() {
         Uri imageUri = Uri.parse(getArguments().getString(IMAGE_URI));
-
         Bitmap bitmapImage = BitmapProcess.getExifRotatedBitmap(getContext(), imageUri);
-        Log.d(TAG, "width = " + bitmapImage.getWidth() + ", height = " + bitmapImage.getHeight());
-
         updateImage(imageView, bitmapImage);
     }
 
@@ -228,7 +206,7 @@ public class ProcessFragment extends Fragment {
 
     private void updateProgressBar(int progressNumber) {
         progressBar.setProgress(progressNumber);
-        progressText.setText(progressBar.getProgress() + " / " + progressBar.getMax());
+        progressText.setText(getString(R.string.progress_number, progressBar.getProgress(), progressBar.getMax()));
     }
 
     private class ProcessAsyncTask extends AsyncTask<Uri, Object, AnswerSheet> {
@@ -243,20 +221,20 @@ public class ProcessFragment extends Fragment {
 
             InputStream metadataInputStream = null;
             try {
-                if(chosenMetadata == null) chosenMetadata = "F-40.asmf";
-                metadataInputStream = getContext().getAssets().open("metadata/" + chosenMetadata);
+                metadataInputStream = new FileInputStream(MetadataUtils.metadataFile(chosenMetadata));
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
             if(metadataInputStream == null) return null;
 
+            String[] processNames = getResources().getStringArray(R.array.grade_process);
             try {
                 AnswerSheetMetadata metadata = new AnswerSheetMetadata(metadataInputStream);
 
                 publishProgress(Integer.valueOf(1));
                 sectionStartTime = System.nanoTime();
-                publishProgress("Converting image");
+                publishProgress(processNames[0]);
                 imageMat = AnswerSheetScorer.convertAnswerSheet(imageMat, metadata);
                 sectionEndTime = System.nanoTime();
                 image = Bitmap.createBitmap(imageMat.cols(), imageMat.rows(), Bitmap.Config.ARGB_8888);
@@ -266,7 +244,7 @@ public class ProcessFragment extends Fragment {
 
                 publishProgress(Integer.valueOf(2));
                 sectionStartTime = System.nanoTime();
-                publishProgress("Retrieving answer sheet squares");
+                publishProgress(processNames[1]);
                 Mat updateImageMat = new Mat(imageMat.rows(), imageMat.cols(), CvType.CV_8UC3);
                 ArrayList<AnswerMat> matSquares = AnswerSheetScorer.processAnswerSheet(imageMat, updateImageMat, metadata);
                 sectionEndTime = System.nanoTime();
@@ -277,7 +255,7 @@ public class ProcessFragment extends Fragment {
 
                 publishProgress(Integer.valueOf(3));
                 sectionStartTime = System.nanoTime();
-                publishProgress("Recognizing answer sheet");
+                publishProgress(processNames[2]);
                 AnswerSheet answerSheet = AnswerSheetScorer.recognizeAnswerSheet(matSquares);
                 sectionEndTime = System.nanoTime();
                 publishProgress(sectionEndTime - sectionStartTime);
@@ -311,10 +289,10 @@ public class ProcessFragment extends Fragment {
         protected void onPostExecute(AnswerSheet answerSheet) {
             super.onPostExecute(answerSheet);
             if(answerSheet != null) {
-                Toast.makeText(getActivity(), "Answer sheet retrieved! Well done!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), R.string.success_grade_notification, Toast.LENGTH_SHORT).show();
             }
             else {
-                Toast.makeText(getActivity(), "Failed to get answer sheet", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), R.string.failed_grade_notification, Toast.LENGTH_SHORT).show();
             }
             nextProcessAnswerSheet(answerSheet);
         }

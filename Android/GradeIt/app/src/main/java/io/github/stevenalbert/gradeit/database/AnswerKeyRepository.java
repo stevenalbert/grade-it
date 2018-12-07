@@ -60,6 +60,10 @@ public class AnswerKeyRepository {
         new DeleteAsyncTask(answerKeyDao).execute(answerKey);
     }
 
+    public void deleteByMCode(Integer mCode) {
+        new DeleteByMCodeAsyncTask(answerKeyDao).execute(mCode);
+    }
+
     public void deleteAll() {
         new DeleteAllAsyncTask(answerKeyDao).execute();
     }
@@ -90,6 +94,21 @@ public class AnswerKeyRepository {
         @Override
         protected Void doInBackground(AnswerKey... answerKeys) {
             answerKeyDao.delete(answerKeys[0]);
+            return null;
+        }
+    }
+
+    private static class DeleteByMCodeAsyncTask extends AsyncTask<Integer, Void, Void> {
+
+        private AnswerKeyDao answerKeyDao;
+
+        private DeleteByMCodeAsyncTask(AnswerKeyDao answerKeyDao) {
+            this.answerKeyDao = answerKeyDao;
+        }
+
+        @Override
+        protected Void doInBackground(Integer... mCodes) {
+            answerKeyDao.deleteByMCode(mCodes[0]);
             return null;
         }
     }

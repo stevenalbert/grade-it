@@ -48,24 +48,19 @@ public class AnswerSheetDetailActivity extends LayoutToolbarActivity {
                 answerKeyViewModel = ViewModelProviders.of(this).get(AnswerKeyViewModel.class);
                 answerSheetViewModel = ViewModelProviders.of(this).get(AnswerSheetViewModel.class);
 
-                answerSheetViewModel.getAnswerSheet(answerSheetCode.exCode, answerSheetCode.mCode).observe(this, new Observer<AnswerSheet>() {
-                    @Override
-                    public void onChanged(@Nullable AnswerSheet answerSheet) {
-                        answerSheetRetrieved = answerSheet;
-                        fillAnswer();
-                    }
+                answerSheetViewModel.getAnswerSheet(answerSheetCode.exCode, answerSheetCode.mCode)
+                        .observe(this, (answerSheet) -> {
+                    answerSheetRetrieved = answerSheet;
+                    fillAnswer();
                 });
 
-                answerKeyViewModel.getAnswerKeyByMCode(answerSheetCode.mCode).observe(this, new Observer<AnswerKey>() {
-                    @Override
-                    public void onChanged(@Nullable AnswerKey answerKey) {
-                        answerKeyRetrieved = answerKey;
-                        fillAnswer();
-                    }
+                answerKeyViewModel.getAnswerKeyByMCode(answerSheetCode.mCode).observe(this, (answerKey) -> {
+                    answerKeyRetrieved = answerKey;
+                    fillAnswer();
                 });
             }
         } else {
-            Toast.makeText(this, "No answer sheet is found", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.no_answer_sheet_found, Toast.LENGTH_SHORT).show();
             finish();
         }
 
@@ -101,19 +96,12 @@ public class AnswerSheetDetailActivity extends LayoutToolbarActivity {
         switch (item.getItemId()) {
             case R.id.delete:
                 AlertDialog alertDialog = new AlertDialog.Builder(this).setCancelable(true)
-                        .setTitle("Delete answer key")
-                        .setMessage("Are you sure?")
-                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                            }
+                        .setTitle(R.string.delete_answer_sheet_title)
+                        .setMessage(R.string.delete_confirmation_message)
+                        .setNegativeButton(R.string.no, (dialog, which) -> {
                         })
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                onDeleteAnswerSheet(answerSheetRetrieved);
-                            }
-                        }).create();
+                        .setPositiveButton(R.string.yes, (dialog, which) -> onDeleteAnswerSheet(answerSheetRetrieved))
+                        .create();
                 alertDialog.show();
                 return true;
             default:
